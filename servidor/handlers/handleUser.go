@@ -35,7 +35,7 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	id := params["id"]
 	usuario := models.GetUser(id)
-	if usuario.Cipherdata == "" {
+	if usuario.Empty() {
 		w.WriteHeader(400)
 		w.Write([]byte("No existe el usuario"))
 	} else {
@@ -59,10 +59,38 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(usuarioID)
 }
 
+type ModifiedStructure struct {
+	Campo string `json:"campo"`
+	Valor string `json:"valor"`
+}
+
 func UpdateUser(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "hello\n")
+
+	var estructuraNueva ModifiedStructure
+	json.NewDecoder(r.Body).Decode(&estructuraNueva)
+
+	//Obtengo el id de los parametros de la petición
+	params := mux.Vars(r)
+	id := params["id"]
+	usuario := models.UpdateUser(id, estructuraNueva.Campo, estructuraNueva.Valor)
+	if usuario.Empty() {
+		w.WriteHeader(400)
+		w.Write([]byte("No se actualizo el usuario"))
+	} else {
+		json.NewEncoder(w).Encode(usuario)
+	}
 }
 
 func DeleteUser(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "hello\n")
+	params := mux.Vars(r)
+	id := params["id"]
+
+	borrado := models.DeleteUser(id)
+	if borrado == false {
+		w.WriteHeader(400)
+		w.Write([]byte("No se borro el usuario"))
+	} else {
+		w.Write([]byte("Usuario borrado"))
+	}
+
 }

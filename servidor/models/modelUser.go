@@ -16,6 +16,15 @@ type User struct {
 	Cipherdata string             `bson:"cipherdata"`
 }
 
+//Metodo para comprobar si el usuario esta vacio o tiene datos
+func (u User) Empty() bool {
+	var mongoId interface{}
+	mongoId = u.ID
+	stringObjectID := mongoId.(primitive.ObjectID).Hex()
+	fmt.Println(stringObjectID)
+	return (stringObjectID == "000000000000000000000000" && u.Cipherdata == "")
+}
+
 func GetUsers() []User {
 	//Creo un contexto
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
@@ -74,4 +83,44 @@ func CreateUser(usuario User) string {
 	stringObjectID := result.InsertedID.(primitive.ObjectID).Hex()
 	fmt.Println(stringObjectID)
 	return stringObjectID
+}
+
+func UpdateUser(idString string, campo string, valorNuevo interface{}) User {
+	//Creo un contexto
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	//Obtengo la coleccion
+	coleccion := config.InstanceDB.DB.Collection("usuarios")
+	//Paso el string a un primitive.objectID
+	id, _ := primitive.ObjectIDFromHex(idString)
+
+	filter := bson.D{{"_id", id}}
+	update := bson.D{{"$set", bson.D{{campo, valorNuevo}}}}
+
+	var usuario User
+	//Consulto a la base de datos
+	result, err := coleccion.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return usuario
+	}
+	if result.ModifiedCount > 0 {
+		return GetUser(idString)
+	}
+	return usuario
+}
+
+func DeleteUser(idString string) bool {
+	//Creo un contexto
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	//Obtengo la coleccion
+	coleccion := config.InstanceDB.DB.Collection("usuarios")
+	//Paso el string a un primitive.objectID
+	id, _ := primitive.ObjectIDFromHex(idString)
+
+	filter := bson.D{{"_id", id}}
+
+	result, err := coleccion.DeleteOne(ctx, filter)
+	if err != nil || result.DeletedCount == 0 {
+		return false
+	}
+	return true
 }
