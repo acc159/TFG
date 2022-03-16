@@ -34,7 +34,6 @@ func GetUsers() []User {
 	//Consulto a la base de datos
 	result, err := coleccion.Find(ctx, bson.M{})
 	if err != nil {
-		fmt.Println("ASDFDSF")
 		log.Fatal(err)
 	}
 
@@ -42,7 +41,6 @@ func GetUsers() []User {
 	var usuarios []User
 	err = result.All(ctx, &usuarios)
 	if err != nil {
-		fmt.Println("ASDFDSF")
 		log.Fatal(err)
 	}
 	return usuarios

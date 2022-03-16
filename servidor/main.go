@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"servidor/config"
 	"servidor/middlewares"
+	"servidor/models"
 	"servidor/routes"
 
 	"github.com/gorilla/mux"
@@ -26,6 +27,10 @@ func main() {
 	//Defino las rutas
 	//Usuarios
 	routes.User(r)
+	//Proyectos
+	routes.Proyect(r)
+
+	models.GetProyects()
 
 	//Lanzo el servidor
 	http.ListenAndServe("localhost:8080", r)

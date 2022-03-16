@@ -47,7 +47,6 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 func CreateUser(w http.ResponseWriter, r *http.Request) {
 	var usuario models.User
 	json.NewDecoder(r.Body).Decode(&usuario)
-	fmt.Println(usuario)
 	usuarioID := models.CreateUser(usuario)
 
 	if usuarioID == "" {
