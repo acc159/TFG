@@ -16,4 +16,6 @@ func User(r *mux.Router) {
 	r.HandleFunc("/user", handlers.CreateUser).Methods("POST")
 	r.HandleFunc("/users/{id}", handlers.UpdateUser).Methods("PUT")
 	r.HandleFunc("/users/{id}", handlers.DeleteUser).Methods("DELETE")
+	r.HandleFunc("/users/proyects/{id}", handlers.UpdateUserProyects).Methods("PUT")
+
 }

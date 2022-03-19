@@ -2,13 +2,17 @@ package config
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
+
+var nombreDB = "pruebas"
 
 type MongoConection struct {
 	DB     *mongo.Database
@@ -39,8 +43,57 @@ func ConnectDB() {
 	}
 
 	InstanceDB = MongoConection{
-		DB:     client.Database("pruebas"),
+		DB:     client.Database(nombreDB),
 		Client: client,
+	}
+
+	CreateIndexUniqueUsers()
+	CreateIndexCompose()
+	CreateIndexListIDinTask()
+}
+
+func CreateIndexUniqueUsers() {
+	coleccion := InstanceDB.DB.Collection("usuarios")
+	_, err := coleccion.Indexes().CreateOne(
+		context.Background(),
+		mongo.IndexModel{
+			Keys:    bson.D{{Key: "email", Value: 1}},
+			Options: options.Index().SetUnique(true),
+		},
+	)
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+}
+
+func CreateIndexListIDinTask() {
+	coleccion := InstanceDB.DB.Collection("tasks")
+	_, err := coleccion.Indexes().CreateOne(
+		context.Background(),
+		mongo.IndexModel{
+			Keys: bson.D{{Key: "listID", Value: 1}},
+		},
+	)
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+}
+
+func CreateIndexCompose() {
+	coleccion := InstanceDB.DB.Collection("Usuarios_Proyectos")
+	_, err := coleccion.Indexes().CreateOne(
+		context.Background(),
+		mongo.IndexModel{
+			Keys:    bson.D{{"userID", 1}, {"proyectID", 1}},
+			Options: options.Index().SetUnique(true),
+		},
+	)
+	if err != nil {
+		fmt.Println(err)
 	}
 }
 

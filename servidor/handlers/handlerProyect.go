@@ -23,3 +23,11 @@ func CreateProyect(w http.ResponseWriter, r *http.Request) {
 
 	w.Write([]byte("Proyectos"))
 }
+
+func UpdateProyect(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func DeleteProyect(w http.ResponseWriter, r *http.Request) {
+
+}

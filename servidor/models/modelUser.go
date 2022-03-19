@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"servidor/config"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -13,7 +14,10 @@ import (
 
 type User struct {
 	ID         primitive.ObjectID `bson:"_id,omitempty"`
+	Email      string             `bson:"email"`
 	Cipherdata string             `bson:"cipherdata"`
+	Edad       int                `bson:"edad"`
+	Proyectos  []ProyectKey       `bson:"proyectos"`
 }
 
 //Metodo para comprobar si el usuario esta vacio o tiene datos
@@ -72,8 +76,13 @@ func CreateUser(usuario User) string {
 	coleccion := config.InstanceDB.DB.Collection("usuarios")
 	//Inserto el usuario pasado por parametro
 	result, err := coleccion.InsertOne(ctx, usuario)
+
 	if err != nil {
-		log.Fatal(err)
+		//Compruebo si el error que se me da es por valor duplicado
+		textoError := err.Error()
+		if duplicado := strings.Index(textoError, "duplicate"); duplicado != -1 {
+			return "Duplicado"
+		}
 		return "0"
 	}
 
@@ -121,4 +130,19 @@ func DeleteUser(idString string) bool {
 		return false
 	}
 	return true
+}
+
+func AddProyect(proyecto ProyectKey, idString string) {
+	//Creo un contexto
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	//Obtengo la coleccion
+	coleccion := config.InstanceDB.DB.Collection("usuarios")
+
+	id, _ := primitive.ObjectIDFromHex(idString)
+
+	filter := bson.D{{"_id", id}}
+	update := bson.D{{"$push", bson.D{{"proyectos", proyecto}}}}
+
+	coleccion.UpdateOne(ctx, filter, update)
+
 }

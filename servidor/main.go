@@ -29,8 +29,11 @@ func main() {
 	routes.User(r)
 	//Proyectos
 	routes.Proyect(r)
+	//Tareas
+	routes.Task(r)
 
 	models.GetProyects()
+	//models.CreateIndexUnique()
 
 	//Lanzo el servidor
 	http.ListenAndServe("localhost:8080", r)

@@ -59,8 +59,8 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 type ModifiedStructure struct {
-	Campo string `json:"campo"`
-	Valor string `json:"valor"`
+	Campo string      `json:"campo"`
+	Valor interface{} `json:"valor"`
 }
 
 func UpdateUser(w http.ResponseWriter, r *http.Request) {
@@ -91,5 +91,16 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	} else {
 		w.Write([]byte("Usuario borrado"))
 	}
+
+}
+
+func UpdateUserProyects(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	id := params["id"]
+
+	var proyectoNuevo models.ProyectKey
+	json.NewDecoder(r.Body).Decode(&proyectoNuevo)
+
+	models.AddProyect(proyectoNuevo, id)
 
 }
