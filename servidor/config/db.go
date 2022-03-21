@@ -48,12 +48,12 @@ func ConnectDB() {
 	}
 
 	CreateIndexUniqueUsers()
-	CreateIndexCompose()
+	CreateIndexComposeUserProyectList()
 	CreateIndexListIDinTask()
 }
 
 func CreateIndexUniqueUsers() {
-	coleccion := InstanceDB.DB.Collection("usuarios")
+	coleccion := InstanceDB.DB.Collection("users")
 	_, err := coleccion.Indexes().CreateOne(
 		context.Background(),
 		mongo.IndexModel{
@@ -61,7 +61,6 @@ func CreateIndexUniqueUsers() {
 			Options: options.Index().SetUnique(true),
 		},
 	)
-
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -83,12 +82,12 @@ func CreateIndexListIDinTask() {
 
 }
 
-func CreateIndexCompose() {
-	coleccion := InstanceDB.DB.Collection("Usuarios_Proyectos")
+func CreateIndexComposeUserProyectList() {
+	coleccion := InstanceDB.DB.Collection("users_proyects_lists")
 	_, err := coleccion.Indexes().CreateOne(
 		context.Background(),
 		mongo.IndexModel{
-			Keys:    bson.D{{"userID", 1}, {"proyectID", 1}},
+			Keys:    bson.D{{"userID", 1}, {"proyectID", 1}, {"listID", 1}},
 			Options: options.Index().SetUnique(true),
 		},
 	)

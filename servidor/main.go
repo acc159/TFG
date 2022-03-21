@@ -31,6 +31,8 @@ func main() {
 	routes.Proyect(r)
 	//Tareas
 	routes.Task(r)
+	//Listas
+	routes.List(r)
 
 	models.GetProyects()
 	//models.CreateIndexUnique()

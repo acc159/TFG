@@ -17,32 +17,6 @@ type Proyect struct {
 	Users      []string           `bson:"users"`
 }
 
-type ProyectKey struct {
-	Proyecto primitive.ObjectID `bson:"proyecto,omitempty"`
-	Key      string             `bson:"key"`
-}
-
-/*
-func CreateIndexUnique() {
-	coleccion := config.InstanceDB.DB.Collection("proyectos")
-
-	indexName, err := coleccion.Indexes().CreateOne(
-		context.Background(),
-		mongo.IndexModel{
-			Keys:    bson.D{{Key: "email", Value: 1}},
-			Options: options.Index().SetUnique(true),
-		},
-	)
-
-	if err != nil {
-		fmt.Println(err)
-	} else {
-		fmt.Println(indexName)
-	}
-
-}
-*/
-
 func GetProyects() []Proyect {
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 

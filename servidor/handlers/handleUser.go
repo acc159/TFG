@@ -65,18 +65,18 @@ type ModifiedStructure struct {
 
 func UpdateUser(w http.ResponseWriter, r *http.Request) {
 
-	var estructuraNueva ModifiedStructure
-	json.NewDecoder(r.Body).Decode(&estructuraNueva)
+	var user models.User
+	json.NewDecoder(r.Body).Decode(&user)
 
 	//Obtengo el id de los parametros de la petición
 	params := mux.Vars(r)
 	id := params["id"]
-	usuario := models.UpdateUser(id, estructuraNueva.Campo, estructuraNueva.Valor)
-	if usuario.Empty() {
+	resultado := models.UpdateUser(id, user)
+	if resultado != true {
 		w.WriteHeader(400)
 		w.Write([]byte("No se actualizo el usuario"))
 	} else {
-		json.NewEncoder(w).Encode(usuario)
+		w.Write([]byte("Se actualizo el usuario"))
 	}
 }
 
@@ -94,6 +94,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 
 }
 
+/*
 func UpdateUserProyects(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	id := params["id"]
@@ -104,3 +105,4 @@ func UpdateUserProyects(w http.ResponseWriter, r *http.Request) {
 	models.AddProyect(proyectoNuevo, id)
 
 }
+*/

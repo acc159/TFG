@@ -14,10 +14,8 @@ import (
 
 type User struct {
 	ID         primitive.ObjectID `bson:"_id,omitempty"`
-	Email      string             `bson:"email"`
-	Cipherdata string             `bson:"cipherdata"`
-	Edad       int                `bson:"edad"`
-	Proyectos  []ProyectKey       `bson:"proyectos"`
+	Email      string             `bson:"email,omitempty"`
+	Cipherdata string             `bson:"cipherdata,omitempty"`
 }
 
 //Metodo para comprobar si el usuario esta vacio o tiene datos
@@ -33,7 +31,7 @@ func GetUsers() []User {
 	//Creo un contexto
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	//Obtengo la coleccion
-	coleccion := config.InstanceDB.DB.Collection("usuarios")
+	coleccion := config.InstanceDB.DB.Collection("users")
 
 	//Consulto a la base de datos
 	result, err := coleccion.Find(ctx, bson.M{})
@@ -54,7 +52,7 @@ func GetUser(idString string) User {
 	//Creo un contexto
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	//Obtengo la coleccion
-	coleccion := config.InstanceDB.DB.Collection("usuarios")
+	coleccion := config.InstanceDB.DB.Collection("users")
 	//Paso el string a un primitive.objectID
 	id, _ := primitive.ObjectIDFromHex(idString)
 
@@ -73,7 +71,7 @@ func CreateUser(usuario User) string {
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 
 	//Obtengo la coleccion
-	coleccion := config.InstanceDB.DB.Collection("usuarios")
+	coleccion := config.InstanceDB.DB.Collection("users")
 	//Inserto el usuario pasado por parametro
 	result, err := coleccion.InsertOne(ctx, usuario)
 
@@ -92,34 +90,33 @@ func CreateUser(usuario User) string {
 	return stringObjectID
 }
 
-func UpdateUser(idString string, campo string, valorNuevo interface{}) User {
+func UpdateUser(idString string, usuario User) bool {
 	//Creo un contexto
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	//Obtengo la coleccion
-	coleccion := config.InstanceDB.DB.Collection("usuarios")
+	coleccion := config.InstanceDB.DB.Collection("users")
 	//Paso el string a un primitive.objectID
 	id, _ := primitive.ObjectIDFromHex(idString)
 
-	filter := bson.D{{"_id", id}}
-	update := bson.D{{"$set", bson.D{{campo, valorNuevo}}}}
+	filter := bson.D{{Key: "_id", Value: id}}
+	update := bson.D{{Key: "$set", Value: usuario}}
 
-	var usuario User
 	//Consulto a la base de datos
 	result, err := coleccion.UpdateOne(ctx, filter, update)
 	if err != nil {
-		return usuario
+		fmt.Println(err)
 	}
-	if result.ModifiedCount > 0 {
-		return GetUser(idString)
+	if result.ModifiedCount == 0 {
+		return false
 	}
-	return usuario
+	return true
 }
 
 func DeleteUser(idString string) bool {
 	//Creo un contexto
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	//Obtengo la coleccion
-	coleccion := config.InstanceDB.DB.Collection("usuarios")
+	coleccion := config.InstanceDB.DB.Collection("users")
 	//Paso el string a un primitive.objectID
 	id, _ := primitive.ObjectIDFromHex(idString)
 
@@ -132,11 +129,12 @@ func DeleteUser(idString string) bool {
 	return true
 }
 
+/*
 func AddProyect(proyecto ProyectKey, idString string) {
 	//Creo un contexto
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	//Obtengo la coleccion
-	coleccion := config.InstanceDB.DB.Collection("usuarios")
+	coleccion := config.InstanceDB.DB.Collection("users")
 
 	id, _ := primitive.ObjectIDFromHex(idString)
 
@@ -146,3 +144,4 @@ func AddProyect(proyecto ProyectKey, idString string) {
 	coleccion.UpdateOne(ctx, filter, update)
 
 }
+*/
