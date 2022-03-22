@@ -13,14 +13,14 @@ import (
 
 type Proyect struct {
 	ID         primitive.ObjectID `bson:"_id,omitempty"`
-	Cipherdata string             `bson:"cipherdata"`
-	Users      []string           `bson:"users"`
+	Cipherdata string             `bson:"cipherdata,omitempty"`
+	Users      []string           `bson:"users,omitempty"`
 }
 
 func GetProyects() []Proyect {
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 
-	coleccion := config.InstanceDB.DB.Collection("proyectos")
+	coleccion := config.InstanceDB.DB.Collection("proyects")
 
 	//Consulto a la base de datos
 	result, err := coleccion.Find(ctx, bson.M{})
@@ -38,12 +38,24 @@ func GetProyects() []Proyect {
 	return proyectos
 }
 
+func GetProyect(idString string) Proyect {
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	coleccion := config.InstanceDB.DB.Collection("proyects")
+	id, _ := primitive.ObjectIDFromHex(idString)
+	var proyecto Proyect
+	err := coleccion.FindOne(ctx, bson.M{"_id": id}).Decode(&proyecto)
+	if err != nil {
+		log.Println(err)
+	}
+	return proyecto
+}
+
 func CreateProyect(proyecto Proyect) {
 	//Creo un contexto
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 
 	//Obtengo la coleccion
-	coleccion := config.InstanceDB.DB.Collection("proyectos")
+	coleccion := config.InstanceDB.DB.Collection("proyects")
 	//Inserto el usuario pasado por parametro
 	result, err := coleccion.InsertOne(ctx, proyecto)
 	if err != nil {
@@ -53,4 +65,46 @@ func CreateProyect(proyecto Proyect) {
 		stringObjectID := result.InsertedID.(primitive.ObjectID).Hex()
 		fmt.Println(stringObjectID)
 	}
+}
+
+func UpdateProyect(proyecto Proyect, stringID string) bool {
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	coleccion := config.InstanceDB.DB.Collection("proyects")
+
+	id, _ := primitive.ObjectIDFromHex(stringID)
+	filter := bson.D{{Key: "_id", Value: id}}
+	update := bson.D{{Key: "$set", Value: proyecto}}
+
+	var updatedDoc bson.D
+	err := coleccion.FindOneAndUpdate(ctx, filter, update).Decode(&updatedDoc)
+	if err != nil {
+		log.Println(err)
+	}
+	if len(updatedDoc) == 0 {
+		return false
+	}
+	return true
+}
+
+func DeleteProyect(stringID string) bool {
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	coleccion := config.InstanceDB.DB.Collection("proyects")
+	id, _ := primitive.ObjectIDFromHex(stringID)
+	filter := bson.D{{Key: "_id", Value: id}}
+
+	err := coleccion.FindOneAndDelete(ctx, filter)
+	if err.Err() != nil {
+		log.Println(err)
+		return false
+	}
+	return true
+
+}
+
+func addUsers() {
+
+}
+
+func deleteUsers() {
+	//Usar $pullAll
 }

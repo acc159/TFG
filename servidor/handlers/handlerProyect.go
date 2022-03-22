@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"net/http"
 	"servidor/models"
+
+	"github.com/gorilla/mux"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func GetProyects(w http.ResponseWriter, r *http.Request) {
@@ -16,18 +19,54 @@ func GetProyects(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func GetProyect(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	id := params["id"]
+	proyecto := models.GetProyect(id)
+	var mongoId interface{}
+	mongoId = proyecto.ID
+	stringID := mongoId.(primitive.ObjectID).Hex()
+	if stringID == "000000000000000000000000" {
+		w.WriteHeader(400)
+		w.Write([]byte("No existe el proyecto"))
+	} else {
+		json.NewEncoder(w).Encode(proyecto)
+	}
+
+}
+
 func CreateProyect(w http.ResponseWriter, r *http.Request) {
 	var proyecto models.Proyect
 	json.NewDecoder(r.Body).Decode(&proyecto)
 	models.CreateProyect(proyecto)
 
-	w.Write([]byte("Proyectos"))
+	w.Write([]byte("Creado proyecto"))
 }
 
 func UpdateProyect(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	id := params["id"]
 
+	var proyecto models.Proyect
+	json.NewDecoder(r.Body).Decode(&proyecto)
+	resultado := models.UpdateProyect(proyecto, id)
+	if !resultado {
+		w.WriteHeader(400)
+		w.Write([]byte("No se pudo actualizar el proyecto"))
+	} else {
+		w.Write([]byte("Proyecto actualizado"))
+	}
 }
 
 func DeleteProyect(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	id := params["id"]
 
+	resultado := models.DeleteProyect(id)
+	if !resultado {
+		w.WriteHeader(400)
+		w.Write([]byte("No se pudo borrar el proyecto"))
+	} else {
+		w.Write([]byte("Proyecto borrado"))
+	}
 }

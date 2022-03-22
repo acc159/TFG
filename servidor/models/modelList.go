@@ -3,6 +3,7 @@ package models
 import (
 	"context"
 	"fmt"
+	"log"
 	"servidor/config"
 	"time"
 
@@ -12,7 +13,7 @@ import (
 
 type List struct {
 	ID         primitive.ObjectID   `bson:"_id,omitempty"`
-	Cipherdata string               `bson:"cipherdata"`
+	Cipherdata string               `bson:"cipherdata,omitempty"`
 	Users      []primitive.ObjectID `bson:"users,omitempty"`
 }
 
@@ -39,16 +40,15 @@ func UpdateList(list List, idString string) bool {
 	filter := bson.D{{Key: "_id", Value: id}}
 	update := bson.M{"$set": list}
 
-	result, err := coleccion.UpdateOne(ctx, filter, update)
+	var updatedDoc bson.D
+	err := coleccion.FindOneAndUpdate(ctx, filter, update).Decode(&updatedDoc)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
-
-	if result.ModifiedCount == 0 {
+	if len(updatedDoc) == 0 {
 		return false
-	} else {
-		return true
 	}
+	return true
 }
 
 func DeleteList(idString string) bool {
@@ -61,12 +61,9 @@ func DeleteList(idString string) bool {
 
 	id, _ := primitive.ObjectIDFromHex(idString)
 	filter := bson.D{{Key: "_id", Value: id}}
-	result, err := coleccion.DeleteOne(ctx, filter)
-
-	if err != nil {
-		fmt.Println(err)
-	}
-	if result.DeletedCount == 0 {
+	err := coleccion.FindOneAndDelete(ctx, filter)
+	if err.Err() != nil {
+		log.Println(err)
 		return false
 	}
 	return true

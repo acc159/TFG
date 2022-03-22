@@ -8,7 +8,8 @@ import (
 
 func Proyect(r *mux.Router) {
 	r.HandleFunc("/proyects", handlers.GetProyects).Methods("GET")
+	r.HandleFunc("/proyects/{id}", handlers.GetProyect).Methods("GET")
 	r.HandleFunc("/proyect", handlers.CreateProyect).Methods("POST")
-	r.HandleFunc("/proyect/:id", handlers.UpdateProyect).Methods("PUT")
-	r.HandleFunc("/proyect/:id", handlers.DeleteProyect).Methods("DELETE")
+	r.HandleFunc("/proyects/{id}", handlers.UpdateProyect).Methods("PUT")
+	r.HandleFunc("/proyects/{id}", handlers.DeleteProyect).Methods("DELETE")
 }

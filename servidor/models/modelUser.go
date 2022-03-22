@@ -102,11 +102,12 @@ func UpdateUser(idString string, usuario User) bool {
 	update := bson.D{{Key: "$set", Value: usuario}}
 
 	//Consulto a la base de datos
-	result, err := coleccion.UpdateOne(ctx, filter, update)
+	var updatedDoc bson.D
+	err := coleccion.FindOneAndUpdate(ctx, filter, update).Decode(&updatedDoc)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
-	if result.ModifiedCount == 0 {
+	if len(updatedDoc) == 0 {
 		return false
 	}
 	return true
@@ -122,8 +123,9 @@ func DeleteUser(idString string) bool {
 
 	filter := bson.D{{"_id", id}}
 
-	result, err := coleccion.DeleteOne(ctx, filter)
-	if err != nil || result.DeletedCount == 0 {
+	err := coleccion.FindOneAndDelete(ctx, filter)
+	if err.Err() != nil {
+		log.Println(err)
 		return false
 	}
 	return true
