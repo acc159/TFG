@@ -33,6 +33,8 @@ func main() {
 	routes.Task(r)
 	//Listas
 	routes.List(r)
+	//Relaciones
+	routes.Relation(r)
 
 	models.GetProyects()
 	//models.CreateIndexUnique()

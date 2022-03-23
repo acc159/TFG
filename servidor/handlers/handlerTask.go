@@ -11,9 +11,15 @@ import (
 func CreateTask(w http.ResponseWriter, r *http.Request) {
 	var task models.Task
 	json.NewDecoder(r.Body).Decode(&task)
-	models.CreateTask(task)
+	respuesta := models.CreateTask(task)
 
-	w.Write([]byte("Tarea creada"))
+	if respuesta == "000000000000000000000000" {
+		w.WriteHeader(400)
+		respuesta := "No se creo la tarea"
+		json.NewEncoder(w).Encode(respuesta)
+	} else {
+		json.NewEncoder(w).Encode(respuesta)
+	}
 }
 
 func GetTasksByList(w http.ResponseWriter, r *http.Request) {
@@ -49,11 +55,13 @@ func DeleteTask(w http.ResponseWriter, r *http.Request) {
 
 	borrada := models.DeleteTask(id)
 	if borrada {
-		w.Write([]byte("Tarea borrada"))
+		respuesta := "Se borro la tarea"
+		json.NewEncoder(w).Encode(respuesta)
 		return
 	} else {
 		w.WriteHeader(400)
-		w.Write([]byte("No pudo ser borrada la tarea"))
+		respuesta := "No se pudo borrar la tarea"
+		json.NewEncoder(w).Encode(respuesta)
 	}
 
 }

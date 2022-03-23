@@ -125,7 +125,6 @@ func DeleteUser(idString string) bool {
 
 	err := coleccion.FindOneAndDelete(ctx, filter)
 	if err.Err() != nil {
-		log.Println(err)
 		return false
 	}
 	return true

@@ -51,7 +51,8 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	if usuarioID == "" {
 		w.WriteHeader(400)
-		w.Write([]byte("No se creo el usuario"))
+		respuesta := "No se creo el usuario"
+		json.NewEncoder(w).Encode(respuesta)
 		return
 	}
 

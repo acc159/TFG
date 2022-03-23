@@ -63,7 +63,6 @@ func DeleteList(idString string) bool {
 	filter := bson.D{{Key: "_id", Value: id}}
 	err := coleccion.FindOneAndDelete(ctx, filter)
 	if err.Err() != nil {
-		log.Println(err)
 		return false
 	}
 	return true
