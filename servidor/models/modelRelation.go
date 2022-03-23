@@ -31,7 +31,7 @@ func CreateRelation(relation Relation) bool {
 	return true
 }
 
-func GetRelations(idString string) []Relation {
+func GetRelationsbyUserID(idString string) []Relation {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	coleccion := config.InstanceDB.DB.Collection("users_proyects_lists")

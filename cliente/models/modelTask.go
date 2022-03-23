@@ -53,14 +53,14 @@ func CreateTask() {
 	}
 
 	//Pasamos el tipo Relation a JSON
-	relationJSON, err := json.Marshal(task)
+	taskJSON, err := json.Marshal(task)
 	if err != nil {
 		fmt.Println(err)
 	}
 
 	//Peticion POST
 	url := config.URLbase + "task"
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(relationJSON))
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(taskJSON))
 	if err != nil {
 		panic(err)
 	}
@@ -85,6 +85,39 @@ func CreateTask() {
 
 func UpdateTask() {
 
+	listID, _ := primitive.ObjectIDFromHex("6239fb356f2ad453296c5807")
+	task := TaskCipher{
+		Cipherdata: "ACTUALIZADA",
+		ListID:     listID,
+	}
+
+	taskJSON, err := json.Marshal(task)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	url := config.URLbase + "tasks/" + "623b64ef2945dc21f09354d9"
+
+	req, err := http.NewRequest("PUT", url, bytes.NewBuffer(taskJSON))
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	client := &http.Client{}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == 400 {
+		fmt.Println("La tarea no pudo ser actualizada")
+	} else {
+		var newTaskID string
+		json.NewDecoder(resp.Body).Decode(&newTaskID)
+		fmt.Println(newTaskID)
+	}
 }
 
 func DeleteTask() {

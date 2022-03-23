@@ -61,5 +61,6 @@ func main() {
 
 	//models.CreateTask()
 	//models.DeleteTask()
-	models.DeleteRelation("6239fac76f2ad453296c5809", "6239faf56f2ad453296c5807", "6239fb356f2ad453296c5808")
+	//models.DeleteRelation("6239fac76f2ad453296c5809", "6239faf56f2ad453296c5807", "6239fb356f2ad453296c5808")
+	models.UpdateTask()
 }

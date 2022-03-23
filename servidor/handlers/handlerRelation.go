@@ -11,7 +11,7 @@ import (
 func GetRelations(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	id := params["id"]
-	relations := models.GetRelations(id)
+	relations := models.GetRelationsbyUserID(id)
 	if len(relations) == 0 {
 		w.WriteHeader(400)
 		w.Write([]byte("Ninguna relacion para dicho usuario"))

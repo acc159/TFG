@@ -70,3 +70,35 @@ func DeleteProyect(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Proyecto borrado"))
 	}
 }
+
+func AddUserProyect(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	id := params["id"]
+
+	var user models.User
+	json.NewDecoder(r.Body).Decode(&user)
+
+	resultado := models.AddUserProyect(id, user.Email)
+	if !resultado {
+		w.WriteHeader(400)
+		w.Write([]byte("No se pudo añadir el usuario al proyecto"))
+	} else {
+		w.Write([]byte("Usuario añadido al proyecto"))
+	}
+}
+
+func DeleteUserProyect(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	id := params["id"]
+
+	var user models.User
+	json.NewDecoder(r.Body).Decode(&user)
+
+	resultado := models.DeleteUserProyect(id, user.Email)
+	if !resultado {
+		w.WriteHeader(400)
+		w.Write([]byte("No se pudo borrar el usuario del proyecto"))
+	} else {
+		w.Write([]byte("Usuario borrado"))
+	}
+}

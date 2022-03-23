@@ -87,7 +87,12 @@ func UpdateProyect(proyecto Proyect, stringID string) bool {
 }
 
 func DeleteProyect(stringID string) bool {
+
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+
+	//1. Borrar las listas del proyecto con las tareas asociadas a esas listas
+
+	//2. Borrar el proyecto en si
 	coleccion := config.InstanceDB.DB.Collection("proyects")
 	id, _ := primitive.ObjectIDFromHex(stringID)
 	filter := bson.D{{Key: "_id", Value: id}}
@@ -100,10 +105,41 @@ func DeleteProyect(stringID string) bool {
 
 }
 
-func addUsers() {
+func AddUserProyect(stringID string, user string) bool {
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	coleccion := config.InstanceDB.DB.Collection("proyects")
+	id, _ := primitive.ObjectIDFromHex(stringID)
+	filter := bson.D{{Key: "_id", Value: id}}
+	update := bson.M{"$push": bson.M{"users": user}}
 
+	var updatedDoc bson.D
+	err := coleccion.FindOneAndUpdate(ctx, filter, update).Decode(&updatedDoc)
+	if err != nil {
+		log.Println(err)
+	}
+	if len(updatedDoc) == 0 {
+		return false
+	}
+	return true
 }
 
-func deleteUsers() {
+func DeleteUserProyect(stringID string, user string) bool {
 	//Usar $pullAll
+
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	coleccion := config.InstanceDB.DB.Collection("proyects")
+	id, _ := primitive.ObjectIDFromHex(stringID)
+	filter := bson.D{{Key: "_id", Value: id}}
+	update := bson.M{"$pull": bson.M{"users": user}}
+
+	var updatedDoc bson.D
+	err := coleccion.FindOneAndUpdate(ctx, filter, update).Decode(&updatedDoc)
+	if err != nil {
+		log.Println(err)
+	}
+	if len(updatedDoc) == 0 {
+		return false
+	}
+	return true
+
 }

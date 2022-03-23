@@ -40,11 +40,12 @@ func UpdateTask(w http.ResponseWriter, r *http.Request) {
 	json.NewDecoder(r.Body).Decode(&newTask)
 	modificado := models.UpdateTask(newTask, id)
 	if modificado {
-		w.Write([]byte("Tarea actualizada"))
-		return
+		respuesta := "Tarea actualizada"
+		json.NewEncoder(w).Encode(respuesta)
 	} else {
 		w.WriteHeader(400)
-		w.Write([]byte("No se pudo modificar la tarea"))
+		respuesta := "No se pudo modificar la tarea"
+		json.NewEncoder(w).Encode(respuesta)
 	}
 }
 
