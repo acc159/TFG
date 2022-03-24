@@ -20,8 +20,10 @@ type Relation struct {
 	CAMPO      string             `bson:"patata,omitempty"`
 }
 
-func GetProyectsListsByUser() {
-	userID := "6239fac76f2ad453296c5804"
+var Relations []Relation
+
+func GetProyectsListsByUser(userID string) {
+	//userID := "6239fac76f2ad453296c5804"
 
 	resp, err := http.Get(config.URLbase + "relations/" + userID)
 	if err != nil {
@@ -32,9 +34,7 @@ func GetProyectsListsByUser() {
 	if resp.StatusCode == 400 {
 		fmt.Println("Ningun proyecto ni lista para dicho usuario")
 	} else {
-		var responseObject []Relation
-		json.NewDecoder(resp.Body).Decode(&responseObject)
-		fmt.Println(responseObject)
+		json.NewDecoder(resp.Body).Decode(&Relations)
 	}
 }
 

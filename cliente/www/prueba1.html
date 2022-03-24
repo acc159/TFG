@@ -1,33 +1,34 @@
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Indice</title>
+    
 </head>
 <body>
-    <h1>{{.PageTitle}}</h1>
-<ul>
-    {{range .Todos}}
-        {{if .Done}}
-            <li class="done">{{.Title}}</li>
-        {{else}}
-            <li>{{.Title}}</li>
-        {{end}}
-    {{end}}
+    <h1>Bienvenido</h1>
+    <span id="numero">97</span>
+    <button onclick="llamoDesdeJavaScriptaFuncionGO()">Pulsame para ejecutar la funcion en GOLANG</button>
+
+    <button onclick="cambioVista()">Cambia de Vista</button>
     <input type="text" name="" id="">
-</ul>
+
 </body>
-</html>
-<button onclick="llamoDesdeJavaScriptaFuncionGO()">Pulsame para ejecutar la funcion en GOLANG</button>
 
 <script>
     function llamoDesdeJavaScriptaFuncionGO(){
         llamarGO().then(
             function(valorDesdeGO){
                 alert("El valor enviado desde GOLANG: " + valorDesdeGO)
+                document.querySelector('h1').textContent  = valorDesdeGO
             }
         )
     }
 
+    function cambioVista(){
+        cambiarVistaenGO("www/otra.html").then(
+
+        )
+    }
 </script>

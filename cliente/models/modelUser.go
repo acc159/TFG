@@ -3,6 +3,7 @@ package models
 import (
 	"bytes"
 	"cliente/config"
+	"cliente/view"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -48,8 +49,13 @@ func Register(usuario string, password string, user User) {
 
 }
 
-func LogIn() {
-
+func LogIn(username string, password string) bool {
+	if password == "a" {
+		view.ChangeView("www/index.html")
+		return true
+	} else {
+		return false
+	}
 }
 
 func GetUsers() {

@@ -12,16 +12,30 @@
 
 <body>
 
-    <h1>HOME</h1>
-    <span id="numero">97</span>
+    <h1>En pruebas</h1>
+    <label for="userID">Usuario ID:</label>
+    <input type="text" id="userID" name="userID"><br><br>
+    <button onclick="callRecibirProyectosyListasenGO()">Haz click para recibir los proyectos y listas del usuario</button>
+
+
+
+    <!-- Estructura REAL -->
+    <h1>Listado de proyectos</h1>
+    <div class="proyectos" id="proyectos">
+    </div>
+
+    <h2>Añadir Proyecto nuevo</h2>
+    <div>
+        <label for="proyectName">Nombre del proyecto</label>
+        <input type="text" id="proyectName" name="proyectName"><br><br>
+    </div>
+
+
+<!-- 
     <button onclick="llamoDesdeJavaScriptaFuncionGO()">Pulsame para ejecutar la funcion en GOLANG</button>
-    <button onclick="llamarAprueba()">Traer Proyectos Usuario</button>
-
-
+    <button onclick="llamarAprueba()">Traer Proyectos Usuario</button> -->
+    
 </body>
-
-
-
 
 
 
@@ -31,8 +45,65 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 
 <script>
+
+    //Crea un div por cada proyecto que este relacionado con el usuario
+    function createDivsProyects(relations){
+        let proyectsIDS = [];
+        //Primero creo un array con todos los ids de los proyectos , en este habran repetidos
+        for (let i in relations){
+            proyectsIDS.push(relations[i].ProyectID)
+        }
+
+        //Aqui limpio del array los ids repetidos
+        let idsSinRepetir = proyectsIDS.filter((item, index) => {
+            return proyectsIDS.indexOf(item) === index;   
+        })
+
+        //Creo un div dentro del div general de proyectos por cada proyectID
+        for (let index = 0; index < idsSinRepetir.length; index++){
+            var proyectos = document.querySelector('#proyectos');
+            var div = document.createElement("div");
+            div.id = idsSinRepetir[index];
+
+            var titulo_lista = document.createElement('h2')
+            titulo_lista.textContent = "Listas del proyecto"
+            div.appendChild(titulo_lista)
+
+            proyectos.appendChild(div)
+        }
+    }
+
+    //Llamo a GO para obtener las relaciones del usuario
+    function callRecibirProyectosyListasenGO(){
+        //Aqui tengo el id del usuario
+        let id = document.querySelector('#userID').value
+        document.querySelector('#proyectos').innerHTML = "";
+        recibirProyectosyListasenGO(id).then(
+            function(relations){  
+
+                if (relations == null) {
+                        alert('No hay proyectos para el usuario')
+                }else{
+                    createDivsProyects(relations)
+                    //Recorro cada relacion y agrego en el div correspondiente datos
+                    for (let indice = 0; indice < relations.length; indice++){
+                        //Obtengo el proyecto sobre el que meter la Lista
+                        div = document.getElementById(relations[indice].ProyectID)
+                        var tag = document.createElement("p");
+                        tag.textContent = relations[indice].ListKey;
+                        div.appendChild(tag);
+                    }
+                }
+            }
+        )
+    }
+
+
+
     function llamoDesdeJavaScriptaFuncionGO(){
-        llamarGO().then(
+        let username = document.querySelector('#username').value;
+        let password = document.querySelector('#password').value;
+        llamarGO(username, password).then(
             function(valorDesdeGO){
                 alert("El valor enviado desde GOLANG: " + valorDesdeGO)
             }
@@ -47,5 +118,9 @@
         )
     }
 
+    function init(){
+        //alert("Bienvenido");
+    }
 
+    document.addEventListener('DOMContentLoaded',init,false);
 </script>
