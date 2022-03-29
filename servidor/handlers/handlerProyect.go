@@ -9,6 +9,10 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+type JsonCustom struct {
+	StringIDs []string `json:"stringsIDs"`
+}
+
 func GetProyects(w http.ResponseWriter, r *http.Request) {
 	proyectos := models.GetProyects()
 	if len(proyectos) == 0 {
@@ -101,4 +105,22 @@ func DeleteUserProyect(w http.ResponseWriter, r *http.Request) {
 	} else {
 		w.Write([]byte("Usuario borrado"))
 	}
+}
+
+func GetProyectsByIDs(w http.ResponseWriter, r *http.Request) {
+	var IDs JsonCustom
+	json.NewDecoder(r.Body).Decode(&IDs)
+	if len(IDs.StringIDs) > 0 {
+		proyects := models.GetProyectsByIDs(IDs.StringIDs)
+		if len(proyects) > 0 {
+			json.NewEncoder(w).Encode(proyects)
+		} else {
+			w.WriteHeader(400)
+			w.Write([]byte("No hay ningun proyecto para esos ids"))
+		}
+	} else {
+		w.WriteHeader(400)
+		w.Write([]byte("No has enviado ningun id"))
+	}
+
 }

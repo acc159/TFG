@@ -14,8 +14,10 @@ import (
 
 type User struct {
 	ID         primitive.ObjectID `bson:"_id,omitempty"`
-	Email      string             `bson:"email,omitempty"`
-	Cipherdata string             `bson:"cipherdata,omitempty"`
+	Email      string             `bson:"email",omitempty`
+	ServerKey  []byte             `bson:"server_key,omitempty"`
+	PublicKey  string             `bson:"public_key,omitempty"`
+	PrivateKey string             `bson:"private_key,omitempty"`
 }
 
 //Metodo para comprobar si el usuario esta vacio o tiene datos
@@ -24,7 +26,41 @@ func (u User) Empty() bool {
 	mongoId = u.ID
 	stringObjectID := mongoId.(primitive.ObjectID).Hex()
 	fmt.Println(stringObjectID)
-	return (stringObjectID == "000000000000000000000000" && u.Cipherdata == "")
+	return (stringObjectID == "000000000000000000000000")
+}
+
+func SignUp(user User) string {
+
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	coleccion := config.InstanceDB.DB.Collection("users")
+
+	result, err := coleccion.InsertOne(ctx, user)
+	if err != nil {
+		fmt.Println(err)
+		return ""
+	}
+
+	stringObjectID := result.InsertedID.(primitive.ObjectID).Hex()
+	fmt.Println(stringObjectID)
+	return stringObjectID
+
+}
+
+func Login(user User) User {
+	//Creo un contexto
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	//Obtengo la coleccion
+	coleccion := config.InstanceDB.DB.Collection("users")
+
+	var usuario User
+
+	//Consulto a la base de datos
+	err := coleccion.FindOne(ctx, bson.M{"email": user.Email}).Decode(&usuario)
+	if err != nil {
+		return usuario
+	}
+
+	return usuario
 }
 
 func GetUsers() []User {

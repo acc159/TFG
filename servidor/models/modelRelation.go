@@ -14,9 +14,13 @@ type Relation struct {
 	ID         primitive.ObjectID `bson:"_id,omitempty"`
 	UserID     primitive.ObjectID `bson:"userID,omitempty"`
 	ProyectID  primitive.ObjectID `bson:"proyectID,omitempty"`
-	ListID     primitive.ObjectID `bson:"listID,omitempty"`
 	ProyectKey string             `bson:"proyectKey,omitempty"`
-	ListKey    string             `bson:"listKey,omitempty"`
+	Lists      []RelationLists    `bson:"lists,omitempty"`
+}
+
+type RelationLists struct {
+	ListID  primitive.ObjectID `bson:"listID,omitempty"`
+	ListKey string             `bson:"listKey,omitempty"`
 }
 
 func CreateRelation(relation Relation) bool {
@@ -52,14 +56,45 @@ func GetRelationsbyUserID(idString string) []Relation {
 	return relations
 }
 
-func DeleteRelation(userID primitive.ObjectID, proyectID primitive.ObjectID, listID primitive.ObjectID) bool {
+func DeleteRelation(userID primitive.ObjectID, proyectID primitive.ObjectID) bool {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	coleccion := config.InstanceDB.DB.Collection("users_proyects_lists")
-	filter := bson.D{{Key: "userID", Value: userID}, {Key: "proyectID", Value: proyectID}, {Key: "listID", Value: listID}}
+	filter := bson.D{{Key: "userID", Value: userID}, {Key: "proyectID", Value: proyectID}}
 	err := coleccion.FindOneAndDelete(ctx, filter)
 	if err.Err() != nil {
 		return false
 	}
 	return true
+}
+
+func DeleteRelationList(userID primitive.ObjectID, proyectID primitive.ObjectID, listID primitive.ObjectID) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	coleccion := config.InstanceDB.DB.Collection("users_proyects_lists")
+
+	pullQuery := bson.M{"lists": bson.M{"listID": listID}}
+	filter := bson.D{{Key: "userID", Value: userID}, {Key: "proyectID", Value: proyectID}}
+	var updatedDoc bson.D
+	err := coleccion.FindOneAndUpdate(ctx, filter, bson.M{"$pull": pullQuery}).Decode(&updatedDoc)
+	if err != nil {
+		log.Println(err)
+	}
+	if len(updatedDoc) == 0 {
+		return false
+	}
+	return true
+
+}
+
+func UpdateRelationList(relation Relation) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	coleccion := config.InstanceDB.DB.Collection("users_proyects_lists")
+
+	//pullQuery := bson.M{"lists": bson.M{"listID": }}
+	filter := bson.D{{Key: "userID", Value: relation.UserID}, {Key: "proyectID", Value: relation.ProyectID}}
+
+	err := coleccion.FindOneAndReplace(ctx, filter, relation)
+	return err.Err() == nil
 }

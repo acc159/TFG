@@ -1,7 +1,6 @@
 package models
 
 import (
-	"bytes"
 	"cliente/config"
 	"encoding/json"
 	"fmt"
@@ -14,16 +13,18 @@ type Relation struct {
 	ID         primitive.ObjectID `bson:"_id,omitempty"`
 	UserID     primitive.ObjectID `bson:"userID,omitempty"`
 	ProyectID  primitive.ObjectID `bson:"proyectID,omitempty"`
-	ListID     primitive.ObjectID `bson:"listID,omitempty"`
 	ProyectKey string             `bson:"proyectKey,omitempty"`
-	ListKey    string             `bson:"listKey,omitempty"`
-	CAMPO      string             `bson:"patata,omitempty"`
+	Lists      []RelationLists    `bson:"lists,omitempty"`
+}
+
+type RelationLists struct {
+	ListID  primitive.ObjectID `bson:"listID,omitempty"`
+	ListKey string             `bson:"listKey,omitempty"`
 }
 
 var Relations []Relation
 
 func GetProyectsListsByUser(userID string) {
-	//userID := "6239fac76f2ad453296c5804"
 
 	resp, err := http.Get(config.URLbase + "relations/" + userID)
 	if err != nil {
@@ -38,6 +39,7 @@ func GetProyectsListsByUser(userID string) {
 	}
 }
 
+/*
 func CreateRelation(userStringID string, proyectStringID string, listStringID string) {
 	userID, _ := primitive.ObjectIDFromHex(userStringID)
 	listID, _ := primitive.ObjectIDFromHex(proyectStringID)
@@ -122,3 +124,4 @@ func DeleteRelation(userStringID string, proyectStringID string, listStringID st
 		fmt.Println(resultado)
 	}
 }
+*/

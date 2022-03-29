@@ -87,7 +87,7 @@ func CreateIndexComposeUserProyectList() {
 	_, err := coleccion.Indexes().CreateOne(
 		context.Background(),
 		mongo.IndexModel{
-			Keys:    bson.D{{"userID", 1}, {"proyectID", 1}, {"listID", 1}},
+			Keys:    bson.D{{Key: "userID", Value: 1}, {Key: "proyectID", Value: 1}},
 			Options: options.Index().SetUnique(true),
 		},
 	)

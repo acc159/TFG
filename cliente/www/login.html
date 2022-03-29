@@ -7,10 +7,9 @@
 </head>
 <body>
     <div>
-      
         <h1>Identificarse:</h1>
-        <label for="username">Username</label>
-        <input type="text" id="username" name="username"><br><br>
+        <label for="email">Email</label>
+        <input type="text" id="email" name="email"><br><br>
 
         <label for="password">Password</label>
         <input type="password" id="password" name="password"><br><br>
@@ -21,20 +20,23 @@
 </body>
 </html>
 <script>
-    function changeToRegister(){
-        cambiarVistaenGO("www/register.html")
-    }
-
 
     function login(){
-      let username = document.querySelector('#username').value;
+      let email = document.querySelector('#email').value;
       let password = document.querySelector('#password').value;
-      let userPass = [username, password];
-        llamarGO(userPass).then(
-            function(valorDesdeGO){
-                alert("El valor enviado desde GOLANG: " + valorDesdeGO)
-            }
-        )
+
+      if (email != "" && password != ""){
+            let user_pass = [email, password];
+            loginGO(user_pass).then(
+                function(valorDesdeGO){
+                    if (valorDesdeGO == false){
+                        alert('El usuario no se a logueado')
+                    }
+                }
+            )
+        }else{
+            alert('Introduce todos los campos')
+        }
     }
 
 </script>

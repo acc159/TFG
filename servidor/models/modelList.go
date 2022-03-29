@@ -68,11 +68,35 @@ func DeleteList(idString string) bool {
 	return true
 }
 
-//Posibles
-func AddUserToList() {
+func GetListsByIDs(stringsIDs []string) []Proyect {
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	coleccion := config.InstanceDB.DB.Collection("lists")
+
+	var ids []primitive.ObjectID
+
+	for i := 0; i < len(stringsIDs); i++ {
+		id, _ := primitive.ObjectIDFromHex(stringsIDs[i])
+		ids = append(ids, id)
+	}
+
+	var lists []Proyect
+	filter := bson.M{"_id": bson.M{"$in": ids}}
+
+	result, err := coleccion.Find(ctx, filter)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = result.All(ctx, &lists)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return lists
 
 }
 
-func GetList() {
+//Posibles
+func AddUserToList() {
 
 }

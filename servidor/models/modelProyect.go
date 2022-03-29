@@ -92,7 +92,9 @@ func DeleteProyect(stringID string) bool {
 
 	//1. Borrar las listas del proyecto con las tareas asociadas a esas listas
 
-	//2. Borrar el proyecto en si
+	//2. Borrar las relaciones en las que aparezca el proyecto
+
+	//3. Borrar el proyecto en si
 	coleccion := config.InstanceDB.DB.Collection("proyects")
 	id, _ := primitive.ObjectIDFromHex(stringID)
 	filter := bson.D{{Key: "_id", Value: id}}
@@ -124,7 +126,6 @@ func AddUserProyect(stringID string, user string) bool {
 }
 
 func DeleteUserProyect(stringID string, user string) bool {
-	//Usar $pullAll
 
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	coleccion := config.InstanceDB.DB.Collection("proyects")
@@ -141,5 +142,33 @@ func DeleteUserProyect(stringID string, user string) bool {
 		return false
 	}
 	return true
+
+}
+
+func GetProyectsByIDs(stringsIDs []string) []Proyect {
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	coleccion := config.InstanceDB.DB.Collection("proyects")
+
+	var ids []primitive.ObjectID
+
+	for i := 0; i < len(stringsIDs); i++ {
+		id, _ := primitive.ObjectIDFromHex(stringsIDs[i])
+		ids = append(ids, id)
+	}
+
+	var proyects []Proyect
+	filter := bson.M{"_id": bson.M{"$in": ids}}
+
+	result, err := coleccion.Find(ctx, filter)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = result.All(ctx, &proyects)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return proyects
 
 }

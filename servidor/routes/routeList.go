@@ -7,6 +7,8 @@ import (
 )
 
 func List(r *mux.Router) {
+
+	r.HandleFunc("/lists/ids", handlers.GetListsByIDs).Methods("GET")
 	r.HandleFunc("/list", handlers.CreateList).Methods("POST")
 	r.HandleFunc("/lists/{id}", handlers.UpdateList).Methods("PUT")
 	r.HandleFunc("/lists/{id}", handlers.DeleteList).Methods("DELETE")

@@ -53,3 +53,20 @@ func UpdateList(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("No se pudo modificar la tarea"))
 	}
 }
+
+func GetListsByIDs(w http.ResponseWriter, r *http.Request) {
+	var IDs []string
+	json.NewDecoder(r.Body).Decode(&IDs)
+	if len(IDs) > 0 {
+		lists := models.GetListsByIDs(IDs)
+		if len(lists) > 0 {
+			json.NewEncoder(w).Encode(lists)
+		} else {
+			w.WriteHeader(400)
+			w.Write([]byte("No hay ninguna lista para esos ids"))
+		}
+	} else {
+		w.WriteHeader(400)
+		w.Write([]byte("No has enviado ningun id"))
+	}
+}

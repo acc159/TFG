@@ -3,7 +3,6 @@ package models
 import (
 	"bytes"
 	"cliente/config"
-	"cliente/view"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -13,48 +12,167 @@ import (
 )
 
 type User struct {
-	ID         primitive.ObjectID `json:"_id,omitempty"`
-	Nombre     string             `json:"nombre"`
-	Apellidos  string             `json:"apellidos"`
-	Email      string             `json:"email"`
-	PublicKey  string             `json:"public_key"`
-	PrivateKey string             `json:"private_key"`
-}
-
-type UserCipher struct {
 	ID         primitive.ObjectID `bson:"_id,omitempty"`
-	Cipherdata string             `bson:"cipherdata"`
+	Email      string             `bson:"email"`
+	ServerKey  []byte             `bson:"server_key"`
+	PublicKey  string             `bson:"public_key"`
+	PrivateKey string             `bson:"private_key"`
+	Rol        string             `bson:"rol"`
 }
 
-func Register(usuario string, password string, user User) {
-	//Obtenemos Kaes , IV, Kservidor
-	user_pass := usuario + password
+var UserSesion User
+
+type DatosUser struct {
+	Proyecto ProyectCipher
+	Listas   []ListCipher
+}
+
+var DatosUsuario []DatosUser
+
+func Register(email string, password string) bool {
+
+	//Pruebas
+	/*
+		prueba := []byte(email + password)
+		sum := sha256.Sum256(prueba)
+		sumString := string(sum[:])
+		pass := hex.EncodeToString(sum[:]) //String
+
+		fmt.Println(sum)
+		fmt.Println(sum[0:16])
+		fmt.Println(sum[16:32])
+		fmt.Println(sumString)
+		fmt.Println(pass)
+
+		hash2, _ := bcrypt.GenerateFromPassword([]byte(pass), 12)
+		fmt.Println(hash2)
+	*/
+	//
+
+	user_pass := email + password
 	SAL := 12 //Con esto generara un segmento aleatorio cuanto mayor sea el numero mas robusto que usara como SAL
 	hash, err := bcrypt.GenerateFromPassword([]byte(user_pass), SAL)
 	if err != nil {
 		fmt.Println("Error al hashear")
 	}
-	fmt.Println(hash)
 
-	err = bcrypt.CompareHashAndPassword(hash, []byte("sadfdsf"))
-	if err != nil {
-		fmt.Println(err)
-	} else {
-		fmt.Println("La contraseña coincide")
+	UserSesion.Email = email
+	UserSesion = User{
+		Email: email,
 	}
 
+	//La clave del servidor
+	UserSesion.ServerKey = hash
+	//Obtenemos las Claves RSA
+	UserSesion.PrivateKey = "ClavePrivada"
+	UserSesion.PublicKey = "ClavePublica"
+
 	//Enviamos los datos al servidor
+	userIDstring := RegisterServer(UserSesion)
+	if userIDstring == "" {
+		UserSesion = User{}
+		return false
+	} else {
+		id, _ := primitive.ObjectIDFromHex(userIDstring)
+		UserSesion.ID = id
+		return true
+	}
+	/*
+		err = bcrypt.CompareHashAndPassword(hash, []byte(user_pass))
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			fmt.Println("La contraseña coincide")
+		}
+	*/
 
 	//El usuario accede
+}
+
+func RegisterServer(user User) string {
+	//Convertimos el user de tipo objeto GO a un JSON
+	userJSON, err := json.Marshal(user)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	//Preparo la peticion POST
+	url := config.URLbase + "signup"
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(userJSON))
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	client := &http.Client{}
+
+	//Realizo la peticion
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer resp.Body.Close()
+
+	//Respuesta
+	//En caso de fallo del registro del usuario en el servidor
+	if resp.StatusCode == 400 {
+		fmt.Println("El usuario no se ha registrado")
+		return ""
+	} else {
+		//Si todo fue correcto en el servidor devuelvo el id del usuario creado
+		var resultado string
+		json.NewDecoder(resp.Body).Decode(&resultado)
+		return resultado
+	}
+}
+
+func LogIn(email string, password string) bool {
+
+	user_pass := email + password
+	UserSesion.Email = email
+
+	UserSesion = LogInServer()
+
+	err := bcrypt.CompareHashAndPassword(UserSesion.ServerKey, []byte(user_pass))
+	if err != nil {
+		fmt.Println(err)
+		UserSesion = User{}
+		return false
+	} else {
+		fmt.Println("La contraseña coincide")
+		return true
+	}
 
 }
 
-func LogIn(username string, password string) bool {
-	if password == "a" {
-		view.ChangeView("www/index.html")
-		return true
+func LogInServer() User {
+	userJSON, err := json.Marshal(UserSesion)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	url := config.URLbase + "login"
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(userJSON))
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	client := &http.Client{}
+
+	//Realizo la peticion
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == 400 {
+		fmt.Println("El usuario no esta registrado")
+		return User{}
 	} else {
-		return false
+		//Si todo fue correcto en el servidor devuelvo el id del usuario creado
+		var resultado User
+		json.NewDecoder(resp.Body).Decode(&resultado)
+		return resultado
 	}
 }
 
@@ -69,12 +187,41 @@ func GetUsers() {
 	if resp.StatusCode == 404 {
 		fmt.Println("Ningun usuario encontrado")
 	} else {
-		var responseObject []UserCipher
+		var responseObject []User
 		json.NewDecoder(resp.Body).Decode(&responseObject)
 		fmt.Println(responseObject)
 	}
 }
 
+//Obtengo los proyectos y sus listas asociadas para el usuario
+func GetUserProyectsLists() {
+	//Recupero las relaciones
+	GetProyectsListsByUser(UserSesion.ID.Hex())
+	if len(Relations) > 0 {
+		//Proyectos
+		for i := 0; i < len(Relations); i++ {
+			proyecto := GetProyect(Relations[i].ProyectID.Hex())
+			//Listas
+			var ListsIDs []string
+			for j := 0; j < len(Relations[i].Lists); j++ {
+				ListsIDs = append(ListsIDs, Relations[i].Lists[j].ListID.Hex())
+			}
+			var lists []ListCipher
+			if len(ListsIDs) > 0 {
+				lists = GetListsByIDs(ListsIDs)
+			}
+
+			datos := DatosUser{
+				Proyecto: proyecto,
+				Listas:   lists,
+			}
+			DatosUsuario = append(DatosUsuario, datos)
+		}
+	}
+	//return DatosUsuario
+}
+
+/*
 func PostUser() {
 	//Creo el usuario que voy a mandar al servidor
 	user := UserCipher{Cipherdata: "enviandoDesdeCliente"}
@@ -106,3 +253,4 @@ func PostUser() {
 	json.NewDecoder(resp.Body).Decode(&response)
 	fmt.Println(response)
 }
+*/

@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"servidor/models"
 
@@ -12,11 +11,30 @@ import (
 //Aqui tengo los controladores que responden a las peticiones a las diferentes rutas
 
 func Signup(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "hello\n")
+	var user models.User
+	json.NewDecoder(r.Body).Decode(&user)
+	resultado := models.SignUp(user)
+	if resultado == "" {
+		w.WriteHeader(400)
+		respuesta := "No se registro el usuario"
+		json.NewEncoder(w).Encode(respuesta)
+	} else {
+		json.NewEncoder(w).Encode(resultado)
+	}
 }
 
 func Login(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "hello\n")
+
+	var user models.User
+	json.NewDecoder(r.Body).Decode(&user)
+	usuario := models.Login(user)
+	if usuario.Empty() {
+		w.WriteHeader(400)
+		respuesta := "No existe el usuario"
+		json.NewEncoder(w).Encode(respuesta)
+	} else {
+		json.NewEncoder(w).Encode(usuario)
+	}
 }
 
 func GetUsers(w http.ResponseWriter, r *http.Request) {

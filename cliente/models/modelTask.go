@@ -14,7 +14,8 @@ type Task struct {
 	ID               primitive.ObjectID `bson:"_id,omitempty"`
 	Nombre           string             `bson:"nombre"`
 	Descripcion      string             `bson:"apellidos"`
-	FechaLimite      string             `bson:"fecha_limite"`
+	Fecha            primitive.DateTime `bson:"fecha"`
+	Estado           string             `bson:"estado"`
 	ArchivosAdjuntos string             `bson:"archivos_adjuntos"`
 	EnlacesAdjuntos  string             `bson:"enlaces_adjuntos"`
 }

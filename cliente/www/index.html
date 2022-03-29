@@ -9,18 +9,38 @@
 </head>
 
 
-
 <body>
-
     <h1>En pruebas</h1>
-    <label for="userID">Usuario ID:</label>
-    <input type="text" id="userID" name="userID"><br><br>
-    <button onclick="callRecibirProyectosyListasenGO()">Haz click para recibir los proyectos y listas del usuario</button>
-
-
 
     <!-- Estructura REAL -->
+    <h1>Bienvenido: {{.User.Email}}</h1>
     <h1>Listado de proyectos</h1>
+
+    <div id="proyectos">
+        {{if not .Datos}}
+        <h1>No tienes ningun proyecto</h1>
+        {{else}}
+            {{range .Datos}}
+            <div id="{{.Proyecto.ID}}">
+                <h1>{{.Proyecto.Cipherdata}}</h1>
+                <button>Actualizar Proyecto</button>
+                <button class="deleteProyect">Eliminar Proyecto</button>
+                {{if not .Listas}}
+                <h2>Ninguna Lista que mostrar</h2>
+                {{else}}
+                    {{range .Listas}}
+                    <h2> {{.Cipherdata}}</h2>
+                    {{end}}
+                {{end}}
+            </div>
+            {{end}}
+        {{end}}
+ 
+    </div>
+
+    
+    
+
     <div class="proyectos" id="proyectos">
     </div>
 
@@ -28,6 +48,7 @@
     <div>
         <label for="proyectName">Nombre del proyecto</label>
         <input type="text" id="proyectName" name="proyectName"><br><br>
+        <button>Añadir Proyecto</button>
     </div>
 
 
@@ -75,10 +96,7 @@
 
     //Llamo a GO para obtener las relaciones del usuario
     function callRecibirProyectosyListasenGO(){
-        //Aqui tengo el id del usuario
-        let id = document.querySelector('#userID').value
-        document.querySelector('#proyectos').innerHTML = "";
-        recibirProyectosyListasenGO(id).then(
+        recibirProyectosyListasenGO().then(
             function(relations){  
 
                 if (relations == null) {
@@ -98,28 +116,10 @@
         )
     }
 
-
-
-    function llamoDesdeJavaScriptaFuncionGO(){
-        let username = document.querySelector('#username').value;
-        let password = document.querySelector('#password').value;
-        llamarGO(username, password).then(
-            function(valorDesdeGO){
-                alert("El valor enviado desde GOLANG: " + valorDesdeGO)
-            }
-        )
-    }
-
-    function llamarAprueba(){
-        prueba().then(
-            function(task){
-                document.querySelector('h1').textContent = task.Nombre
-            }
-        )
-    }
-
     function init(){
         //alert("Bienvenido");
+        //let boton = document.querySelector('.deleteProyect').textContent;
+        //alert(boton);
     }
 
     document.addEventListener('DOMContentLoaded',init,false);

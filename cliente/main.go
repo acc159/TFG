@@ -1,101 +1,55 @@
 package main
 
 import (
+	"cliente/config"
 	"cliente/models"
-	"cliente/view"
-	"fmt"
 	"os"
 	"os/signal"
 )
 
 func main() {
+	//Inicio la interfaz visual
+	InitUI()
+	defer UI.Close()
 
-	view.InitUI()
-	defer view.UI.Close()
+	//Binds Pruebas
 
-	view.UI.Bind("llamarGO", func(arrayUserPass []string) bool {
-		// username := view.UI.Eval("document.querySelector('#username').value").String()
-		// password := view.UI.Eval("document.querySelector('#password').value").String()
-		fmt.Println(arrayUserPass[0])
-		fmt.Println(arrayUserPass[1])
-		return models.LogIn(arrayUserPass[0], arrayUserPass[1])
+	//Binds Finales
+
+	//Cambiar a la pantalla de registro
+	UI.Bind("changeToRegister", func() {
+		ChangeView("www/register.html")
 	})
 
-	view.UI.Bind("cambiarVistaenGO", func(nombreVista string) {
-		view.ChangeView(nombreVista)
+	//Cambiar a la pantalla de inicio de sesion
+	UI.Bind("changeToLogin", func() {
+		ChangeView("www/login.html")
 	})
 
-	//Otra alternativa
-	// view.UI.Bind("recibirProyectosyListasenGO", func(id string) []models.Relation {
-	// 	var relations []models.Relation
-	// 	models.GetProyectsListsByUser(id, &relations)
-	// 	return relations
-	// })
+	//Registro del usuario
+	UI.Bind("registerGO", func(user_pass []string) bool {
+		result := models.Register(user_pass[0], user_pass[1])
+		if result {
+			ChangeViewWithValues(config.PreView + "index.html")
+		}
+		return false
+	})
 
-	view.UI.Bind("recibirProyectosyListasenGO", func(id string) interface{} {
-		models.GetProyectsListsByUser(id)
-		return models.Relations
+	//Login del usuario
+	UI.Bind("loginGO", func(user_pass []string) bool {
+		result := models.LogIn(user_pass[0], user_pass[1])
+		if result {
+			models.GetUserProyectsLists()
+			ChangeViewWithValues(config.PreView + "index.html")
+		}
+		return false
 	})
 
 	sigc := make(chan os.Signal)
 	signal.Notify(sigc, os.Interrupt)
 	select {
 	case <-sigc:
-	case <-view.UI.Done():
+	case <-UI.Done():
 	}
 
-	// ui.Bind("prueba", func() []models.Task {
-	// ui.Eval("alert('Estoy aqui')")
-
-	// 	task := models.Task{
-	// 		Nombre:      "<script>alert('dsafasd')</script>",
-	// 		Descripcion: "asdfdf",
-	// 		FechaLimite: "ASDFADSF",
-	// 	}
-
-	// 	task2 := models.Task{
-	// 		Nombre:      "OTRO",
-	// 		Descripcion: "OTRO",
-	// 		FechaLimite: "OITERWSARI",
-	// 	}
-
-	// 	tasks := []models.Task{
-	// 		task, task2,
-	// 	}
-
-	// 	return tasks
-	// })
-
-	// //Bindeo las funciones
-	// ui.Bind("llamarGO", func() int {
-
-	// 	log.Println("Me han llamado desde Javascript")
-	// 	//Aqui obtengo un numero que hay en un span en el html desde GOLANG y lo imprimo aqui
-	// 	numero := ui.Eval("document.querySelector('#numero').textContent").String()
-	// 	fmt.Println(numero)
-	// 	valor, _ := strconv.Atoi(numero)
-	// 	return valor
-
-	// })
-
-	// //Cargo la primera pantalla
-
-	// content, err := ioutil.ReadFile("www/login.html")
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// myFileContents := string(content)
-	// loadableContents := "data:text/html," + url.PathEscape(myFileContents)
-	// ui.Load(loadableContents)
-	// <-ui.Done()
-
-	//models.GetUsers()
-	// models.GetProyectsListsByUser()
-	// models.CreateRelation("6231fae79f2ad453236d5804", "6239fac76f2ad453276c5804", "9239fac76f2ad453296c5804")
-	// models.GetTasksByList()
-
-	//models.CreateTask()
-	//models.DeleteTask()
-	//models.DeleteRelation("6239fac76f2ad453296c5809", "6239faf56f2ad453296c5807", "6239fb356f2ad453296c5808")
-	//models.UpdateTask()
 }
