@@ -10,10 +10,10 @@ import (
 )
 
 type Proyect struct {
-	ID          primitive.ObjectID `bson:"_id,omitempty"`
-	Name        string             `bson:"name,omitempty"`
-	Description string             `bson:"description,omitempty"`
-	Users       []string           `bson:"users,omitempty"`
+	ID          string   `bson:"_id,omitempty"`
+	Name        string   `bson:"name,omitempty"`
+	Description string   `bson:"description,omitempty"`
+	Users       []string `bson:"users,omitempty"`
 }
 
 type ProyectCipher struct {
@@ -37,6 +37,15 @@ func GetProyect(proyectID string) ProyectCipher {
 		json.NewDecoder(resp.Body).Decode(&responseObject)
 		return responseObject
 	}
+}
+
+func DescifrarProyecto(proyecto ProyectCipher) Proyect {
+	var descifrado Proyect
+	descifrado.ID = proyecto.ID.Hex()
+	descifrado.Name = "Nombre Proyecto"
+	descifrado.Description = "Esto seria la descripcion del proyecto"
+	descifrado.Users = []string{"pepito@gmail.com", "juanito@gmail.com"}
+	return descifrado
 }
 
 func GetProyectsByIDs() {

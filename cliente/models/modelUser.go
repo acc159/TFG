@@ -23,8 +23,8 @@ type User struct {
 var UserSesion User
 
 type DatosUser struct {
-	Proyecto ProyectCipher
-	Listas   []ListCipher
+	Proyecto Proyect
+	Listas   []List
 }
 
 var DatosUsuario []DatosUser
@@ -201,6 +201,7 @@ func GetUserProyectsLists() {
 		//Proyectos
 		for i := 0; i < len(Relations); i++ {
 			proyecto := GetProyect(Relations[i].ProyectID.Hex())
+
 			//Listas
 			var ListsIDs []string
 			for j := 0; j < len(Relations[i].Lists); j++ {
@@ -211,9 +212,20 @@ func GetUserProyectsLists() {
 				lists = GetListsByIDs(ListsIDs)
 			}
 
+			//Desciframos el proyecto
+			proyectoDescifrado := DescifrarProyecto(proyecto)
+
+			//Desciframos las listas del proyecto
+			var listsDescifradas []List
+			for index := 0; index < len(lists); index++ {
+				listsDescifradas = append(listsDescifradas, DescifrarLista(lists[index]))
+			}
+
+			//Desciframos las listas
+
 			datos := DatosUser{
-				Proyecto: proyecto,
-				Listas:   lists,
+				Proyecto: proyectoDescifrado,
+				Listas:   listsDescifradas,
 			}
 			DatosUsuario = append(DatosUsuario, datos)
 		}

@@ -11,10 +11,10 @@ import (
 )
 
 type List struct {
-	ID          primitive.ObjectID `bson:"_id,omitempty"`
-	Name        string             `bson:"name,omitempty"`
-	Description string             `bson:"description,omitempty"`
-	Users       []string           `bson:"users,omitempty"`
+	ID          string   `bson:"_id,omitempty"`
+	Name        string   `bson:"name,omitempty"`
+	Description string   `bson:"description,omitempty"`
+	Users       []string `bson:"users,omitempty"`
 }
 
 type ListCipher struct {
@@ -52,4 +52,14 @@ func GetListsByIDs(stringsIDs []string) []ListCipher {
 		json.NewDecoder(resp.Body).Decode(&responseObject)
 	}
 	return responseObject
+}
+
+func DescifrarLista(listCipher ListCipher) List {
+	list := List{
+		ID:          listCipher.ID.Hex(),
+		Name:        "Nombre de la lista",
+		Description: "Descripcion de la lista",
+		Users:       []string{"pepito@gmail.com", "juanito@gmail.com"},
+	}
+	return list
 }
