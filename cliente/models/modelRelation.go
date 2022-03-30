@@ -1,6 +1,7 @@
 package models
 
 import (
+	"bytes"
 	"cliente/config"
 	"encoding/json"
 	"fmt"
@@ -11,7 +12,7 @@ import (
 
 type Relation struct {
 	ID         primitive.ObjectID `bson:"_id,omitempty"`
-	UserID     primitive.ObjectID `bson:"userID,omitempty"`
+	UserEmail  string             `bson:"userEmail,omitempty"`
 	ProyectID  primitive.ObjectID `bson:"proyectID,omitempty"`
 	ProyectKey string             `bson:"proyectKey,omitempty"`
 	Lists      []RelationLists    `bson:"lists,omitempty"`
@@ -22,35 +23,33 @@ type RelationLists struct {
 	ListKey string             `bson:"listKey,omitempty"`
 }
 
-var Relations []Relation
+func GetProyectsListsByUser(userEmail string) []Relation {
 
-func GetProyectsListsByUser(userID string) {
-
-	resp, err := http.Get(config.URLbase + "relations/" + userID)
+	resp, err := http.Get(config.URLbase + "relations/" + userEmail)
 	if err != nil {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
-
+	var relations []Relation
 	if resp.StatusCode == 400 {
 		fmt.Println("Ningun proyecto ni lista para dicho usuario")
+		return relations
 	} else {
-		json.NewDecoder(resp.Body).Decode(&Relations)
+		json.NewDecoder(resp.Body).Decode(&relations)
+		return relations
 	}
 }
 
-/*
-func CreateRelation(userStringID string, proyectStringID string, listStringID string) {
-	userID, _ := primitive.ObjectIDFromHex(userStringID)
-	listID, _ := primitive.ObjectIDFromHex(proyectStringID)
-	proyectID, _ := primitive.ObjectIDFromHex(listStringID)
+func CreateRelation(userEmail string, proyectStringID string, listStringID string) bool {
+	//userID, _ := primitive.ObjectIDFromHex(userStringID)
+	proyectID, _ := primitive.ObjectIDFromHex(proyectStringID)
+
+	//Compruebo si es una relacion de proyecto sin lista o con lista
 
 	//Creo la relacion a enviar
 	relation := Relation{
-		UserID:     userID,
-		ListID:     listID,
+		UserEmail:  userEmail,
 		ProyectID:  proyectID,
-		ListKey:    "sdafdasf",
 		ProyectKey: "asdfasdfasdfsdafsdf",
 	}
 
@@ -77,14 +76,23 @@ func CreateRelation(userStringID string, proyectStringID string, listStringID st
 
 	if resp.StatusCode == 400 {
 		fmt.Println("La relacion no pudo ser creada")
+		return false
 	} else {
 		var responseObject string
 		json.NewDecoder(resp.Body).Decode(&responseObject)
 		fmt.Println(responseObject)
+		return true
 	}
 
 }
 
+func AddListToRelation(proyectID string, listID string) {
+	//Recupero la relacion
+
+	//Actualizo
+}
+
+/*
 func DeleteRelation(userStringID string, proyectStringID string, listStringID string) {
 
 	userID, _ := primitive.ObjectIDFromHex(userStringID)
@@ -114,7 +122,7 @@ func DeleteRelation(userStringID string, proyectStringID string, listStringID st
 	if err != nil {
 		fmt.Println(err)
 	}
-	defer resp.Body.Close()
+	defer resp.Body.Close()git a
 
 	if resp.StatusCode == 400 {
 		fmt.Println("La relacion no pudo ser borrada")

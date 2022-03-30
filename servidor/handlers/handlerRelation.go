@@ -6,13 +6,12 @@ import (
 	"servidor/models"
 
 	"github.com/gorilla/mux"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func GetRelations(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	id := params["id"]
-	relations := models.GetRelationsbyUserID(id)
+	email := params["email"]
+	relations := models.GetRelationsbyUserEmail(email)
 	if len(relations) == 0 {
 		w.WriteHeader(400)
 		w.Write([]byte("Ninguna relacion para dicho usuario"))
@@ -41,7 +40,7 @@ func CreateRelation(w http.ResponseWriter, r *http.Request) {
 func DeleteRelation(w http.ResponseWriter, r *http.Request) {
 	var relation models.Relation
 	json.NewDecoder(r.Body).Decode(&relation)
-	resultado := models.DeleteRelation(relation.UserID, relation.ProyectID)
+	resultado := models.DeleteRelation(relation.UserEmail, relation.ProyectID)
 	if resultado {
 		respuesta := "La relacion fue borrada"
 		json.NewEncoder(w).Encode(respuesta)
@@ -52,36 +51,36 @@ func DeleteRelation(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-type RelationJSON struct {
-	UserID    primitive.ObjectID `bson:"userID,omitempty"`
-	ProyectID primitive.ObjectID `bson:"proyectID,omitempty"`
-	ListID    primitive.ObjectID `bson:"listID,omitempty"`
-}
+// type RelationJSON struct {
+// 	UserID    primitive.ObjectID `bson:"userID,omitempty"`
+// 	ProyectID primitive.ObjectID `bson:"proyectID,omitempty"`
+// 	ListID    primitive.ObjectID `bson:"listID,omitempty"`
+// }
 
-func DeleteRelationList(w http.ResponseWriter, r *http.Request) {
-	var relation RelationJSON
-	json.NewDecoder(r.Body).Decode(&relation)
-	resultado := models.DeleteRelationList(relation.UserID, relation.ProyectID, relation.ListID)
-	if resultado {
-		respuesta := "La lista en la relacion fue borrada"
-		json.NewEncoder(w).Encode(respuesta)
-	} else {
-		w.WriteHeader(400)
-		respuesta := "No se pudo borrar la lista en la relacion"
-		json.NewEncoder(w).Encode(respuesta)
-	}
-}
+// func DeleteRelationList(w http.ResponseWriter, r *http.Request) {
+// 	var relation RelationJSON
+// 	json.NewDecoder(r.Body).Decode(&relation)
+// 	resultado := models.DeleteRelationList(relation.UserEmail, relation.ProyectID, relation.ListID)
+// 	if resultado {
+// 		respuesta := "La lista en la relacion fue borrada"
+// 		json.NewEncoder(w).Encode(respuesta)
+// 	} else {
+// 		w.WriteHeader(400)
+// 		respuesta := "No se pudo borrar la lista en la relacion"
+// 		json.NewEncoder(w).Encode(respuesta)
+// 	}
+// }
 
 func UpdateRelationList(w http.ResponseWriter, r *http.Request) {
 	var relation models.Relation
 	json.NewDecoder(r.Body).Decode(&relation)
 	resultado := models.UpdateRelationList(relation)
 	if resultado {
-		respuesta := "La lista en la relacion fue borrada"
+		respuesta := "La lista en la relacion fue actualizada"
 		json.NewEncoder(w).Encode(respuesta)
 	} else {
 		w.WriteHeader(400)
-		respuesta := "No se pudo borrar la lista en la relacion"
+		respuesta := "No se actualizar"
 		json.NewEncoder(w).Encode(respuesta)
 	}
 }

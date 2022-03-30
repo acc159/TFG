@@ -176,7 +176,13 @@ func LogInServer() User {
 	}
 }
 
-func GetUsers() {
+func LogOut() {
+	UserSesion = User{}
+	DatosUsuario = []DatosUser{}
+}
+
+func GetUsers() []User {
+	var usersResponse []User
 	resp, err := http.Get(config.URLbase + "users")
 	if err != nil {
 		fmt.Println(err)
@@ -186,26 +192,30 @@ func GetUsers() {
 	//Compruebo si no hay ningun usuario
 	if resp.StatusCode == 404 {
 		fmt.Println("Ningun usuario encontrado")
+		return usersResponse
 	} else {
-		var responseObject []User
-		json.NewDecoder(resp.Body).Decode(&responseObject)
-		fmt.Println(responseObject)
+		json.NewDecoder(resp.Body).Decode(&usersResponse)
+		return usersResponse
 	}
 }
 
 //Obtengo los proyectos y sus listas asociadas para el usuario
 func GetUserProyectsLists() {
+
+	//Limpio los datos del usuario
+	DatosUsuario = []DatosUser{}
+
 	//Recupero las relaciones
-	GetProyectsListsByUser(UserSesion.ID.Hex())
-	if len(Relations) > 0 {
+	relations := GetProyectsListsByUser(UserSesion.Email)
+	if len(relations) > 0 {
 		//Proyectos
-		for i := 0; i < len(Relations); i++ {
-			proyecto := GetProyect(Relations[i].ProyectID.Hex())
+		for i := 0; i < len(relations); i++ {
+			proyecto := GetProyect(relations[i].ProyectID.Hex())
 
 			//Listas
 			var ListsIDs []string
-			for j := 0; j < len(Relations[i].Lists); j++ {
-				ListsIDs = append(ListsIDs, Relations[i].Lists[j].ListID.Hex())
+			for j := 0; j < len(relations[i].Lists); j++ {
+				ListsIDs = append(ListsIDs, relations[i].Lists[j].ListID.Hex())
 			}
 			var lists []ListCipher
 			if len(ListsIDs) > 0 {

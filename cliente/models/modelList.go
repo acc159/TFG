@@ -20,7 +20,43 @@ type List struct {
 type ListCipher struct {
 	ID         primitive.ObjectID `bson:"_id,omitempty"`
 	Cipherdata string             `bson:"cipherdata,omitempty"`
+	Users      []string           `bson:"users,omitempty"`
 	ProyectID  string             `bson:"proyectID,omitempty"`
+}
+
+func CreateList(list List) string {
+	//Ciframos la lista
+	listCipher := CifrarLista(list)
+	//Enviamos la lista cifrada
+
+	listJSON, err := json.Marshal(listCipher)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	url := config.URLbase + "list"
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(listJSON))
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	client := &http.Client{}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == 400 {
+		fmt.Println("El proyecto no pudo ser creado")
+		return ""
+	} else {
+		var listID string
+		json.NewDecoder(resp.Body).Decode(&listID)
+		return listID
+	}
+
 }
 
 func GetListsByIDs(stringsIDs []string) []ListCipher {
@@ -62,4 +98,11 @@ func DescifrarLista(listCipher ListCipher) List {
 		Users:       []string{"pepito@gmail.com", "juanito@gmail.com"},
 	}
 	return list
+}
+
+func CifrarLista(listCipher List) ListCipher {
+	return ListCipher{
+		Cipherdata: "DASFSDFASDFSDF",
+		Users:      []string{"sadfds", "sadfasd"},
+	}
 }

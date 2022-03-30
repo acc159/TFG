@@ -1,0 +1,58 @@
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1>Añadir una lista al proyecto {{.ProyectID}}</h1>
+    <h1 id="proyectID">{{.ProyectID}}</h1>
+    <button onclick="AddList()">Añadir Lista</button>
+
+    <label for="name">Nombre de la lista</label>
+    <input type="text" id="name" name="name"><br><br>
+    <label for="description">Nombre de la lista</label>
+    <input type="text" id="description" name="description"><br><br>
+
+    <select name="usuarios" id="usuarios" multiple>
+        {{range .UsersProyect}}
+        <option value={{.}}>{{.}}</option>
+        {{end}}
+    </select>
+    <button onclick="changeHome()">Volver al Home</button>
+</body>
+</html>
+
+<script>
+
+    
+
+    function AddList(){
+        let listName = document.querySelector('#name').value
+        let description = document.querySelector('#description').value
+        let usuariosSeleccionados = document.querySelector('select').selectedOptions;
+        let usersList = []
+        for (let index = 0; index < usuariosSeleccionados.length; index++) {
+            usersList.push(usuariosSeleccionados[index].value);
+        }
+        let lista = {
+            Users : usersList,
+            Name : listName,
+            Description : description,
+        }
+
+        let proyectID = document.querySelector('#proyectID').textContent;
+
+        addListGO(lista, proyectID).then(
+            function(response){
+
+            }
+        )
+    }
+</script>
+
+
+
+
+

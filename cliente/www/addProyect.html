@@ -1,0 +1,77 @@
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1 id="userEmail">{{.User.Email}}</h1>
+    <button onclick="changeHome()">Volver al Home</button>
+    <h2>Añadir Proyecto nuevo</h2>
+    <div>
+        <label for="proyectName">Nombre del proyecto</label>
+        <input type="text" id="proyectName" name="proyectName"><br><br>
+        <label for="usuarios">Selecciona los usuarios:</label>
+        <select name="usuarios" id="usuarios" multiple>
+        </select>
+        <button onclick="addProyect()">Añadir Proyecto</button>
+    </div>
+</body>
+</html>
+
+
+<script>
+    function init(){
+        getUsersToAddProyect();
+    }
+
+    //Para poder mostrar por pantalla los usuarios que se pueden añadir a un proyecto
+    function getUsersToAddProyect(){
+        getEmailsGO().then(
+            function(emails){
+                let userEmail = document.querySelector('#userEmail').textContent
+                for (let i = 0; i < emails.length; i++){
+                    if(emails[i] != userEmail){
+                        let email = document.createElement('option')
+                        email.value = emails[i]
+                        email.textContent = emails[i]
+                        document.querySelector('#usuarios').appendChild(email)
+                    }
+                }
+            }
+        )
+    }
+
+    function addProyect(){
+
+        //Obtengo los campos metidos por el usuario
+        let proyectName = document.querySelector('#proyectName').value;
+        let usuariosSeleccionados = document.querySelector('select').selectedOptions;
+        if (proyectName == ""){
+            alert('Introduce todos los valores para añadir un proyecto')
+        }else{
+            let usuariosProyect = []
+            for (let index = 0; index < usuariosSeleccionados.length; index++) {
+                usuariosProyect.push(usuariosSeleccionados[index].value);
+            }
+
+            let proyect = {
+                "Name" : proyectName,
+                "Users" : usuariosProyect
+            }
+
+            addProyectGO(proyect).then(
+                function(valorDesdeGO){
+                    if (valorDesdeGO == false){
+                        alert('El proyecto no se a creado')
+                    }else{
+                        changeHome()
+                    }
+                }
+            )
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded',init,false);
+</script>

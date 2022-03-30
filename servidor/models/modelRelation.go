@@ -12,7 +12,7 @@ import (
 
 type Relation struct {
 	ID         primitive.ObjectID `bson:"_id,omitempty"`
-	UserID     primitive.ObjectID `bson:"userID,omitempty"`
+	UserEmail  string             `bson:"userEmail,omitempty"`
 	ProyectID  primitive.ObjectID `bson:"proyectID,omitempty"`
 	ProyectKey string             `bson:"proyectKey,omitempty"`
 	Lists      []RelationLists    `bson:"lists,omitempty"`
@@ -35,13 +35,13 @@ func CreateRelation(relation Relation) bool {
 	return true
 }
 
-func GetRelationsbyUserID(idString string) []Relation {
+func GetRelationsbyUserEmail(userEmail string) []Relation {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	coleccion := config.InstanceDB.DB.Collection("users_proyects_lists")
 
-	userID, _ := primitive.ObjectIDFromHex(idString)
-	filter := bson.D{{Key: "userID", Value: userID}}
+	//userID, _ := primitive.ObjectIDFromHex(idString)
+	filter := bson.D{{Key: "userEmail", Value: userEmail}}
 
 	results, err := coleccion.Find(ctx, filter)
 	if err != nil {
@@ -56,11 +56,11 @@ func GetRelationsbyUserID(idString string) []Relation {
 	return relations
 }
 
-func DeleteRelation(userID primitive.ObjectID, proyectID primitive.ObjectID) bool {
+func DeleteRelation(userEmail string, proyectID primitive.ObjectID) bool {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	coleccion := config.InstanceDB.DB.Collection("users_proyects_lists")
-	filter := bson.D{{Key: "userID", Value: userID}, {Key: "proyectID", Value: proyectID}}
+	filter := bson.D{{Key: "userEmail", Value: userEmail}, {Key: "proyectID", Value: proyectID}}
 	err := coleccion.FindOneAndDelete(ctx, filter)
 	if err.Err() != nil {
 		return false
@@ -68,13 +68,27 @@ func DeleteRelation(userID primitive.ObjectID, proyectID primitive.ObjectID) boo
 	return true
 }
 
-func DeleteRelationList(userID primitive.ObjectID, proyectID primitive.ObjectID, listID primitive.ObjectID) bool {
+func DeleteRelationByProyectID(proyectID string) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	coleccion := config.InstanceDB.DB.Collection("users_proyects_lists")
+
+	id, _ := primitive.ObjectIDFromHex(proyectID)
+	filter := bson.D{{Key: "proyectID", Value: id}}
+	_, err := coleccion.DeleteMany(ctx, filter)
+	if err != nil {
+		return false
+	}
+	return true
+}
+
+func DeleteRelationList(userEmail string, proyectID primitive.ObjectID, listID primitive.ObjectID) bool {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	coleccion := config.InstanceDB.DB.Collection("users_proyects_lists")
 
 	pullQuery := bson.M{"lists": bson.M{"listID": listID}}
-	filter := bson.D{{Key: "userID", Value: userID}, {Key: "proyectID", Value: proyectID}}
+	filter := bson.D{{Key: "userEmail", Value: userEmail}, {Key: "proyectID", Value: proyectID}}
 	var updatedDoc bson.D
 	err := coleccion.FindOneAndUpdate(ctx, filter, bson.M{"$pull": pullQuery}).Decode(&updatedDoc)
 	if err != nil {
@@ -93,8 +107,26 @@ func UpdateRelationList(relation Relation) bool {
 	coleccion := config.InstanceDB.DB.Collection("users_proyects_lists")
 
 	//pullQuery := bson.M{"lists": bson.M{"listID": }}
-	filter := bson.D{{Key: "userID", Value: relation.UserID}, {Key: "proyectID", Value: relation.ProyectID}}
+	filter := bson.D{{Key: "userEmail", Value: relation.UserEmail}, {Key: "proyectID", Value: relation.ProyectID}}
 
 	err := coleccion.FindOneAndReplace(ctx, filter, relation)
 	return err.Err() == nil
+}
+
+func AddListToRelation(userEmail string, proyectIDstring string, list RelationLists) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	coleccion := config.InstanceDB.DB.Collection("users_proyects_lists")
+	proyectID, _ := primitive.ObjectIDFromHex(proyectIDstring)
+
+	pushQuery := bson.D{{Key: "listID", Value: list.ListID}, {Key: "listKey", Value: list.ListKey}}
+	push := bson.D{{Key: "lists", Value: pushQuery}}
+	filter := bson.D{{Key: "userEmail", Value: userEmail}, {Key: "proyectID", Value: proyectID}}
+
+	_, err := coleccion.UpdateOne(ctx, filter, bson.M{"$push": push})
+	if err != nil {
+		log.Println(err)
+		return false
+	}
+	return true
 }

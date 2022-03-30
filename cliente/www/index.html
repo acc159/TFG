@@ -11,9 +11,13 @@
 
 <body>
     <h1>En pruebas</h1>
+    <h1 id="userEmail">{{.User.Email}}</h1>
+
+    <button onclick="exitSesion()">Salir de la sesion</button>
 
     <!-- Estructura REAL -->
     <h1>Bienvenido: {{.User.Email}}</h1>
+    {{$email:=.User.Email}}
     <h1>Listado de proyectos</h1>
 
     <div id="proyectos">
@@ -23,20 +27,32 @@
         <h1>Proyectos totales: {{len .Datos}}</h1>
             {{range .Datos}}
             <div id="{{.Proyecto.ID}}">
+                <button onclick="changeToAddList(event)">Añadir Lista al proyecto</button>
                 <h1>{{.Proyecto.Name}}</h1>
                 <p>{{.Proyecto.Description}}</p>
+                <h2>Usuarios del proyecto:</h2>
+                <ul>
+                    {{range .Proyecto.Users}}
+                        {{if eq . $email}}
+                        {{else}}
+                            <li>{{.}}</li>
+                        {{end}}
+                    {{end}}
+                </ul>
+   
                 <button>Actualizar Proyecto</button>
-                <button class="deleteProyect">Eliminar Proyecto</button>
+                <button class="deleteProyect" onclick="deleteProyect(event)">Eliminar Proyecto</button>
                 {{if not .Listas}}
-                <h2>Ninguna Lista que mostrar</h2>
+                    <h2>Ninguna Lista que mostrar</h2>
                 {{else}}
                     <h2>Listas:</h2>
                     {{range .Listas}}
+                    <input  name="listaID" type="hidden" value={{.ID}}>
                     <h3> {{.Name}}</h3>
                     <p>{{.Description}}</p>
                     {{end}}
                 {{end}}
-                <p>------------------------------------------</p>
+                <p>---------------------------------------------------------------------------</p>
             </div>
             {{end}}
         {{end}}
@@ -44,17 +60,12 @@
     </div>
 
     
-    
 
     <div class="proyectos" id="proyectos">
     </div>
 
-    <h2>Añadir Proyecto nuevo</h2>
-    <div>
-        <label for="proyectName">Nombre del proyecto</label>
-        <input type="text" id="proyectName" name="proyectName"><br><br>
-        <button>Añadir Proyecto</button>
-    </div>
+    <h2>Ir a añadir un proyecto</h2>
+    <button onclick="changeToAddProyect()">Añadir un proyecto</button>
 
 
 <!-- 
@@ -72,6 +83,108 @@
 
 <script>
 
+    function changeToAddList(event){
+        var div = event.target.closest('div');
+        proyectID = div.id;
+
+        let usersProyectElement = div.querySelectorAll('li')
+        let usersProyect = []
+        for (let i = 0; i < usersProyectElement.length; i++) {
+            usersProyect.push(usersProyectElement[i].textContent)
+        }
+
+        changeToAddListGO(proyectID, usersProyect).then(
+            function(){
+                
+            }
+        )
+    }
+
+
+    function deleteProyect(event){
+        var div = event.target.closest('div');
+        proyectID = div.id;
+
+        let listas = div.querySelectorAll('input[name="listaID"]')
+        let listasIDs = []
+        for (let i = 0; i < listas.length; i++){
+            listasIDs.push(listas[i].value)
+        }
+
+        deleteProyectGO(proyectID, listasIDs).then(
+            function(valorDesdeGO){
+                if (valorDesdeGO == false){
+                    alert('El proyecto no se borro')
+                }else{
+                    changeHome()
+                }
+            }
+        )
+    }
+
+
+    function init(){
+
+
+        //Añadimos el evento a los botones de borrado
+        // let botones = document.querySelectorAll('.deleteProyect')
+        // for (let i = 0; i < botones.length; i++){
+        //     botones[i].addEventListener('click', )
+        // }
+
+        //getUsersToAddProyect();
+
+        //alert("Bienvenido");
+        //let boton = document.querySelector('.deleteProyect').textContent;
+        //alert(boton);
+    }
+/*
+    //Para poder mostrar por pantalla los usuarios que se pueden añadir a un proyecto
+    function getUsersToAddProyect(){
+        getEmailsGO().then(
+            function(emails){
+                let userEmail = document.querySelector('#userEmail').textContent
+                for (let i = 0; i < emails.length; i++){
+                    if(emails[i] != userEmail){
+                        let email = document.createElement('option')
+                        email.value = emails[i]
+                        email.textContent = emails[i]
+                        document.querySelector('#usuarios').appendChild(email)
+                    }
+                }
+            }
+        )
+    }
+
+    function addProyect(){
+
+        //Obtengo los campos metidos por el usuario
+        let proyectName = document.querySelector('#proyectName').value;
+        let usuariosSeleccionados = document.querySelector('select').selectedOptions;
+        if (proyectName == ""){
+            alert('Introduce todos los valores para añadir un proyecto')
+        }else{
+            let usuariosProyect = []
+            for (let index = 0; index < usuariosSeleccionados.length; index++) {
+                usuariosProyect.push(usuariosSeleccionados[index].value);
+                
+            }
+
+            let proyect = {
+                "Name" : proyectName,
+                "Users" : usuariosProyect
+            }
+
+            addProyectGO(proyect).then(
+                function(valorDesdeGO){
+                    if (valorDesdeGO == false){
+                        alert('El proyecto no se a creado')
+                    }
+                }
+            )
+        }
+    }
+/*
     //Crea un div por cada proyecto que este relacionado con el usuario
     function createDivsProyects(relations){
         let proyectsIDS = [];
@@ -120,12 +233,8 @@
             }
         )
     }
+*/
 
-    function init(){
-        //alert("Bienvenido");
-        //let boton = document.querySelector('.deleteProyect').textContent;
-        //alert(boton);
-    }
 
     document.addEventListener('DOMContentLoaded',init,false);
 </script>

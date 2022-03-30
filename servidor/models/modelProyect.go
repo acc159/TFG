@@ -50,7 +50,7 @@ func GetProyect(idString string) Proyect {
 	return proyecto
 }
 
-func CreateProyect(proyecto Proyect) {
+func CreateProyect(proyecto *Proyect) {
 	//Creo un contexto
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 
@@ -63,7 +63,8 @@ func CreateProyect(proyecto Proyect) {
 	} else {
 		//Paso el primitive.ObjectID a un string
 		stringObjectID := result.InsertedID.(primitive.ObjectID).Hex()
-		fmt.Println(stringObjectID)
+		id, _ := primitive.ObjectIDFromHex(stringObjectID)
+		proyecto.ID = id
 	}
 }
 
@@ -86,17 +87,21 @@ func UpdateProyect(proyecto Proyect, stringID string) bool {
 	return true
 }
 
-func DeleteProyect(stringID string) bool {
+func DeleteProyect(proyectIDstring string, listsIDs []string) bool {
 
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 
 	//1. Borrar las listas del proyecto con las tareas asociadas a esas listas
+	for i := 0; i < len(listsIDs); i++ {
+		DeleteList(listsIDs[i])
+	}
 
 	//2. Borrar las relaciones en las que aparezca el proyecto
+	DeleteRelationByProyectID(proyectIDstring)
 
 	//3. Borrar el proyecto en si
 	coleccion := config.InstanceDB.DB.Collection("proyects")
-	id, _ := primitive.ObjectIDFromHex(stringID)
+	id, _ := primitive.ObjectIDFromHex(proyectIDstring)
 	filter := bson.D{{Key: "_id", Value: id}}
 
 	err := coleccion.FindOneAndDelete(ctx, filter)

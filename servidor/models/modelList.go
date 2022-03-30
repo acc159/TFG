@@ -15,6 +15,7 @@ type List struct {
 	ID         primitive.ObjectID   `bson:"_id,omitempty"`
 	Cipherdata string               `bson:"cipherdata,omitempty"`
 	Users      []primitive.ObjectID `bson:"users,omitempty"`
+	proyectID  primitive.ObjectID   `bson:"proyectID,omitempty"`
 }
 
 func CreateList(list List) bool {
@@ -29,7 +30,6 @@ func CreateList(list List) bool {
 		return false
 	}
 	return true
-
 }
 
 func UpdateList(list List, idString string) bool {

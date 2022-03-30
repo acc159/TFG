@@ -40,11 +40,16 @@ func GetProyect(w http.ResponseWriter, r *http.Request) {
 }
 
 func CreateProyect(w http.ResponseWriter, r *http.Request) {
-	var proyecto models.Proyect
+	var proyecto *models.Proyect
 	json.NewDecoder(r.Body).Decode(&proyecto)
 	models.CreateProyect(proyecto)
-
-	w.Write([]byte("Creado proyecto"))
+	if proyecto.ID.Hex() == "" {
+		w.WriteHeader(400)
+		respuesta := "Proyecto no creado"
+		json.NewEncoder(w).Encode(respuesta)
+	} else {
+		json.NewEncoder(w).Encode(proyecto.ID.Hex())
+	}
 }
 
 func UpdateProyect(w http.ResponseWriter, r *http.Request) {
@@ -66,7 +71,9 @@ func DeleteProyect(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	id := params["id"]
 
-	resultado := models.DeleteProyect(id)
+	var listsIDs []string
+	json.NewDecoder(r.Body).Decode(&listsIDs)
+	resultado := models.DeleteProyect(id, listsIDs)
 	if !resultado {
 		w.WriteHeader(400)
 		w.Write([]byte("No se pudo borrar el proyecto"))
@@ -123,4 +130,21 @@ func GetProyectsByIDs(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("No has enviado ningun id"))
 	}
 
+}
+
+func AddListToRelation(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	proyectID := params["proyectID"]
+	userEmail := params["userEmail"]
+
+	var list models.RelationLists
+	json.NewDecoder(r.Body).Decode(&list)
+
+	resultado := models.AddListToRelation(userEmail, proyectID, list)
+	if !resultado {
+		w.WriteHeader(400)
+		w.Write([]byte("La lista no fue añadida a la relacion"))
+	} else {
+		w.Write([]byte("Lista añadida a la relacion"))
+	}
 }

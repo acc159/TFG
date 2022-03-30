@@ -38,33 +38,44 @@ func ChangeView(nombreVista string) {
 }
 
 func ChangeViewWithValues(nombreVista string) {
-
 	tmpl, err := template.ParseFiles(nombreVista)
 	if err != nil {
 		log.Fatal(err)
 	}
-	// var users = []string{"<script>alert('a')</script>", "Canada", "Japan"}
-
-	// proyect1 := models.ProyectCipher{
-	// 	Cipherdata: "A",
-	// 	Users:      users,
-	// }
-	// proyect2 := models.ProyectCipher{
-	// 	Cipherdata: "dsafdsfasdfasdfsdfds",
-	// }
-
-	// var proyects []models.DatosUser
-	// proyects = append(proyects, proyect1)
-	// proyects = append(proyects, proyect2)
 
 	dataStruct := Data{
 		User:  models.UserSesion,
 		Datos: models.DatosUsuario,
 	}
-	data := dataStruct
 	buff := bytes.Buffer{}
 
-	tmpl.Execute(&buff, data)
+	tmpl.Execute(&buff, dataStruct)
+
+	loadableContents := "data:text/html," + url.PathEscape(buff.String())
+	UI.Load(loadableContents)
+}
+
+type DataList struct {
+	ProyectID    string
+	UsersProyect []string
+}
+
+func ChangeViewAddList(nombreVista string, proyectID string, usersProyect []string) {
+
+	//Recupero los usuarios del proyecto
+
+	tmpl, err := template.ParseFiles(nombreVista)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	dataStruct := DataList{
+		ProyectID:    proyectID,
+		UsersProyect: usersProyect,
+	}
+	buff := bytes.Buffer{}
+
+	tmpl.Execute(&buff, dataStruct)
 
 	loadableContents := "data:text/html," + url.PathEscape(buff.String())
 	UI.Load(loadableContents)
