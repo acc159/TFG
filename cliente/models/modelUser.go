@@ -238,6 +238,58 @@ func GetUserProyectsLists() {
 	}
 }
 
+func DeleteUser(userEmail string) {
+	DatosUsuario = []DatosUser{}
+	//Recupero las relaciones junto a los proyectos y las listas Mejorable el pensar en llamar a una funcion que no descifre todo porque no lo necesitamos
+	GetUserProyectsLists()
+	for i := 0; i < len(DatosUsuario); i++ {
+		//Para cada Proyecto miro si el proyecto no tiene mas usuarios que el usuario a borrar
+		if len(DatosUsuario[i].Proyecto.Users) == 1 {
+			//Borro el proyecto
+			DeleteProyect(DatosUsuario[i].Proyecto.ID)
+		} else {
+			//Quito al usuario del array Users del proyecto
+			DeleteUserProyect(DatosUsuario[i].Proyecto.ID, userEmail)
+			//Por cada una de las listas del proyecto
+			for j := 0; j < len(DatosUsuario[i].Listas); j++ {
+				//Compruebo si la lista solo tiene de usuario a dicho usuario
+				if len(DatosUsuario[i].Listas[j].Users) == 1 {
+					//Borro la lista
+					DeleteList(DatosUsuario[i].Listas[j].ID)
+				} else {
+					//Quito al usuario del array Users de la Lista
+					DeleteUserList(DatosUsuario[i].Listas[j].ID, userEmail)
+				}
+			}
+		}
+	}
+	//Borro las relaciones
+	DeleteUserRelation(userEmail)
+	//Borro al usuario
+	DeleteUserByEmail(userEmail)
+}
+
+func DeleteUserByEmail(userEmail string) bool {
+	url := config.URLbase + "users/" + userEmail
+	req, err := http.NewRequest("DELETE", url, nil)
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode == 400 {
+		fmt.Println("El usuario no pudo ser eliminado del proyecto")
+		return false
+	} else {
+		return true
+	}
+}
+
 /*
 func PostUser() {
 	//Creo el usuario que voy a mandar al servidor

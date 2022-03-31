@@ -138,3 +138,25 @@ func DeleteRelationList(proyectStringID string, listStringID string, userEmail s
 		fmt.Println(resultado)
 	}
 }
+
+//Elimino las relaciones donde aparece el usuario
+func DeleteUserRelation(userEmail string) bool {
+	url := config.URLbase + "relations/user/" + userEmail
+	req, err := http.NewRequest("DELETE", url, nil)
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode == 400 {
+		fmt.Println("Las relaciones del usuario no pudieron ser eliminadas")
+		return false
+	} else {
+		return true
+	}
+}

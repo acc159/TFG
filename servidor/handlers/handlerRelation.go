@@ -95,3 +95,15 @@ func UpdateRelationList(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(respuesta)
 	}
 }
+
+func DeleteRelationByUser(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	userEmail := params["userEmail"]
+	resultado := models.DeleteRelationByUser(userEmail)
+	if !resultado {
+		w.WriteHeader(400)
+		w.Write([]byte("Las relaciones no se han borrado"))
+	} else {
+		w.Write([]byte("Todas las relaciones del usuario han sido borradas"))
+	}
+}

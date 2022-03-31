@@ -120,6 +120,28 @@ func GetUsersProyect(proyectID string) []string {
 	}
 }
 
+//Elimino al usuario del array Users del proyecto
+func DeleteUserProyect(proyectID string, userEmail string) bool {
+	url := config.URLbase + "proyect/users/" + proyectID + "/" + userEmail
+	req, err := http.NewRequest("DELETE", url, nil)
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode == 400 {
+		fmt.Println("El usuario no pudo ser eliminado del proyecto")
+		return false
+	} else {
+		return true
+	}
+}
+
 //Cifrado y Descifrado
 
 func DescifrarProyecto(proyecto ProyectCipher) Proyect {

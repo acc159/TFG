@@ -71,13 +71,11 @@ func UpdateUser(idString string, usuario User) bool {
 	return true
 }
 
-//Borrar el usuario cuyo id es pasado por parametro (FALTA ELIMINAR TODO LO ASOCIADO CON ESTE USUARIO)
-func DeleteUser(idString string) bool {
+//Borrar el usuario cuyo email es pasado por parametro
+func DeleteUser(userEmail string) bool {
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	coleccion := config.InstanceDB.DB.Collection("users")
-	id, _ := primitive.ObjectIDFromHex(idString)
-
-	filter := bson.D{{Key: "_id", Value: id}}
+	filter := bson.D{{Key: "email", Value: userEmail}}
 	err := coleccion.FindOneAndDelete(ctx, filter)
 	return err.Err() == nil
 }

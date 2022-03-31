@@ -13,6 +13,8 @@ func User(r *mux.Router) {
 	r.HandleFunc("/signup", handlers.Signup).Methods("POST")
 	//Login
 	r.HandleFunc("/login", handlers.Login).Methods("POST")
+	//Borrar Usuario
+	r.HandleFunc("/users/{userEmail}", handlers.DeleteUser).Methods("DELETE")
 
 	//SIN USAR
 	//Recuperar Usuarios
@@ -23,6 +25,5 @@ func User(r *mux.Router) {
 	r.HandleFunc("/user", handlers.CreateUser).Methods("POST")
 	//Actualizar Usuario
 	r.HandleFunc("/users/{id}", handlers.UpdateUser).Methods("PUT")
-	//Borrar Usuario
-	r.HandleFunc("/users/{id}", handlers.DeleteUser).Methods("DELETE")
+
 }

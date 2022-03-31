@@ -57,8 +57,8 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	id := params["id"]
-	borrado := models.DeleteUser(id)
+	email := params["userEmail"]
+	borrado := models.DeleteUser(email)
 	if !borrado {
 		w.WriteHeader(400)
 		w.Write([]byte("No se borro el usuario"))

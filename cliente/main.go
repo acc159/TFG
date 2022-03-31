@@ -12,7 +12,10 @@ func main() {
 	InitUI()
 	defer UI.Close()
 
-	models.GetTasksByList("623372b607ec94da39b16b2e")
+	UI.Bind("deleteUserGO", func() {
+		models.DeleteUser(models.UserSesion.Email)
+		ChangeView("www/login.html")
+	})
 
 	//Binds Cambiar Pantallas
 

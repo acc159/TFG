@@ -114,6 +114,16 @@ func AddListToRelation(userEmail string, proyectIDstring string, list RelationLi
 
 //Sin usar
 
+//Para eliminar todas las relaciones donde aparezca el userEmail dado como parametro
+func DeleteRelationByUser(userEmail string) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	coleccion := config.InstanceDB.DB.Collection("users_proyects_lists")
+	filter := bson.D{{Key: "userEmail", Value: userEmail}}
+	_, err := coleccion.DeleteMany(ctx, filter)
+	return err == nil
+}
+
 func UpdateRelationList(relation Relation) bool {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
