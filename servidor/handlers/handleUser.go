@@ -10,6 +10,7 @@ import (
 
 //Aqui tengo los controladores que responden a las peticiones a las diferentes rutas
 
+//Registro del usuario
 func Signup(w http.ResponseWriter, r *http.Request) {
 	var user models.User
 	json.NewDecoder(r.Body).Decode(&user)
@@ -23,6 +24,7 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+//Login del Usuario
 func Login(w http.ResponseWriter, r *http.Request) {
 
 	var user models.User
@@ -36,6 +38,36 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(usuario)
 	}
 }
+
+//Por revisar y modificar
+
+func UpdateUser(w http.ResponseWriter, r *http.Request) {
+	var user models.User
+	json.NewDecoder(r.Body).Decode(&user)
+	params := mux.Vars(r)
+	id := params["id"]
+	resultado := models.UpdateUser(id, user)
+	if !resultado {
+		w.WriteHeader(400)
+		w.Write([]byte("No se actualizo el usuario"))
+	} else {
+		w.Write([]byte("Se actualizo el usuario"))
+	}
+}
+
+func DeleteUser(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	id := params["id"]
+	borrado := models.DeleteUser(id)
+	if !borrado {
+		w.WriteHeader(400)
+		w.Write([]byte("No se borro el usuario"))
+	} else {
+		w.Write([]byte("Usuario borrado"))
+	}
+}
+
+//SIN USAR
 
 func GetUsers(w http.ResponseWriter, r *http.Request) {
 	usuarios := models.GetUsers()
@@ -76,52 +108,3 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(usuarioID)
 }
-
-type ModifiedStructure struct {
-	Campo string      `json:"campo"`
-	Valor interface{} `json:"valor"`
-}
-
-func UpdateUser(w http.ResponseWriter, r *http.Request) {
-
-	var user models.User
-	json.NewDecoder(r.Body).Decode(&user)
-
-	//Obtengo el id de los parametros de la petición
-	params := mux.Vars(r)
-	id := params["id"]
-	resultado := models.UpdateUser(id, user)
-	if resultado != true {
-		w.WriteHeader(400)
-		w.Write([]byte("No se actualizo el usuario"))
-	} else {
-		w.Write([]byte("Se actualizo el usuario"))
-	}
-}
-
-func DeleteUser(w http.ResponseWriter, r *http.Request) {
-	params := mux.Vars(r)
-	id := params["id"]
-
-	borrado := models.DeleteUser(id)
-	if borrado == false {
-		w.WriteHeader(400)
-		w.Write([]byte("No se borro el usuario"))
-	} else {
-		w.Write([]byte("Usuario borrado"))
-	}
-
-}
-
-/*
-func UpdateUserProyects(w http.ResponseWriter, r *http.Request) {
-	params := mux.Vars(r)
-	id := params["id"]
-
-	var proyectoNuevo models.ProyectKey
-	json.NewDecoder(r.Body).Decode(&proyectoNuevo)
-
-	models.AddProyect(proyectoNuevo, id)
-
-}
-*/

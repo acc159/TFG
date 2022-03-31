@@ -36,7 +36,6 @@ func GetProyect(w http.ResponseWriter, r *http.Request) {
 	} else {
 		json.NewEncoder(w).Encode(proyecto)
 	}
-
 }
 
 func CreateProyect(w http.ResponseWriter, r *http.Request) {
@@ -71,9 +70,7 @@ func DeleteProyect(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	id := params["id"]
 
-	var listsIDs []string
-	json.NewDecoder(r.Body).Decode(&listsIDs)
-	resultado := models.DeleteProyect(id, listsIDs)
+	resultado := models.DeleteProyect(id)
 	if !resultado {
 		w.WriteHeader(400)
 		w.Write([]byte("No se pudo borrar el proyecto"))
@@ -85,11 +82,8 @@ func DeleteProyect(w http.ResponseWriter, r *http.Request) {
 func AddUserProyect(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	id := params["id"]
-
-	var user models.User
-	json.NewDecoder(r.Body).Decode(&user)
-
-	resultado := models.AddUserProyect(id, user.Email)
+	email := params["email"]
+	resultado := models.AddUserProyect(id, email)
 	if !resultado {
 		w.WriteHeader(400)
 		w.Write([]byte("No se pudo añadir el usuario al proyecto"))
@@ -101,16 +95,13 @@ func AddUserProyect(w http.ResponseWriter, r *http.Request) {
 func DeleteUserProyect(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	id := params["id"]
-
-	var user models.User
-	json.NewDecoder(r.Body).Decode(&user)
-
-	resultado := models.DeleteUserProyect(id, user.Email)
+	email := params["email"]
+	resultado := models.DeleteUserProyect(id, email)
 	if !resultado {
 		w.WriteHeader(400)
 		w.Write([]byte("No se pudo borrar el usuario del proyecto"))
 	} else {
-		w.Write([]byte("Usuario borrado"))
+		w.Write([]byte("Usuario borrado del proyecto"))
 	}
 }
 
@@ -132,19 +123,15 @@ func GetProyectsByIDs(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func AddListToRelation(w http.ResponseWriter, r *http.Request) {
+func GetUsersProyect(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	proyectID := params["proyectID"]
-	userEmail := params["userEmail"]
+	id := params["id"]
 
-	var list models.RelationLists
-	json.NewDecoder(r.Body).Decode(&list)
-
-	resultado := models.AddListToRelation(userEmail, proyectID, list)
-	if !resultado {
+	resultado := models.GetUsersProyect(id)
+	if len(resultado) == 0 {
 		w.WriteHeader(400)
-		w.Write([]byte("La lista no fue añadida a la relacion"))
+		json.NewEncoder(w).Encode(resultado)
 	} else {
-		w.Write([]byte("Lista añadida a la relacion"))
+		json.NewEncoder(w).Encode(resultado)
 	}
 }

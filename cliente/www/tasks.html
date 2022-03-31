@@ -1,0 +1,16 @@
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tareas</title>
+</head>
+<body>
+    <button onclick="changeHome()">Volver al Home</button>
+    <h1>Tareas de la lista: {{.ListID}}</h1>
+    <h2>Numero de tareas: {{len .Tasks}}</h2>
+    {{range .Tasks}}
+        <h2>Nombre: {{.Nombre}}</h2>
+    {{end}}
+</body>
+</html>

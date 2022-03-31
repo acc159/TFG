@@ -6,6 +6,7 @@ import (
 	"servidor/models"
 
 	"github.com/gorilla/mux"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func CreateList(w http.ResponseWriter, r *http.Request) {
@@ -13,12 +14,12 @@ func CreateList(w http.ResponseWriter, r *http.Request) {
 	json.NewDecoder(r.Body).Decode(&list)
 	resultado := models.CreateList(list)
 
-	if resultado {
-		w.Write([]byte("Lista Creada"))
+	if resultado != "" {
+		json.NewEncoder(w).Encode(resultado)
 		return
 	} else {
 		w.WriteHeader(400)
-		w.Write([]byte("No se pudo crear la tarea"))
+		json.NewEncoder(w).Encode(resultado)
 	}
 }
 
@@ -68,5 +69,58 @@ func GetListsByIDs(w http.ResponseWriter, r *http.Request) {
 	} else {
 		w.WriteHeader(400)
 		w.Write([]byte("No has enviado ningun id"))
+	}
+}
+
+func GetUsersList(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	id := params["id"]
+	resultado := models.GetUsersList(id)
+	if len(resultado) == 0 {
+		w.WriteHeader(400)
+		json.NewEncoder(w).Encode(resultado)
+	} else {
+		json.NewEncoder(w).Encode(resultado)
+	}
+}
+
+func AddUserList(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	id := params["id"]
+	email := params["email"]
+	resultado := models.AddUserList(id, email)
+	if !resultado {
+		w.WriteHeader(400)
+		w.Write([]byte("No se pudo añadir el usuario a la lista"))
+	} else {
+		w.Write([]byte("Usuario añadido a la lista"))
+	}
+}
+
+func DeleteUserList(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	id := params["id"]
+	email := params["email"]
+	resultado := models.DeleteUserList(id, email)
+	if !resultado {
+		w.WriteHeader(400)
+		w.Write([]byte("No se pudo borrar el usuario de la lista"))
+	} else {
+		w.Write([]byte("Usuario borrado de la lista"))
+	}
+}
+
+func GetList(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	id := params["id"]
+	list := models.GetList(id)
+	var mongoId interface{}
+	mongoId = list.ID
+	stringID := mongoId.(primitive.ObjectID).Hex()
+	if stringID == "000000000000000000000000" {
+		w.WriteHeader(400)
+		w.Write([]byte("No existe la lista"))
+	} else {
+		json.NewEncoder(w).Encode(list)
 	}
 }

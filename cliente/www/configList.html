@@ -1,0 +1,16 @@
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuración de la Lista</title>
+</head>
+<body>
+    <button onclick="changeHome()">Volver al Home</button>
+    <h1>Configuración de la Lista</h1>
+    {{.List.ID}}
+    {{.List.Name}}
+
+    <h2>Usuarios del proyecto al que pertenece la lista: {{len .Proyect.Users}}</h2>
+</body>
+</html>

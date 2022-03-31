@@ -18,7 +18,6 @@
     <!-- Estructura REAL -->
     <h1>Bienvenido: {{.User.Email}}</h1>
     {{$email:=.User.Email}}
-    <h1>Listado de proyectos</h1>
 
     <div id="proyectos">
         {{if not .Datos}}
@@ -27,7 +26,7 @@
         <h1>Proyectos totales: {{len .Datos}}</h1>
             {{range .Datos}}
             <div id="{{.Proyecto.ID}}">
-                <button onclick="changeToAddList(event)">Añadir Lista al proyecto</button>
+                <button onclick="changeToProyectConfig(event)">Configuracion del proyecto</button>
                 <h1>{{.Proyecto.Name}}</h1>
                 <p>{{.Proyecto.Description}}</p>
                 <h2>Usuarios del proyecto:</h2>
@@ -40,23 +39,36 @@
                     {{end}}
                 </ul>
    
+                <button onclick="changeToAddList(event)">Añadir Lista al proyecto</button>
                 <button>Actualizar Proyecto</button>
                 <button class="deleteProyect" onclick="deleteProyect(event)">Eliminar Proyecto</button>
+
                 {{if not .Listas}}
                     <h2>Ninguna Lista que mostrar</h2>
                 {{else}}
-                    <h2>Listas:</h2>
-                    {{range .Listas}}
-                    <input  name="listaID" type="hidden" value={{.ID}}>
-                    <h3> {{.Name}}</h3>
-                    <p>{{.Description}}</p>
-                    {{end}}
+                    <h3>Numero de listas en el proyecto: {{len .Listas}}</h3>
+                    <ul class="listas">
+                        {{range .Listas}}
+                            <li id={{.ID}}>
+                                <button onclick="changeToListConfig(event)">Configuracion de la Lista</button>
+                                <h3> {{.Name}}</h3>
+                                <p>{{.Description}}</p>
+                                <button onclick="changeToTasks(event)">Ver Tareas de la lista</button>
+                                <h4>Usuarios de la lista:</h4>
+                                <ul id="users_list">
+                                    {{range .Users}}
+                                        <li>{{.}}</li>
+                                    {{end}}
+                                </ul>
+                                <button class="deleteList" onclick="deleteList(event)">Eliminar Lista</button>
+                            </li>
+                        {{end}}
+                    </ul>                    
                 {{end}}
                 <p>---------------------------------------------------------------------------</p>
             </div>
             {{end}}
         {{end}}
- 
     </div>
 
     
@@ -86,32 +98,72 @@
     function changeToAddList(event){
         var div = event.target.closest('div');
         proyectID = div.id;
-
-        let usersProyectElement = div.querySelectorAll('li')
-        let usersProyect = []
-        for (let i = 0; i < usersProyectElement.length; i++) {
-            usersProyect.push(usersProyectElement[i].textContent)
-        }
-
-        changeToAddListGO(proyectID, usersProyect).then(
+        changeToAddListGO(proyectID).then(
             function(){
                 
             }
         )
     }
 
+    function changeToProyectConfig(event){
+        var div = event.target.closest('div');
+        proyectID = div.id;
+        changeToProyectConfigGO(proyectID).then(
+            function(){
+                
+            }
+        )
+    }
+
+    function changeToListConfig(event){
+        var div = event.target.closest('div');
+        proyectID = div.id;
+        var li = event.target.closest('li');
+        listID = li.id;
+        changeToListConfigGO(listID, proyectID).then(
+            function(){
+            }
+        )
+    }
+
+    function changeToTasks(event){
+        var li = event.target.closest('li');
+        listID = li.id;
+        changeToTasksGO(listID).then(
+            function(){
+            }
+        )
+    }
+
+
+
+
+    function deleteList(event){
+        var li = event.target.closest('li');
+        listID = li.id;
+
+        var div = event.target.closest('div');
+        proyectID = div.id;
+
+
+        deleteListGO(listID, proyectID).then(
+            function(valorDesdeGO){
+                if (valorDesdeGO == false){
+                    alert('La lista no se borro')
+                }else{
+                    changeHome()
+                }
+            }
+        )
+    }
+
+
 
     function deleteProyect(event){
         var div = event.target.closest('div');
         proyectID = div.id;
 
-        let listas = div.querySelectorAll('input[name="listaID"]')
-        let listasIDs = []
-        for (let i = 0; i < listas.length; i++){
-            listasIDs.push(listas[i].value)
-        }
-
-        deleteProyectGO(proyectID, listasIDs).then(
+        deleteProyectGO(proyectID).then(
             function(valorDesdeGO){
                 if (valorDesdeGO == false){
                     alert('El proyecto no se borro')

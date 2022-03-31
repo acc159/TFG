@@ -12,7 +12,7 @@
 
     <label for="name">Nombre de la lista</label>
     <input type="text" id="name" name="name"><br><br>
-    <label for="description">Nombre de la lista</label>
+    <label for="description">Descripción de la lista</label>
     <input type="text" id="description" name="description"><br><br>
 
     <select name="usuarios" id="usuarios" multiple>
@@ -46,7 +46,11 @@
 
         addListGO(lista, proyectID).then(
             function(response){
-
+                if (response == false){
+                    alert('La lista no se a creado')
+                }else{
+                    changeHome()
+                }
             }
         )
     }

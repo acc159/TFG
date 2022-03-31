@@ -20,15 +20,18 @@ type User struct {
 	Rol        string             `bson:"rol"`
 }
 
-var UserSesion User
-
 type DatosUser struct {
 	Proyecto Proyect
 	Listas   []List
 }
 
+//Contiene los proyectos y listas del usuario
 var DatosUsuario []DatosUser
 
+//Contiene los datos del usuario
+var UserSesion User
+
+//Registro del usuario POR TERMINAR
 func Register(email string, password string) bool {
 
 	//Pruebas
@@ -89,13 +92,13 @@ func Register(email string, password string) bool {
 	//El usuario accede
 }
 
+//Registro del usuario en el servidor
 func RegisterServer(user User) string {
 	//Convertimos el user de tipo objeto GO a un JSON
 	userJSON, err := json.Marshal(user)
 	if err != nil {
 		fmt.Println(err)
 	}
-
 	//Preparo la peticion POST
 	url := config.URLbase + "signup"
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(userJSON))
@@ -125,13 +128,11 @@ func RegisterServer(user User) string {
 	}
 }
 
+//Login del usuario
 func LogIn(email string, password string) bool {
-
 	user_pass := email + password
 	UserSesion.Email = email
-
 	UserSesion = LogInServer()
-
 	err := bcrypt.CompareHashAndPassword(UserSesion.ServerKey, []byte(user_pass))
 	if err != nil {
 		fmt.Println(err)
@@ -141,9 +142,9 @@ func LogIn(email string, password string) bool {
 		fmt.Println("La contraseña coincide")
 		return true
 	}
-
 }
 
+//Login del usuario en el servidor
 func LogInServer() User {
 	userJSON, err := json.Marshal(UserSesion)
 	if err != nil {
@@ -176,11 +177,13 @@ func LogInServer() User {
 	}
 }
 
+//Cerrar la sesion
 func LogOut() {
 	UserSesion = User{}
 	DatosUsuario = []DatosUser{}
 }
 
+//Recupero todos los usuarios
 func GetUsers() []User {
 	var usersResponse []User
 	resp, err := http.Get(config.URLbase + "users")
@@ -199,40 +202,33 @@ func GetUsers() []User {
 	}
 }
 
-//Obtengo los proyectos y sus listas asociadas para el usuario
+//Obtengo las relaciones junto a los proyectos y sus listas asociadas para el usuario
 func GetUserProyectsLists() {
-
 	//Limpio los datos del usuario
 	DatosUsuario = []DatosUser{}
-
 	//Recupero las relaciones
 	relations := GetProyectsListsByUser(UserSesion.Email)
 	if len(relations) > 0 {
 		//Proyectos
 		for i := 0; i < len(relations); i++ {
 			proyecto := GetProyect(relations[i].ProyectID.Hex())
-
 			//Listas
 			var ListsIDs []string
 			for j := 0; j < len(relations[i].Lists); j++ {
-				ListsIDs = append(ListsIDs, relations[i].Lists[j].ListID.Hex())
+				ListsIDs = append(ListsIDs, relations[i].Lists[j].ListID)
 			}
 			var lists []ListCipher
 			if len(ListsIDs) > 0 {
 				lists = GetListsByIDs(ListsIDs)
 			}
-
 			//Desciframos el proyecto
 			proyectoDescifrado := DescifrarProyecto(proyecto)
-
 			//Desciframos las listas del proyecto
 			var listsDescifradas []List
 			for index := 0; index < len(lists); index++ {
 				listsDescifradas = append(listsDescifradas, DescifrarLista(lists[index]))
 			}
-
 			//Desciframos las listas
-
 			datos := DatosUser{
 				Proyecto: proyectoDescifrado,
 				Listas:   listsDescifradas,
@@ -240,7 +236,6 @@ func GetUserProyectsLists() {
 			DatosUsuario = append(DatosUsuario, datos)
 		}
 	}
-	//return DatosUsuario
 }
 
 /*

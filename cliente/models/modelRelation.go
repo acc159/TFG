@@ -19,12 +19,12 @@ type Relation struct {
 }
 
 type RelationLists struct {
-	ListID  primitive.ObjectID `bson:"listID,omitempty"`
-	ListKey string             `bson:"listKey,omitempty"`
+	ListID  string `bson:"listID,omitempty"`
+	ListKey string `bson:"listKey,omitempty"`
 }
 
+//Recupero las relaciones para un usuario dado su email
 func GetProyectsListsByUser(userEmail string) []Relation {
-
 	resp, err := http.Get(config.URLbase + "relations/" + userEmail)
 	if err != nil {
 		fmt.Println(err)
@@ -40,25 +40,21 @@ func GetProyectsListsByUser(userEmail string) []Relation {
 	}
 }
 
-func CreateRelation(userEmail string, proyectStringID string, listStringID string) bool {
+//Creo una relacion sin listas FALTA RELLENAR EL CAMPO PROYECT KEY
+func CreateRelation(userEmail string, proyectStringID string) bool {
 	//userID, _ := primitive.ObjectIDFromHex(userStringID)
 	proyectID, _ := primitive.ObjectIDFromHex(proyectStringID)
-
-	//Compruebo si es una relacion de proyecto sin lista o con lista
-
 	//Creo la relacion a enviar
 	relation := Relation{
 		UserEmail:  userEmail,
 		ProyectID:  proyectID,
 		ProyectKey: "asdfasdfasdfsdafsdf",
 	}
-
 	//Pasamos el tipo Relation a JSON
 	relationJSON, err := json.Marshal(relation)
 	if err != nil {
 		fmt.Println(err)
 	}
-
 	//Peticion POST
 	url := config.URLbase + "relation"
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(relationJSON))
@@ -67,13 +63,11 @@ func CreateRelation(userEmail string, proyectStringID string, listStringID strin
 	}
 	req.Header.Set("Content-Type", "application/json")
 	client := &http.Client{}
-
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
-
 	if resp.StatusCode == 400 {
 		fmt.Println("La relacion no pudo ser creada")
 		return false
@@ -83,34 +77,47 @@ func CreateRelation(userEmail string, proyectStringID string, listStringID strin
 		fmt.Println(responseObject)
 		return true
 	}
-
 }
 
-func AddListToRelation(proyectID string, listID string) {
-	//Recupero la relacion
-
-	//Actualizo
-}
-
-/*
-func DeleteRelation(userStringID string, proyectStringID string, listStringID string) {
-
-	userID, _ := primitive.ObjectIDFromHex(userStringID)
-	proyectID, _ := primitive.ObjectIDFromHex(proyectStringID)
-	listID, _ := primitive.ObjectIDFromHex(listStringID)
-
-	relation := Relation{
-		UserID:    userID,
-		ListID:    listID,
-		ProyectID: proyectID,
+//Añado una lista a la relacion dada
+func AddListToRelation(proyectID string, listIDstring string, userEmail string) bool {
+	//Creo la Relacion Lista
+	// listID, _ := primitive.ObjectIDFromHex(listIDstring)
+	relationList := RelationLists{
+		ListID:  listIDstring,
+		ListKey: "sadfsadfsadfsad",
 	}
-
-	relationJSON, err := json.Marshal(relation)
+	relationListJSON, err := json.Marshal(relationList)
 	if err != nil {
 		fmt.Println(err)
 	}
+	url := config.URLbase + "relations/list/" + proyectID + "/" + userEmail
+	req, err := http.NewRequest("PUT", url, bytes.NewBuffer(relationListJSON))
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode == 400 {
+		return false
+	} else {
+		return true
+	}
+}
 
-	url := config.URLbase + "relations"
+//Elimino una lista dado su id en una relacion
+func DeleteRelationList(proyectStringID string, listStringID string, userEmail string) {
+	datos := []string{userEmail, proyectStringID, listStringID}
+	relationJSON, err := json.Marshal(datos)
+	if err != nil {
+		fmt.Println(err)
+	}
+	url := config.URLbase + "relations/list"
 	req, err := http.NewRequest("DELETE", url, bytes.NewBuffer(relationJSON))
 	if err != nil {
 		panic(err)
@@ -122,14 +129,12 @@ func DeleteRelation(userStringID string, proyectStringID string, listStringID st
 	if err != nil {
 		fmt.Println(err)
 	}
-	defer resp.Body.Close()git a
-
+	defer resp.Body.Close()
 	if resp.StatusCode == 400 {
-		fmt.Println("La relacion no pudo ser borrada")
+		fmt.Println("La lista en la relacion no pudo ser borrada")
 	} else {
 		var resultado string
 		json.NewDecoder(resp.Body).Decode(&resultado)
 		fmt.Println(resultado)
 	}
 }
-*/

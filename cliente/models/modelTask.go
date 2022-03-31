@@ -21,25 +21,30 @@ type Task struct {
 }
 
 type TaskCipher struct {
+	ID         primitive.ObjectID `bson:"_id,omitempty"`
 	Cipherdata string             `bson:"cipherdata,omitempty"`
 	ListID     primitive.ObjectID `bson:"listID,omitempty"`
 }
 
-func GetTasksByList() {
-	listID := "6239fb356f2ad453296c5807"
-
+//Recupero las tareas por su ListID
+func GetTasksByList(listID string) []Task {
 	resp, err := http.Get(config.URLbase + "tasks/" + listID)
 	if err != nil {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
-
+	var tasks []Task
 	if resp.StatusCode == 400 {
 		fmt.Println("Ningun tarea para dicha lista")
+		return tasks
 	} else {
-		var responseObject []Task
-		json.NewDecoder(resp.Body).Decode(&responseObject)
-		fmt.Println(responseObject)
+		var tasksCipher []TaskCipher
+		json.NewDecoder(resp.Body).Decode(&tasksCipher)
+		var tasks []Task
+		for i := 0; i < len(tasksCipher); i++ {
+			tasks = append(tasks, DescifrarTarea(tasksCipher[i]))
+		}
+		return tasks
 	}
 }
 
@@ -145,5 +150,20 @@ func DeleteTask() {
 		var resultado string
 		json.NewDecoder(resp.Body).Decode(&resultado)
 		fmt.Println(resultado)
+	}
+}
+
+func DescifrarTarea(taskCipher TaskCipher) Task {
+	return Task{
+		ID:          taskCipher.ID,
+		Nombre:      "Nombre de la tarea",
+		Descripcion: "Descripcion de la tarea",
+		Estado:      "En progreso",
+	}
+}
+
+func CifrarTarea(task Task) TaskCipher {
+	return TaskCipher{
+		Cipherdata: "DASFSDFASDFSDF",
 	}
 }

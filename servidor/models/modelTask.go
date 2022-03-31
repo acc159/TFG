@@ -101,7 +101,7 @@ func UpdateTask(newTask Task, idString string) bool {
 }
 
 //Para eliminar todas las tareas que pertenezcan a la misma Lista
-func DeleteByListID(idString string) bool {
+func DeleteTasksByListID(idString string) bool {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	//Obtengo la coleccion
