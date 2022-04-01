@@ -7,10 +7,50 @@
 </head>
 <body>
     <button onclick="changeHome()">Volver al Home</button>
+    <button onclick="addUserList()">Añadir usuario</button>
     <h1>Configuración de la Lista</h1>
     {{.List.ID}}
     {{.List.Name}}
 
+    <ul class="users_list">
+        {{range .List.Users}}
+            <li id={{.}}>
+                {{.}}
+            </li>
+            <button onclick="deleteUser({{.}})">Eliminar usuario</button>
+        {{end}}
+    </ul>
+
     <h2>Usuarios del proyecto al que pertenece la lista: {{len .Proyect.Users}}</h2>
+    <h2 id="proyectID">{{.Proyect.ID}}</h2>
+    <h2 id="listID">{{.List.ID}}</h2>
 </body>
 </html>
+
+<script>
+    function deleteUser(userEmail){
+        let proyectID = document.querySelector('#proyectID').textContent;
+        let listID = document.querySelector('#listID').textContent;
+        deleteUserListGO(userEmail, listID, proyectID).then(
+            function(){
+
+            }
+        )
+    }
+
+
+    function addUserList(){
+        let listID = document.querySelector('#listID').textContent;
+        let proyectID = document.querySelector('#proyectID').textContent;
+        let userEmail = "prueba"
+        addUserListGO(userEmail, proyectID, listID).then(
+            function(response){
+                if (response){
+                    alert('Usuario añadido')
+                }else{
+                    alert('No se añadio el usuario')
+                }
+            }
+        )
+    }
+</script>

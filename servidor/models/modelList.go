@@ -9,6 +9,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type List struct {
@@ -151,20 +152,22 @@ func AddUserList(stringID string, user string) bool {
 }
 
 //Elimino un usuario del array Users de la lista
-func DeleteUserList(stringID string, user string) bool {
+func DeleteUserList(listStringID string, user string) bool {
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	coleccion := config.InstanceDB.DB.Collection("lists")
-	id, _ := primitive.ObjectIDFromHex(stringID)
+	id, _ := primitive.ObjectIDFromHex(listStringID)
 	filter := bson.D{{Key: "_id", Value: id}}
 	update := bson.M{"$pull": bson.M{"users": user}}
+	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
 
-	var updatedDoc bson.D
-	err := coleccion.FindOneAndUpdate(ctx, filter, update).Decode(&updatedDoc)
+	var listUpdated List
+	err := coleccion.FindOneAndUpdate(ctx, filter, update, opts).Decode(&listUpdated)
 	if err != nil {
 		log.Println(err)
 	}
-	if len(updatedDoc) == 0 {
-		return false
+	//Si ya no quedan mas usuarios en la lista la borro
+	if len(listUpdated.Users) == 0 {
+		DeleteList(listStringID)
 	}
 	return true
 }

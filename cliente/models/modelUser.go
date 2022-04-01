@@ -135,7 +135,6 @@ func LogIn(email string, password string) bool {
 	UserSesion = LogInServer()
 	err := bcrypt.CompareHashAndPassword(UserSesion.ServerKey, []byte(user_pass))
 	if err != nil {
-		fmt.Println(err)
 		UserSesion = User{}
 		return false
 	} else {
@@ -238,6 +237,7 @@ func GetUserProyectsLists() {
 	}
 }
 
+//Elimina a un usuario del sistema borrandolo de todo proyectos, listas y tareas
 func DeleteUser(userEmail string) {
 	DatosUsuario = []DatosUser{}
 	//Recupero las relaciones junto a los proyectos y las listas Mejorable el pensar en llamar a una funcion que no descifre todo porque no lo necesitamos
@@ -259,6 +259,9 @@ func DeleteUser(userEmail string) {
 				} else {
 					//Quito al usuario del array Users de la Lista
 					DeleteUserList(DatosUsuario[i].Listas[j].ID, userEmail)
+
+					//Traer las tareas de la lista y quitar al usuario de todas ellas
+
 				}
 			}
 		}
@@ -269,6 +272,7 @@ func DeleteUser(userEmail string) {
 	DeleteUserByEmail(userEmail)
 }
 
+//Elimino al usuario del sistema
 func DeleteUserByEmail(userEmail string) bool {
 	url := config.URLbase + "users/" + userEmail
 	req, err := http.NewRequest("DELETE", url, nil)
@@ -283,7 +287,7 @@ func DeleteUserByEmail(userEmail string) bool {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode == 400 {
-		fmt.Println("El usuario no pudo ser eliminado del proyecto")
+		fmt.Println("El usuario no pudo ser eliminado sistema")
 		return false
 	} else {
 		return true

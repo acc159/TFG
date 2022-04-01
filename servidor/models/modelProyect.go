@@ -9,6 +9,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type Proyect struct {
@@ -112,20 +113,22 @@ func AddUserProyect(stringID string, user string) bool {
 }
 
 //Elimino un usuario del array Users del proyecto
-func DeleteUserProyect(stringID string, user string) bool {
+func DeleteUserProyect(proyectStringID string, user string) bool {
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	coleccion := config.InstanceDB.DB.Collection("proyects")
-	id, _ := primitive.ObjectIDFromHex(stringID)
+	id, _ := primitive.ObjectIDFromHex(proyectStringID)
 	filter := bson.D{{Key: "_id", Value: id}}
 	update := bson.M{"$pull": bson.M{"users": user}}
+	//Para que me devuelva el documento actualizado
+	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
 
-	var updatedDoc bson.D
-	err := coleccion.FindOneAndUpdate(ctx, filter, update).Decode(&updatedDoc)
+	var updateProyect Proyect
+	err := coleccion.FindOneAndUpdate(ctx, filter, update, opts).Decode(&updateProyect)
 	if err != nil {
 		log.Println(err)
 	}
-	if len(updatedDoc) == 0 {
-		return false
+	if len(updateProyect.Users) == 0 {
+		DeleteProyect(proyectStringID)
 	}
 	return true
 }

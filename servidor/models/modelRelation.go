@@ -55,9 +55,10 @@ func GetRelationsbyUserEmail(userEmail string) []Relation {
 }
 
 //Elimino una relacion dados su email y su proyectID
-func DeleteRelation(userEmail string, proyectID primitive.ObjectID) bool {
+func DeleteRelation(userEmail string, proyectIDString string) bool {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
+	proyectID, _ := primitive.ObjectIDFromHex(proyectIDString)
 	coleccion := config.InstanceDB.DB.Collection("users_proyects_lists")
 	filter := bson.D{{Key: "userEmail", Value: userEmail}, {Key: "proyectID", Value: proyectID}}
 	err := coleccion.FindOneAndDelete(ctx, filter)
@@ -74,6 +75,8 @@ func DeleteRelationByProyectID(proyectID string) bool {
 	_, err := coleccion.DeleteMany(ctx, filter)
 	return err == nil
 }
+
+//Elimino la relacion de un usuario y un proyecto
 
 //Elimino una lista de una relacion concreta
 func DeleteListRelation(userEmail string, proyectIDstring string, listIDstring string) bool {
@@ -110,6 +113,21 @@ func AddListToRelation(userEmail string, proyectIDstring string, list RelationLi
 		return false
 	}
 	return true
+}
+
+//Recupero una relacion para un proyecto y un email dado
+func GetRelationsByUserProyect(userEmail string, proyectIDstring string) Relation {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	coleccion := config.InstanceDB.DB.Collection("users_proyects_lists")
+	proyectID, _ := primitive.ObjectIDFromHex(proyectIDstring)
+	filter := bson.D{{Key: "userEmail", Value: userEmail}, {Key: "proyectID", Value: proyectID}}
+	var relation Relation
+	err := coleccion.FindOne(ctx, filter).Decode(&relation)
+	if err != nil {
+		log.Println(err)
+	}
+	return relation
 }
 
 //Sin usar

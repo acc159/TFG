@@ -41,14 +41,14 @@ func GetProyectsListsByUser(userEmail string) []Relation {
 }
 
 //Creo una relacion sin listas FALTA RELLENAR EL CAMPO PROYECT KEY
-func CreateRelation(userEmail string, proyectStringID string) bool {
+func CreateRelation(userEmail string, proyectStringID string, proyectKey string) bool {
 	//userID, _ := primitive.ObjectIDFromHex(userStringID)
 	proyectID, _ := primitive.ObjectIDFromHex(proyectStringID)
 	//Creo la relacion a enviar
 	relation := Relation{
 		UserEmail:  userEmail,
 		ProyectID:  proyectID,
-		ProyectKey: "asdfasdfasdfsdafsdf",
+		ProyectKey: proyectKey,
 	}
 	//Pasamos el tipo Relation a JSON
 	relationJSON, err := json.Marshal(relation)
@@ -80,12 +80,12 @@ func CreateRelation(userEmail string, proyectStringID string) bool {
 }
 
 //Añado una lista a la relacion dada
-func AddListToRelation(proyectID string, listIDstring string, userEmail string) bool {
+func AddListToRelation(proyectID string, listIDstring string, userEmail string, listKey string) bool {
 	//Creo la Relacion Lista
 	// listID, _ := primitive.ObjectIDFromHex(listIDstring)
 	relationList := RelationLists{
 		ListID:  listIDstring,
-		ListKey: "sadfsadfsadfsad",
+		ListKey: listKey,
 	}
 	relationListJSON, err := json.Marshal(relationList)
 	if err != nil {
@@ -112,13 +112,8 @@ func AddListToRelation(proyectID string, listIDstring string, userEmail string) 
 
 //Elimino una lista dado su id en una relacion
 func DeleteRelationList(proyectStringID string, listStringID string, userEmail string) {
-	datos := []string{userEmail, proyectStringID, listStringID}
-	relationJSON, err := json.Marshal(datos)
-	if err != nil {
-		fmt.Println(err)
-	}
-	url := config.URLbase + "relations/list"
-	req, err := http.NewRequest("DELETE", url, bytes.NewBuffer(relationJSON))
+	url := config.URLbase + "relations/list/" + userEmail + "/" + proyectStringID + "/" + listStringID
+	req, err := http.NewRequest("DELETE", url, nil)
 	if err != nil {
 		panic(err)
 	}
@@ -158,5 +153,44 @@ func DeleteUserRelation(userEmail string) bool {
 		return false
 	} else {
 		return true
+	}
+}
+
+//Elimino la relacion con el proyectID y el userEmail dados
+func DeleteUserProyectRelation(userEmail string, proyectID string) bool {
+	url := config.URLbase + "relations/" + proyectID + "/" + userEmail
+	req, err := http.NewRequest("DELETE", url, nil)
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode == 400 {
+		fmt.Println("La relacion usuario-proyecto no pudo ser eliminada")
+		return false
+	} else {
+		return true
+	}
+}
+
+//Devolver una relacion para un usuario y proyecto dado
+func GetRelationUserProyect(userEmail string, proyectID string) Relation {
+	resp, err := http.Get(config.URLbase + "relations/" + userEmail + "/" + proyectID)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer resp.Body.Close()
+	var relation Relation
+	if resp.StatusCode == 400 {
+		fmt.Println("Ningun proyecto ni lista para dicho usuario")
+		return relation
+	} else {
+		json.NewDecoder(resp.Body).Decode(&relation)
+		return relation
 	}
 }

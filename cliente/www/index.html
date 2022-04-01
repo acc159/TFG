@@ -28,6 +28,8 @@
             {{range .Datos}}
             <div id="{{.Proyecto.ID}}">
                 <button onclick="changeToProyectConfig(event)">Configuracion del proyecto</button>
+                <button onclick="changeToAddList(event)">Añadir Lista al proyecto</button>
+                <button class="deleteProyect" onclick="deleteProyect(event)">Eliminar Proyecto</button>
                 <h1>{{.Proyecto.Name}}</h1>
                 <p>{{.Proyecto.Description}}</p>
                 <h2>Usuarios del proyecto:</h2>
@@ -39,11 +41,6 @@
                         {{end}}
                     {{end}}
                 </ul>
-   
-                <button onclick="changeToAddList(event)">Añadir Lista al proyecto</button>
-                <button>Actualizar Proyecto</button>
-                <button class="deleteProyect" onclick="deleteProyect(event)">Eliminar Proyecto</button>
-
                 {{if not .Listas}}
                     <h2>Ninguna Lista que mostrar</h2>
                 {{else}}
@@ -52,16 +49,16 @@
                         {{range .Listas}}
                             <li id={{.ID}}>
                                 <button onclick="changeToListConfig(event)">Configuracion de la Lista</button>
+                                <button onclick="changeToTasks(event)">Ver Tareas de la lista</button>
+                                <button class="deleteList" onclick="deleteList(event)">Eliminar Lista</button>
                                 <h3> {{.Name}}</h3>
                                 <p>{{.Description}}</p>
-                                <button onclick="changeToTasks(event)">Ver Tareas de la lista</button>
                                 <h4>Usuarios de la lista:</h4>
                                 <ul id="users_list">
                                     {{range .Users}}
                                         <li>{{.}}</li>
                                     {{end}}
                                 </ul>
-                                <button class="deleteList" onclick="deleteList(event)">Eliminar Lista</button>
                             </li>
                         {{end}}
                     </ul>                    
@@ -71,12 +68,6 @@
             {{end}}
         {{end}}
     </div>
-
-    
-
-    <div class="proyectos" id="proyectos">
-    </div>
-
     <h2>Ir a añadir un proyecto</h2>
     <button onclick="changeToAddProyect()">Añadir un proyecto</button>
 

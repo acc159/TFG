@@ -7,8 +7,43 @@
 </head>
 <body>
     <button onclick="changeHome()">Volver al Home</button>
+    <button onclick="addUserProyect()">Añadir usuario</button>
     <h1>Configuracion del proyecto</h1>
-    {{.Proyect.ID}}
+    <h2 id="proyectID">{{.Proyect.ID}}</h2>
     {{.Proyect.Name}}
+
+    <ul class="users_proyect">
+        {{range .Proyect.Users}}
+            <li id={{.}}>
+                {{.}}
+            </li>
+            <button onclick="deleteUser({{.}})">Eliminar usuario</button>
+        {{end}}
+    </ul>
 </body>
 </html>
+
+<script>
+    function deleteUser(userEmail){
+        let proyectID = document.querySelector('#proyectID').textContent;
+        deleteUserProyectGO(userEmail, proyectID).then(
+            function(){
+
+            }
+        )
+    }
+
+    function addUserProyect(){
+        let proyectID = document.querySelector('#proyectID').textContent;
+        let userEmail = "prueba"
+        addUserProyectGO(userEmail, proyectID).then(
+            function(response){
+                if (response){
+                    alert('Usuario añadido')
+                }else{
+                    alert('No se añadio el usuario')
+                }
+            }
+        )
+    }
+</script>

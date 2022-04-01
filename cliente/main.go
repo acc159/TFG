@@ -99,7 +99,7 @@ func main() {
 		listID := models.CreateList(list, proyectID)
 		//Añado la lista a la relacion del proyecto para cada usuario miembro de la lista
 		for i := 0; i < len(list.Users); i++ {
-			models.AddListToRelation(proyectID, listID, list.Users[i])
+			models.AddListToRelation(proyectID, listID, list.Users[i], "Clave para la lista Cifrada")
 		}
 		return true
 	})
@@ -129,6 +129,43 @@ func main() {
 		}
 		//Elimino la lista
 		return models.DeleteList(listID)
+	})
+
+	//Borrar un usuario de un Proyecto
+	UI.Bind("deleteUserProyectGO", func(userEmail string, proyectID string) {
+		//Borro al usuario del proyecto
+		models.DeleteUserProyect(proyectID, userEmail)
+		//Borro la relacion
+		models.DeleteUserProyectRelation(userEmail, proyectID)
+	})
+
+	//Añadir un usuario al proyecto
+	UI.Bind("addUserProyectGO", func(userEmail string, proyectID string) bool {
+		return models.AddUserProyect(proyectID, userEmail)
+	})
+
+	//Borrar un usuario de una Lista
+	UI.Bind("deleteUserListGO", func(userEmail string, listID string, proyectID string) {
+		//Borro al usuario de la lista
+		models.DeleteUserList(listID, userEmail)
+		//Borro la lista en la relacion donde aparece
+		models.DeleteRelationList(proyectID, listID, userEmail)
+		if userEmail == models.UserSesion.Email {
+			//Si el usuario borrado es el que es el actual de la sesion lo redirijo a la home
+			models.GetUserProyectsLists()
+			ChangeViewWithValues(config.PreView + "index.html")
+		} else {
+			listCipher := models.GetList(listID)
+			proyectCipher := models.GetProyect(proyectID)
+			//Descifro
+			list := models.DescifrarLista(listCipher)
+			proyect := models.DescifrarProyecto(proyectCipher)
+			ChangeViewConfig(config.PreView+"configList.html", proyect, list)
+		}
+	})
+
+	UI.Bind("addUserListGO", func(userEmail string, proyectID string, listID string) {
+		models.AddUserList(userEmail, proyectID, listID)
 	})
 
 	//Cerrar la sesion

@@ -12,10 +12,12 @@ func Relation(r *mux.Router) {
 	r.HandleFunc("/relations/{email}", handlers.GetRelations).Methods("GET")
 	//Creo una nueva relacion
 	r.HandleFunc("/relation", handlers.CreateRelation).Methods("POST")
+	//Recupero una relacion para un Proyecto y un Email dado
+	r.HandleFunc("/relations/{email}/{proyectID}", handlers.GetRelationsByUserProyect).Methods("GET")
 	//Borro una relacion
-	r.HandleFunc("/relations", handlers.DeleteRelation).Methods("DELETE")
+	r.HandleFunc("/relations/{proyectID}/{userEmail}", handlers.DeleteRelation).Methods("DELETE")
 	//Borro la lista de una relacion
-	r.HandleFunc("/relations/list", handlers.DeleteListRelation).Methods("DELETE")
+	r.HandleFunc("/relations/list/{userEmail}/{proyectID}/{listID}", handlers.DeleteListRelation).Methods("DELETE")
 	//Añado una lista nueva al campo lists de una relacion
 	r.HandleFunc("/relations/list/{proyectID}/{userEmail}", handlers.AddListToRelation).Methods("PUT")
 	//Borro todas las relaciones para un usuario dado

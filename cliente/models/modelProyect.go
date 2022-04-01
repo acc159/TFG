@@ -77,7 +77,7 @@ func CreateProyect(newProyect Proyect) bool {
 	json.NewDecoder(resp.Body).Decode(&proyectID)
 	//Creamos la relacion para el usuario que crea el proyecto y para cada uno de los usuarios del campo user
 	for i := 0; i < len(newProyect.Users); i++ {
-		CreateRelation(newProyect.Users[i], proyectID)
+		CreateRelation(newProyect.Users[i], proyectID, "Clave del proyecto Cifrada")
 	}
 	return true
 }
@@ -122,6 +122,14 @@ func GetUsersProyect(proyectID string) []string {
 
 //Elimino al usuario del array Users del proyecto
 func DeleteUserProyect(proyectID string, userEmail string) bool {
+
+	//Recupero la relacion para quitar tambien al usuario de las listas del proyecto donde este
+	relation := GetRelationUserProyect(userEmail, proyectID)
+	//Para cada lista que tiene el proyecto elimino al usuario de dicha lista
+	for i := 0; i < len(relation.Lists); i++ {
+		DeleteUserList(relation.Lists[i].ListID, userEmail)
+	}
+
 	url := config.URLbase + "proyect/users/" + proyectID + "/" + userEmail
 	req, err := http.NewRequest("DELETE", url, nil)
 	if err != nil {
@@ -136,6 +144,37 @@ func DeleteUserProyect(proyectID string, userEmail string) bool {
 	defer resp.Body.Close()
 	if resp.StatusCode == 400 {
 		fmt.Println("El usuario no pudo ser eliminado del proyecto")
+		return false
+	} else {
+		return true
+	}
+}
+
+//Añadir un usuario a un proyecto
+func AddUserProyect(proyectIDstring string, userEmail string) bool {
+
+	//Recupero la relacion para el usuario actual para poder descifrar la clave del proyecto que necesitare cifrar para añadir a la relacion del nuevo usuario
+	relationUser := GetRelationUserProyect(UserSesion.Email, proyectIDstring)
+
+	//Desciframos y obtenemos una nueva
+	proyectKey := relationUser.ProyectKey
+	CreateRelation(userEmail, proyectIDstring, proyectKey)
+
+	//Añado el usuario al array de usuarios del proyecto
+	url := config.URLbase + "proyect/users/" + proyectIDstring + "/" + userEmail
+	req, err := http.NewRequest("POST", url, nil)
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode == 400 {
+		fmt.Println("El usuario no pudo ser añadido al proyecto")
 		return false
 	} else {
 		return true

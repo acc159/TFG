@@ -38,9 +38,10 @@ func CreateRelation(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteRelation(w http.ResponseWriter, r *http.Request) {
-	var relation models.Relation
-	json.NewDecoder(r.Body).Decode(&relation)
-	resultado := models.DeleteRelation(relation.UserEmail, relation.ProyectID)
+	params := mux.Vars(r)
+	proyectID := params["proyectID"]
+	userEmail := params["userEmail"]
+	resultado := models.DeleteRelation(userEmail, proyectID)
 	if resultado {
 		respuesta := "La relacion fue borrada"
 		json.NewEncoder(w).Encode(respuesta)
@@ -52,9 +53,11 @@ func DeleteRelation(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteListRelation(w http.ResponseWriter, r *http.Request) {
-	var relation []string
-	json.NewDecoder(r.Body).Decode(&relation)
-	resultado := models.DeleteListRelation(relation[0], relation[1], relation[2])
+	params := mux.Vars(r)
+	proyectID := params["proyectID"]
+	userEmail := params["userEmail"]
+	listID := params["listID"]
+	resultado := models.DeleteListRelation(userEmail, proyectID, listID)
 	if resultado {
 		respuesta := "La lista en la relacion fue borrada"
 		json.NewEncoder(w).Encode(respuesta)
@@ -105,5 +108,19 @@ func DeleteRelationByUser(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Las relaciones no se han borrado"))
 	} else {
 		w.Write([]byte("Todas las relaciones del usuario han sido borradas"))
+	}
+}
+
+func GetRelationsByUserProyect(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	email := params["email"]
+	proyectID := params["proyectID"]
+	relation := models.GetRelationsByUserProyect(email, proyectID)
+	if relation.ID.Hex() == "000000000000000000000000" {
+		w.WriteHeader(400)
+		w.Write([]byte("Ninguna relacion para dicho usuario y proyecto"))
+		return
+	} else {
+		json.NewEncoder(w).Encode(relation)
 	}
 }

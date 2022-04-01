@@ -148,7 +148,7 @@ func GetList(listID string) ListCipher {
 	}
 }
 
-//Elimino al usuario del array Users del proyecto
+//Elimino al usuario del array Users de la lista
 func DeleteUserList(listID string, userEmail string) bool {
 	url := config.URLbase + "list/users/" + listID + "/" + userEmail
 	req, err := http.NewRequest("DELETE", url, nil)
@@ -163,7 +163,45 @@ func DeleteUserList(listID string, userEmail string) bool {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode == 400 {
-		fmt.Println("El usuario no pudo ser eliminado del proyecto")
+		fmt.Println("El usuario no pudo ser eliminado de la lista")
+		return false
+	} else {
+		return true
+	}
+}
+
+//Añadir usuario a una lista
+func AddUserList(userEmail string, proyectID string, listID string) bool {
+	//Recupero la relacion para el usuario actual para poder descifrar la clave del proyecto que necesitare cifrar para añadir a la relacion del nuevo usuario
+	relationUser := GetRelationUserProyect(UserSesion.Email, proyectID)
+	//Obtengo la clave para la lista determinada
+	var listKey string
+	for i := 0; i < len(relationUser.Lists); i++ {
+		if relationUser.Lists[i].ListID == listID {
+			listKey = relationUser.Lists[i].ListKey
+		}
+	}
+
+	//Cifro para el nuevo usuario
+
+	//Añado la lista a la relacion
+	AddListToRelation(proyectID, listID, userEmail, listKey)
+
+	//Añado el usuario al array Users de la lista
+	url := config.URLbase + "list/users/" + listID + "/" + userEmail
+	req, err := http.NewRequest("POST", url, nil)
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode == 400 {
+		fmt.Println("El usuario no pudo ser añadido a la lista")
 		return false
 	} else {
 		return true
