@@ -3,12 +3,21 @@ package main
 import (
 	"cliente/config"
 	"cliente/models"
+	"cliente/utils"
+	"fmt"
 	"os"
 	"os/signal"
+	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func main() {
 	//Inicio la interfaz visual
+
+	datos := utils.TaskToBytes()
+	utils.BytesToTask(datos)
+
 	InitUI()
 	defer UI.Close()
 
@@ -66,6 +75,10 @@ func main() {
 		list := models.DescifrarLista(listCipher)
 		proyect := models.DescifrarProyecto(proyectCipher)
 		ChangeViewConfig(config.PreView+"configList.html", proyect, list)
+	})
+
+	UI.Bind("changeToAddTaskGO", func(listID string) {
+		ChangeViewTasks(config.PreView+"addTask.html", nil, listID)
 	})
 
 	//Binds Funcionalidades
@@ -164,8 +177,27 @@ func main() {
 		}
 	})
 
-	UI.Bind("addUserListGO", func(userEmail string, proyectID string, listID string) {
-		models.AddUserList(userEmail, proyectID, listID)
+	//Añadir un usuario a una lista
+	UI.Bind("addUserListGO", func(userEmail string, proyectID string, listID string) bool {
+		return models.AddUserList(userEmail, proyectID, listID)
+	})
+
+	//Añadir una tarea a una lista
+	UI.Bind("addTaskGO", func(listID string, task models.Task, dateString string) bool {
+		yourDate, _ := time.Parse("2006-01-02", dateString)
+		fmt.Println(yourDate.String())
+		dateParseada := primitive.NewDateTimeFromTime(yourDate)
+		fmt.Println(dateParseada)
+		dateGO := dateParseada.Time()
+		fmt.Println(dateGO.String())
+
+		task.Fecha = dateString
+		return models.CreateTask(listID, task)
+	})
+
+	//Eliminar una tarea
+	UI.Bind("deleteTaskGO", func(taskID string) bool {
+		return models.DeleteTask(taskID)
 	})
 
 	//Cerrar la sesion

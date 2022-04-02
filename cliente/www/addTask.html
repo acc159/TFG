@@ -1,0 +1,61 @@
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Añadir Tarea</title>
+</head>
+<body>
+    <button onclick="changeToTasks()">Volver a las tareas de la lista</button>
+    <h1 id="listID">{{.ListID}}</h1>
+
+
+    <label for="taskName">Nombre de la tarea</label>
+    <input type="text" id="taskName" name="taskName"><br><br>
+    <label for="description">Descripcion de la tarea</label>
+    <input type="text" id="description" name="description"><br><br>
+    <label for="state">Estado de la tarea</label>
+    <select name="state" id="state">
+        <option value="Por hacer">Por hacer</option>
+        <option value="En progreso">En progreso</option>
+        <option value="Hecho">Hecho</option>
+    </select>
+    
+    <label for="date">Fecha de la tarea</label>
+    <input type="date" id="date" name="date"><br><br>
+
+
+    <button onclick="addTask()">Añadir Tarea</button>
+</body>
+</html>
+<script>
+        function changeToTasks(){
+        let listID = document.querySelector('#listID').textContent
+        
+        changeToTasksGO(listID).then(
+            function(){
+
+            }
+        )
+    }
+
+
+    function addTask(){
+        let listID = document.querySelector('#listID').textContent
+        let date = document.querySelector('#date').value
+        let taskName = document.querySelector('#taskName').textContent
+        let task = {
+            Nombre : taskName,
+        }
+        addTaskGO(listID, task, date).then(
+            function(resultado){
+                if (resultado){
+                    alert('La tarea fue creada con exito')
+                }else{
+                    alert('La tarea no se creo')
+                }
+            }
+        )
+    }
+
+</script>

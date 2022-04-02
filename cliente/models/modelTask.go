@@ -14,7 +14,7 @@ type Task struct {
 	ID               primitive.ObjectID `bson:"_id,omitempty"`
 	Nombre           string             `bson:"nombre"`
 	Descripcion      string             `bson:"apellidos"`
-	Fecha            primitive.DateTime `bson:"fecha"`
+	Fecha            string             `bson:"fecha"`
 	Estado           string             `bson:"estado"`
 	ArchivosAdjuntos string             `bson:"archivos_adjuntos"`
 	EnlacesAdjuntos  string             `bson:"enlaces_adjuntos"`
@@ -48,23 +48,17 @@ func GetTasksByList(listID string) []Task {
 	}
 }
 
-func CreateTask() {
-
-	listID, _ := primitive.ObjectIDFromHex("6239fb356f2ad453296c5807")
-
-	//Creo la relacion a enviar
-	task := TaskCipher{
-		Cipherdata: "CREADA DESDE EL CLIENTE",
-		ListID:     listID,
-	}
-
+//Creo una nueva tarea en el servidor para la lista dada
+func CreateTask(stringListID string, task Task) bool {
+	listID, _ := primitive.ObjectIDFromHex(stringListID)
+	//Cifro la tarea
+	taskCipher := CifrarTarea(task)
+	taskCipher.ListID = listID
 	//Pasamos el tipo Relation a JSON
-	taskJSON, err := json.Marshal(task)
+	taskJSON, err := json.Marshal(taskCipher)
 	if err != nil {
 		fmt.Println(err)
 	}
-
-	//Peticion POST
 	url := config.URLbase + "task"
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(taskJSON))
 	if err != nil {
@@ -72,7 +66,6 @@ func CreateTask() {
 	}
 	req.Header.Set("Content-Type", "application/json")
 	client := &http.Client{}
-
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
@@ -81,12 +74,13 @@ func CreateTask() {
 
 	if resp.StatusCode == 400 {
 		fmt.Println("La tarea no pudo ser creada")
+		return false
 	} else {
 		var newTaskID string
 		json.NewDecoder(resp.Body).Decode(&newTaskID)
 		fmt.Println(newTaskID)
+		return true
 	}
-
 }
 
 func UpdateTask() {
@@ -126,10 +120,7 @@ func UpdateTask() {
 	}
 }
 
-func DeleteTask() {
-
-	taskID := "6239fb826f2ad453296c580a"
-
+func DeleteTask(taskID string) bool {
 	url := config.URLbase + "tasks/" + taskID
 	req, err := http.NewRequest("DELETE", url, nil)
 	if err != nil {
@@ -137,28 +128,31 @@ func DeleteTask() {
 	}
 	req.Header.Set("Content-Type", "application/json")
 	client := &http.Client{}
-
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
-
 	if resp.StatusCode == 400 {
 		fmt.Println("La tarea no pudo ser borrada")
+		return false
 	} else {
 		var resultado string
 		json.NewDecoder(resp.Body).Decode(&resultado)
 		fmt.Println(resultado)
+		return true
 	}
 }
 
 func DescifrarTarea(taskCipher TaskCipher) Task {
+	dateString := "2022-13-02"
+	//yourDate, _ := time.Parse("2006-01-02", dateString)
 	return Task{
 		ID:          taskCipher.ID,
 		Nombre:      "Nombre de la tarea",
 		Descripcion: "Descripcion de la tarea",
 		Estado:      "En progreso",
+		Fecha:       dateString,
 	}
 }
 

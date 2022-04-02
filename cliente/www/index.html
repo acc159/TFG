@@ -10,11 +10,14 @@
 
 
 <body>
+    <button onclick="changeToAddProyect()">Añadir un proyecto</button>
+    <button onclick="exitSesion()">Salir de la sesion</button>
     <button onclick="deleteUserGO()">Borrar Usuario</button>
+ 
     <h1>En pruebas</h1>
     <h1 id="userEmail">{{.User.Email}}</h1>
 
-    <button onclick="exitSesion()">Salir de la sesion</button>
+
 
     <!-- Estructura REAL -->
     <h1>Bienvenido: {{.User.Email}}</h1>
@@ -68,8 +71,7 @@
             {{end}}
         {{end}}
     </div>
-    <h2>Ir a añadir un proyecto</h2>
-    <button onclick="changeToAddProyect()">Añadir un proyecto</button>
+
 
 
 <!-- 
