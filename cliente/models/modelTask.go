@@ -84,7 +84,6 @@ func CreateTask(stringListID string, task Task) bool {
 }
 
 func UpdateTask() {
-
 	listID, _ := primitive.ObjectIDFromHex("6239fb356f2ad453296c5807")
 	task := TaskCipher{
 		Cipherdata: "ACTUALIZADA",
@@ -160,4 +159,21 @@ func CifrarTarea(task Task) TaskCipher {
 	return TaskCipher{
 		Cipherdata: "DASFSDFASDFSDF",
 	}
+}
+
+func TaskToBytes() []byte {
+	task := Task{
+		Nombre: "ADSFSDF",
+	}
+	taskBytes, _ := json.Marshal(task)
+	return taskBytes
+}
+
+func BytesToTask(datos []byte) Task {
+	var task Task
+	err := json.Unmarshal(datos, &task)
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+	return task
 }

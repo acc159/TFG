@@ -3,7 +3,6 @@ package main
 import (
 	"cliente/config"
 	"cliente/models"
-	"cliente/utils"
 	"fmt"
 	"os"
 	"os/signal"
@@ -13,11 +12,8 @@ import (
 )
 
 func main() {
+
 	//Inicio la interfaz visual
-
-	datos := utils.TaskToBytes()
-	utils.BytesToTask(datos)
-
 	InitUI()
 	defer UI.Close()
 
@@ -63,8 +59,10 @@ func main() {
 
 	UI.Bind("changeToProyectConfigGO", func(proyectID string) {
 		proyectCipher := models.GetProyect(proyectID)
+
+		//Necesito recuperar la relacion para poder descifrar
 		//Descifro
-		proyect := models.DescifrarProyecto(proyectCipher)
+		proyect := models.DescifrarProyecto(proyectCipher, []byte("dsaf"))
 		ChangeViewConfig(config.PreView+"configProyect.html", proyect, models.List{})
 	})
 
@@ -72,8 +70,8 @@ func main() {
 		listCipher := models.GetList(listID)
 		proyectCipher := models.GetProyect(proyectID)
 		//Descifro
-		list := models.DescifrarLista(listCipher)
-		proyect := models.DescifrarProyecto(proyectCipher)
+		list := models.DescifrarLista(listCipher, []byte("dsaf"))
+		proyect := models.DescifrarProyecto(proyectCipher, []byte("dsaf"))
 		ChangeViewConfig(config.PreView+"configList.html", proyect, list)
 	})
 
@@ -109,11 +107,7 @@ func main() {
 
 	//Añadir una lista
 	UI.Bind("addListGO", func(list models.List, proyectID string) bool {
-		listID := models.CreateList(list, proyectID)
-		//Añado la lista a la relacion del proyecto para cada usuario miembro de la lista
-		for i := 0; i < len(list.Users); i++ {
-			models.AddListToRelation(proyectID, listID, list.Users[i], "Clave para la lista Cifrada")
-		}
+		models.CreateList(list, proyectID)
 		return true
 	})
 
@@ -171,8 +165,8 @@ func main() {
 			listCipher := models.GetList(listID)
 			proyectCipher := models.GetProyect(proyectID)
 			//Descifro
-			list := models.DescifrarLista(listCipher)
-			proyect := models.DescifrarProyecto(proyectCipher)
+			list := models.DescifrarLista(listCipher, []byte("dsaf"))
+			proyect := models.DescifrarProyecto(proyectCipher, []byte("dsaf"))
 			ChangeViewConfig(config.PreView+"configList.html", proyect, list)
 		}
 	})

@@ -14,13 +14,13 @@ type Relation struct {
 	ID         primitive.ObjectID `bson:"_id,omitempty"`
 	UserEmail  string             `bson:"userEmail,omitempty"`
 	ProyectID  primitive.ObjectID `bson:"proyectID,omitempty"`
-	ProyectKey string             `bson:"proyectKey,omitempty"`
+	ProyectKey []byte             `bson:"proyectKey,omitempty"`
 	Lists      []RelationLists    `bson:"lists,omitempty"`
 }
 
 type RelationLists struct {
 	ListID  string `bson:"listID,omitempty"`
-	ListKey string `bson:"listKey,omitempty"`
+	ListKey []byte `bson:"listKey,omitempty"`
 }
 
 //Recupero las relaciones para un usuario dado su email
@@ -41,7 +41,7 @@ func GetProyectsListsByUser(userEmail string) []Relation {
 }
 
 //Creo una relacion sin listas FALTA RELLENAR EL CAMPO PROYECT KEY
-func CreateRelation(userEmail string, proyectStringID string, proyectKey string) bool {
+func CreateRelation(userEmail string, proyectStringID string, proyectKey []byte) bool {
 	//userID, _ := primitive.ObjectIDFromHex(userStringID)
 	proyectID, _ := primitive.ObjectIDFromHex(proyectStringID)
 	//Creo la relacion a enviar
@@ -80,12 +80,12 @@ func CreateRelation(userEmail string, proyectStringID string, proyectKey string)
 }
 
 //Añado una lista a la relacion dada
-func AddListToRelation(proyectID string, listIDstring string, userEmail string, listKey string) bool {
+func AddListToRelation(proyectID string, listIDstring string, userEmail string, listKey []byte) bool {
 	//Creo la Relacion Lista
 	// listID, _ := primitive.ObjectIDFromHex(listIDstring)
 	relationList := RelationLists{
 		ListID:  listIDstring,
-		ListKey: listKey,
+		ListKey: []byte(listKey),
 	}
 	relationListJSON, err := json.Marshal(relationList)
 	if err != nil {

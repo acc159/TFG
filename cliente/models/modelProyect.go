@@ -3,6 +3,7 @@ package models
 import (
 	"bytes"
 	"cliente/config"
+	"cliente/utils"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -19,7 +20,7 @@ type Proyect struct {
 
 type ProyectCipher struct {
 	ID         primitive.ObjectID `bson:"_id,omitempty"`
-	Cipherdata string             `bson:"cipherdata,omitempty"`
+	Cipherdata []byte             `bson:"cipherdata,omitempty"`
 	Users      []string           `bson:"users,omitempty"`
 	Lists      []string           `bson:"lists,omitempty"`
 }
@@ -48,8 +49,11 @@ func GetProyect(proyectID string) ProyectCipher {
 func CreateProyect(newProyect Proyect) bool {
 	//Añadimos el email del usuario que esta creando el proyecto
 	newProyect.Users = append(newProyect.Users, UserSesion.Email)
+
 	//Ciframos el proyecto
-	proyectCipher := CifrarProyecto(newProyect)
+	//1.Generamos la clave aleatoria que se utilizara en el cifrado AES
+	Krandom, IVrandom := utils.GenerateKeyIV()
+	proyectCipher := CifrarProyecto(newProyect, Krandom, IVrandom)
 
 	//Enviamos el proyecto cifrado al servidor
 	proyectJSON, err := json.Marshal(proyectCipher)
@@ -77,7 +81,11 @@ func CreateProyect(newProyect Proyect) bool {
 	json.NewDecoder(resp.Body).Decode(&proyectID)
 	//Creamos la relacion para el usuario que crea el proyecto y para cada uno de los usuarios del campo user
 	for i := 0; i < len(newProyect.Users); i++ {
-		CreateRelation(newProyect.Users[i], proyectID, "Clave del proyecto Cifrada")
+		//Recupero para cada usuario su Public Key y la uso para cifrar la Krandom
+		publicKeyUser := GetUserByEmail(newProyect.Users[i]).PublicKey
+		publicKey := utils.PemToPublicKey(publicKeyUser)
+		KrandomCipher := utils.CifrarRSA(publicKey, Krandom)
+		CreateRelation(newProyect.Users[i], proyectID, KrandomCipher)
 	}
 	return true
 }
@@ -183,19 +191,38 @@ func AddUserProyect(proyectIDstring string, userEmail string) bool {
 
 //Cifrado y Descifrado
 
-func DescifrarProyecto(proyecto ProyectCipher) Proyect {
-	var descifrado Proyect
-	descifrado.ID = proyecto.ID.Hex()
-	descifrado.Name = "Nombre Proyecto"
-	descifrado.Description = "Esto seria la descripcion del proyecto"
-	descifrado.Users = proyecto.Users
-	return descifrado
+func DescifrarProyecto(proyectCipher ProyectCipher, key []byte) Proyect {
+
+	descifradoBytes := utils.DescifrarAES(key, proyectCipher.Cipherdata)
+	proyect := BytesToProyect(descifradoBytes)
+	proyect.ID = proyectCipher.ID.Hex()
+	proyect.Users = proyectCipher.Users
+	return proyect
 }
 
-func CifrarProyecto(proyect Proyect) ProyectCipher {
+func CifrarProyecto(proyect Proyect, key []byte, IV []byte) ProyectCipher {
+	//Paso el proyecto a []byte
+	proyectBytes := ProyectToBytes(proyect)
+	//Cifro
+	proyectCipherBytes := utils.CifrarAES(key, IV, proyectBytes)
+
 	proyectCipher := ProyectCipher{
-		Cipherdata: "Proyecto Cifrado 2",
+		Cipherdata: proyectCipherBytes,
 		Users:      proyect.Users,
 	}
 	return proyectCipher
+}
+
+func ProyectToBytes(proyect Proyect) []byte {
+	proyectBytes, _ := json.Marshal(proyect)
+	return proyectBytes
+}
+
+func BytesToProyect(datos []byte) Proyect {
+	var proyect Proyect
+	err := json.Unmarshal(datos, &proyect)
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+	return proyect
 }

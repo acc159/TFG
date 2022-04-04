@@ -14,13 +14,13 @@ type Relation struct {
 	ID         primitive.ObjectID `bson:"_id,omitempty"`
 	UserEmail  string             `bson:"userEmail,omitempty"`
 	ProyectID  primitive.ObjectID `bson:"proyectID,omitempty"`
-	ProyectKey string             `bson:"proyectKey,omitempty"`
+	ProyectKey []byte             `bson:"proyectKey,omitempty"`
 	Lists      []RelationLists    `bson:"lists,omitempty"`
 }
 
 type RelationLists struct {
 	ListID  primitive.ObjectID `bson:"listID,omitempty"`
-	ListKey string             `bson:"listKey,omitempty"`
+	ListKey []byte             `bson:"listKey,omitempty"`
 }
 
 //Creo una relacion

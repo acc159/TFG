@@ -3,6 +3,8 @@ package models
 import (
 	"bytes"
 	"cliente/config"
+	"cliente/utils"
+	"crypto/rsa"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -19,15 +21,19 @@ type List struct {
 
 type ListCipher struct {
 	ID         primitive.ObjectID `bson:"_id,omitempty"`
-	Cipherdata string             `bson:"cipherdata,omitempty"`
+	Cipherdata []byte             `bson:"cipherdata,omitempty"`
 	Users      []string           `bson:"users,omitempty"`
 	ProyectID  primitive.ObjectID `bson:"proyectID,omitempty"`
 }
 
 //Creo una lista con el proyectID correspondiente
 func CreateList(list List, proyectIDstring string) string {
+
+	//1.Generamos la clave aleatoria que se utilizara en el cifrado AES
+	Krandom, IVrandom := utils.GenerateKeyIV()
+
 	//Ciframos la lista
-	listCipher := CifrarLista(list)
+	listCipher := CifrarLista(list, Krandom, IVrandom)
 	proyectID, _ := primitive.ObjectIDFromHex(proyectIDstring)
 	listCipher.ProyectID = proyectID
 	//Enviamos la lista cifrada
@@ -55,6 +61,16 @@ func CreateList(list List, proyectIDstring string) string {
 	} else {
 		var listID string
 		json.NewDecoder(resp.Body).Decode(&listID)
+
+		//Añado la lista a la relacion de cada usuario miembro de la lista
+		for i := 0; i < len(list.Users); i++ {
+			//Recupero para cada usuario su Public Key y la uso para cifrar la Krandom
+			publicKeyUser := GetUserByEmail(list.Users[i]).PublicKey
+			publicKey := utils.PemToPublicKey(publicKeyUser)
+			KrandomCipher := utils.CifrarRSA(publicKey, Krandom)
+			AddListToRelation(proyectIDstring, listID, list.Users[i], KrandomCipher)
+		}
+
 		return listID
 	}
 }
@@ -175,7 +191,7 @@ func AddUserList(userEmail string, proyectID string, listID string) bool {
 	//Recupero la relacion para el usuario actual para poder descifrar la clave del proyecto que necesitare cifrar para añadir a la relacion del nuevo usuario
 	relationUser := GetRelationUserProyect(UserSesion.Email, proyectID)
 	//Obtengo la clave para la lista determinada
-	var listKey string
+	var listKey []byte
 	for i := 0; i < len(relationUser.Lists); i++ {
 		if relationUser.Lists[i].ListID == listID {
 			listKey = relationUser.Lists[i].ListKey
@@ -208,21 +224,63 @@ func AddUserList(userEmail string, proyectID string, listID string) bool {
 	}
 }
 
+func GetUserList(listID string, listKeyCipher []byte, privateKey *rsa.PrivateKey) List {
+	listKey := utils.DescifrarRSA(privateKey, listKeyCipher)
+	listCipher := GetList(listID)
+	return DescifrarLista(listCipher, listKey)
+}
+
 //Cifrado y Descifrado
 
-func DescifrarLista(listCipher ListCipher) List {
-	list := List{
-		ID:          listCipher.ID.Hex(),
-		Name:        "Nombre de la lista",
-		Description: "Descripcion de la lista",
-		Users:       listCipher.Users,
-	}
+// func DescifrarLista(listCipher ListCipher) List {
+// 	list := List{
+// 		ID:          listCipher.ID.Hex(),
+// 		Name:        "Nombre de la lista",
+// 		Description: "Descripcion de la lista",
+// 		Users:       listCipher.Users,
+// 	}
+// 	return list
+// }
+
+// func CifrarLista(listCipher List) ListCipher {
+// 	return ListCipher{
+// 		Cipherdata: "DASFSDFASDFSDF",
+// 		Users:      listCipher.Users,
+// 	}
+// }
+
+func DescifrarLista(listCipher ListCipher, key []byte) List {
+
+	descifradoBytes := utils.DescifrarAES(key, listCipher.Cipherdata)
+	list := BytesToList(descifradoBytes)
+	list.ID = listCipher.ID.Hex()
+	list.Users = listCipher.Users
 	return list
 }
 
-func CifrarLista(listCipher List) ListCipher {
-	return ListCipher{
-		Cipherdata: "DASFSDFASDFSDF",
-		Users:      listCipher.Users,
+func CifrarLista(list List, key []byte, IV []byte) ListCipher {
+	//Paso el proyecto a []byte
+	listBytes := ListToBytes(list)
+	//Cifro
+	listCipherBytes := utils.CifrarAES(key, IV, listBytes)
+
+	listCipher := ListCipher{
+		Cipherdata: listCipherBytes,
+		Users:      list.Users,
 	}
+	return listCipher
+}
+
+func ListToBytes(list List) []byte {
+	listBytes, _ := json.Marshal(list)
+	return listBytes
+}
+
+func BytesToList(datos []byte) List {
+	var list List
+	err := json.Unmarshal(datos, &list)
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+	return list
 }

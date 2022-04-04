@@ -83,7 +83,7 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 func GetUser(w http.ResponseWriter, r *http.Request) {
 	//Obtengo el id de los parametros de la petición
 	params := mux.Vars(r)
-	id := params["id"]
+	id := params["email"]
 	usuario := models.GetUser(id)
 	if usuario.Empty() {
 		w.WriteHeader(400)

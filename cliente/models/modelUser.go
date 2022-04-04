@@ -3,6 +3,10 @@ package models
 import (
 	"bytes"
 	"cliente/config"
+	"cliente/utils"
+	"crypto/aes"
+	"crypto/rsa"
+	"crypto/sha512"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -15,9 +19,10 @@ type User struct {
 	ID         primitive.ObjectID `bson:"_id,omitempty"`
 	Email      string             `bson:"email"`
 	ServerKey  []byte             `bson:"server_key"`
-	PublicKey  string             `bson:"public_key"`
-	PrivateKey string             `bson:"private_key"`
+	PublicKey  []byte             `bson:"public_key"`
+	PrivateKey []byte             `bson:"private_key"`
 	Rol        string             `bson:"rol"`
+	Kaes       []byte             `bson:"Kaes"`
 }
 
 type DatosUser struct {
@@ -31,44 +36,45 @@ var DatosUsuario []DatosUser
 //Contiene los datos del usuario
 var UserSesion User
 
-//Registro del usuario POR TERMINAR
+//Descifra la clave privada del usuario
+func GetPrivateKeyUser() *rsa.PrivateKey {
+	return utils.PemToPrivateKey(utils.DescifrarAES(UserSesion.Kaes, UserSesion.PrivateKey))
+}
+
+//Generamos a partir de un hash del usuario y contraseña :  Kservidor 16 Bytes, IV 16 Bytes y Kaes 32 Bytes
+func HashUser(user_pass []byte) ([]byte, []byte, []byte) {
+
+	hash := sha512.Sum512(user_pass)
+	Kservidor := hash[:16]
+	IV := hash[aes.BlockSize : aes.BlockSize*2]
+	Kaes := hash[aes.BlockSize*2:]
+	return Kservidor, IV, Kaes
+}
+
+//Registro del usuario
 func Register(email string, password string) bool {
-
-	//Pruebas
-	/*
-		prueba := []byte(email + password)
-		sum := sha256.Sum256(prueba)
-		sumString := string(sum[:])
-		pass := hex.EncodeToString(sum[:]) //String
-
-		fmt.Println(sum)
-		fmt.Println(sum[0:16])
-		fmt.Println(sum[16:32])
-		fmt.Println(sumString)
-		fmt.Println(pass)
-
-		hash2, _ := bcrypt.GenerateFromPassword([]byte(pass), 12)
-		fmt.Println(hash2)
-	*/
-	//
-
-	user_pass := email + password
-	SAL := 12 //Con esto generara un segmento aleatorio cuanto mayor sea el numero mas robusto que usara como SAL
-	hash, err := bcrypt.GenerateFromPassword([]byte(user_pass), SAL)
+	user_pass := []byte(email + password)
+	Kservidor, IV, Kaes := HashUser(user_pass)
+	KservidorHash, err := bcrypt.GenerateFromPassword(Kservidor, 12)
 	if err != nil {
 		fmt.Println("Error al hashear")
 	}
-
+	//Asigno los valores del usuario
 	UserSesion.Email = email
-	UserSesion = User{
-		Email: email,
-	}
-
 	//La clave del servidor
-	UserSesion.ServerKey = hash
+	UserSesion.ServerKey = KservidorHash
 	//Obtenemos las Claves RSA
-	UserSesion.PrivateKey = "ClavePrivada"
-	UserSesion.PublicKey = "ClavePublica"
+	privateKey, publicKey := utils.GeneratePrivatePublicKeys()
+	//La clave publica la almaceno directamente
+	UserSesion.PublicKey = utils.PublicKeyToPem(&publicKey)
+	//La clave privada primero la paso a []byte
+	privateKeyPem := utils.PrivateKeyToPem(privateKey)
+	//La cifro con AES
+	privateKeyCipher := utils.CifrarAES(Kaes, IV, privateKeyPem)
+	//La almaceno cifrada
+	UserSesion.PrivateKey = privateKeyCipher
+	//Guardo Kaes para la sesion del usuario
+	UserSesion.Kaes = Kaes
 
 	//Enviamos los datos al servidor
 	userIDstring := RegisterServer(UserSesion)
@@ -80,16 +86,6 @@ func Register(email string, password string) bool {
 		UserSesion.ID = id
 		return true
 	}
-	/*
-		err = bcrypt.CompareHashAndPassword(hash, []byte(user_pass))
-		if err != nil {
-			fmt.Println(err)
-		} else {
-			fmt.Println("La contraseña coincide")
-		}
-	*/
-
-	//El usuario accede
 }
 
 //Registro del usuario en el servidor
@@ -130,15 +126,18 @@ func RegisterServer(user User) string {
 
 //Login del usuario
 func LogIn(email string, password string) bool {
-	user_pass := email + password
+	user_pass := []byte(email + password)
+	Kservidor, _, Kaes := HashUser(user_pass)
 	UserSesion.Email = email
 	UserSesion = LogInServer()
-	err := bcrypt.CompareHashAndPassword(UserSesion.ServerKey, []byte(user_pass))
+	err := bcrypt.CompareHashAndPassword(UserSesion.ServerKey, Kservidor)
 	if err != nil {
 		UserSesion = User{}
 		return false
 	} else {
 		fmt.Println("La contraseña coincide")
+		//Guardo Kaes para la sesion del usuario
+		UserSesion.Kaes = Kaes
 		return true
 	}
 }
@@ -201,36 +200,71 @@ func GetUsers() []User {
 	}
 }
 
+func GetUserByEmail(userEmail string) User {
+	var usersResponse User
+	resp, err := http.Get(config.URLbase + "users/" + userEmail)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer resp.Body.Close()
+
+	//Compruebo si no hay ningun usuario
+	if resp.StatusCode == 404 {
+		fmt.Println("Ningun usuario encontrado")
+		return usersResponse
+	} else {
+		json.NewDecoder(resp.Body).Decode(&usersResponse)
+		return usersResponse
+	}
+}
+
 //Obtengo las relaciones junto a los proyectos y sus listas asociadas para el usuario
 func GetUserProyectsLists() {
 	//Limpio los datos del usuario
 	DatosUsuario = []DatosUser{}
+	//Obtengo mi clave privada
+	privateKey := GetPrivateKeyUser()
 	//Recupero las relaciones
 	relations := GetProyectsListsByUser(UserSesion.Email)
 	if len(relations) > 0 {
 		//Proyectos
 		for i := 0; i < len(relations); i++ {
 			proyecto := GetProyect(relations[i].ProyectID.Hex())
-			//Listas
-			var ListsIDs []string
-			for j := 0; j < len(relations[i].Lists); j++ {
-				ListsIDs = append(ListsIDs, relations[i].Lists[j].ListID)
-			}
-			var lists []ListCipher
-			if len(ListsIDs) > 0 {
-				lists = GetListsByIDs(ListsIDs)
-			}
+			//Descifro la clave del proyecto con la clave privada del usuario
+			proyectKey := utils.DescifrarRSA(privateKey, relations[i].ProyectKey)
 			//Desciframos el proyecto
-			proyectoDescifrado := DescifrarProyecto(proyecto)
-			//Desciframos las listas del proyecto
-			var listsDescifradas []List
-			for index := 0; index < len(lists); index++ {
-				listsDescifradas = append(listsDescifradas, DescifrarLista(lists[index]))
+			proyectoDescifrado := DescifrarProyecto(proyecto, proyectKey)
+
+			//Listas
+			var lists []List
+			for j := 0; j < len(relations[i].Lists); j++ {
+				list := GetUserList(relations[i].Lists[j].ListID, relations[i].Lists[j].ListKey, privateKey)
+				lists = append(lists, list)
 			}
-			//Desciframos las listas
+
+			//Listas VIEJO BORRAR TRAS REVISAR
+			// var ListsIDs []string
+			// var listKeysCipher [][]byte
+			// for j := 0; j < len(relations[i].Lists); j++ {
+			// 	ListsIDs = append(ListsIDs, relations[i].Lists[j].ListID)
+			// 	listKeysCipher = append(listKeysCipher, relations[i].Lists[j].ListKey)
+			// }
+			// var lists []ListCipher
+			// if len(ListsIDs) > 0 {
+			// 	lists = GetListsByIDs(ListsIDs)
+			// }
+
+			// //Desciframos las listas del proyecto
+			// var listsDescifradas []List
+			// for index := 0; index < len(lists); index++ {
+			// 	//Descifro la Key de la lista antes de descifrar la lista en si
+			// 	listKey := utils.DescifrarRSA(privateKey, listKeysCipher[index])
+			// 	listsDescifradas = append(listsDescifradas, DescifrarLista(lists[index], listKey))
+			// }
+
 			datos := DatosUser{
 				Proyecto: proyectoDescifrado,
-				Listas:   listsDescifradas,
+				Listas:   lists,
 			}
 			DatosUsuario = append(DatosUsuario, datos)
 		}

@@ -14,7 +14,7 @@ import (
 
 type Proyect struct {
 	ID         primitive.ObjectID `bson:"_id,omitempty"`
-	Cipherdata string             `bson:"cipherdata,omitempty"`
+	Cipherdata []byte             `bson:"cipherdata,omitempty"`
 	Users      []string           `bson:"users,omitempty"`
 }
 
@@ -114,7 +114,8 @@ func AddUserProyect(stringID string, user string) bool {
 
 //Elimino un usuario del array Users del proyecto
 func DeleteUserProyect(proyectStringID string, user string) bool {
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	coleccion := config.InstanceDB.DB.Collection("proyects")
 	id, _ := primitive.ObjectIDFromHex(proyectStringID)
 	filter := bson.D{{Key: "_id", Value: id}}
@@ -137,7 +138,8 @@ func DeleteUserProyect(proyectStringID string, user string) bool {
 
 //Actualizo el proyecto
 func UpdateProyect(proyecto Proyect, stringID string) bool {
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	coleccion := config.InstanceDB.DB.Collection("proyects")
 
 	id, _ := primitive.ObjectIDFromHex(stringID)
@@ -157,7 +159,8 @@ func UpdateProyect(proyecto Proyect, stringID string) bool {
 
 //Recupero todos los proyectos
 func GetProyects() []Proyect {
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	coleccion := config.InstanceDB.DB.Collection("proyects")
 
 	//Consulto a la base de datos

@@ -16,11 +16,13 @@ func User(r *mux.Router) {
 	//Borrar Usuario
 	r.HandleFunc("/users/{userEmail}", handlers.DeleteUser).Methods("DELETE")
 
+	//Recuperar Usuario por userEmail
+	r.HandleFunc("/users/{email}", handlers.GetUser).Methods("GET")
+
 	//SIN USAR
 	//Recuperar Usuarios
 	r.HandleFunc("/users", handlers.GetUsers).Methods("GET")
-	//Recuperar Usuario por ID
-	r.HandleFunc("/users/{id}", handlers.GetUser).Methods("GET")
+
 	//Crear Usuario
 	r.HandleFunc("/user", handlers.CreateUser).Methods("POST")
 	//Actualizar Usuario

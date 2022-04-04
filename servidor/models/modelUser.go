@@ -16,8 +16,8 @@ type User struct {
 	ID         primitive.ObjectID `bson:"_id,omitempty"`
 	Email      string             `bson:"email,omitempty"`
 	ServerKey  []byte             `bson:"server_key,omitempty"`
-	PublicKey  string             `bson:"public_key,omitempty"`
-	PrivateKey string             `bson:"private_key,omitempty"`
+	PublicKey  []byte             `bson:"public_key,omitempty"`
+	PrivateKey []byte             `bson:"private_key,omitempty"`
 }
 
 //Metodo para comprobar si el usuario esta vacio o tiene datos
@@ -101,18 +101,14 @@ func GetUsers() []User {
 	return usuarios
 }
 
-func GetUser(idString string) User {
+func GetUser(email string) User {
 	//Creo un contexto
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	//Obtengo la coleccion
 	coleccion := config.InstanceDB.DB.Collection("users")
-	//Paso el string a un primitive.objectID
-	id, _ := primitive.ObjectIDFromHex(idString)
-
 	var usuario User
-
 	//Consulto a la base de datos
-	err := coleccion.FindOne(ctx, bson.M{"_id": id}).Decode(&usuario)
+	err := coleccion.FindOne(ctx, bson.M{"email": email}).Decode(&usuario)
 	if err != nil {
 		return usuario
 	}

@@ -14,7 +14,7 @@ import (
 
 type List struct {
 	ID         primitive.ObjectID `bson:"_id,omitempty"`
-	Cipherdata string             `bson:"cipherdata,omitempty"`
+	Cipherdata []byte             `bson:"cipherdata,omitempty"`
 	Users      []string           `bson:"users,omitempty"`
 	ProyectID  primitive.ObjectID `bson:"proyectID,omitempty"`
 }
@@ -22,7 +22,8 @@ type List struct {
 //Crear una lista
 func CreateList(list List) string {
 	//Creo un contexto
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	//Obtengo la coleccion
 	coleccion := config.InstanceDB.DB.Collection("lists")
 	resultID, err := coleccion.InsertOne(ctx, list)
@@ -40,7 +41,8 @@ func DeleteList(idString string) bool {
 	//1.Borrar todas las tareas cuyo listID sea el id pasado por parametro
 	DeleteTasksByListID(idString)
 	//2.Borrar la lista en si
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	coleccion := config.InstanceDB.DB.Collection("lists")
 	id, _ := primitive.ObjectIDFromHex(idString)
 	filter := bson.D{{Key: "_id", Value: id}}
@@ -50,7 +52,8 @@ func DeleteList(idString string) bool {
 
 //Recupero todas las listas con los ids pasados como parametro
 func GetListsByIDs(stringsIDs []string) []Proyect {
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	coleccion := config.InstanceDB.DB.Collection("lists")
 	//Paso todos los ids de string a ObjectID
 	var ids []primitive.ObjectID
@@ -73,7 +76,8 @@ func GetListsByIDs(stringsIDs []string) []Proyect {
 
 //Recupero los usuarios de una lista
 func GetUsersList(idString string) []string {
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	coleccion := config.InstanceDB.DB.Collection("lists")
 	id, _ := primitive.ObjectIDFromHex(idString)
 	var proyecto Proyect
@@ -86,7 +90,8 @@ func GetUsersList(idString string) []string {
 
 //Recupero los ids de las listas cuyo proyectID es el pasado
 func GetListsByProyect(proyectID string) []string {
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	coleccion := config.InstanceDB.DB.Collection("lists")
 	id, _ := primitive.ObjectIDFromHex(proyectID)
 	result, err := coleccion.Find(ctx, bson.M{"proyectID": id})
@@ -115,7 +120,8 @@ func AddUserToList() {
 
 //Actualizar una lista
 func UpdateList(list List, idString string) bool {
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	coleccion := config.InstanceDB.DB.Collection("lists")
 
 	id, _ := primitive.ObjectIDFromHex(idString)
@@ -135,7 +141,8 @@ func UpdateList(list List, idString string) bool {
 
 //Añado un usuario al array Users de la lista
 func AddUserList(stringID string, user string) bool {
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	coleccion := config.InstanceDB.DB.Collection("lists")
 	id, _ := primitive.ObjectIDFromHex(stringID)
 	filter := bson.D{{Key: "_id", Value: id}}
@@ -153,7 +160,8 @@ func AddUserList(stringID string, user string) bool {
 
 //Elimino un usuario del array Users de la lista
 func DeleteUserList(listStringID string, user string) bool {
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	coleccion := config.InstanceDB.DB.Collection("lists")
 	id, _ := primitive.ObjectIDFromHex(listStringID)
 	filter := bson.D{{Key: "_id", Value: id}}
@@ -174,7 +182,8 @@ func DeleteUserList(listStringID string, user string) bool {
 
 //Recupero una lista por su ID
 func GetList(idString string) Proyect {
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	coleccion := config.InstanceDB.DB.Collection("lists")
 	id, _ := primitive.ObjectIDFromHex(idString)
 	var proyecto Proyect
