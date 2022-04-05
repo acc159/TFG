@@ -7,19 +7,37 @@
 </head>
 <body>
     <button onclick="changeHome()">Volver al Home</button>
-    <button onclick="addUserProyect()">Añadir usuario</button>
+  
+    <button onclick="updateProyect()">Actualizar Proyecto</button>
     <h1>Configuracion del proyecto</h1>
     <h2 id="proyectID">{{.Proyect.ID}}</h2>
-    {{.Proyect.Name}}
-
+    <h2>Nombre: </h2>
+    <h3 contenteditable id="proyectName"> {{.Proyect.Name}}</h3>
+    <h2>Descripcion: </h2>
+    <p contenteditable id="proyectDescription">  {{.Proyect.Name}}</p>
     <ul class="users_proyect">
+
+        {{$email:=.User}}
         {{range .Proyect.Users}}
-            <li id={{.}}>
-                {{.}}
-            </li>
-            <button onclick="deleteUser({{.}})">Eliminar usuario</button>
+            {{if ne $email .}}
+                <li id={{.}}>{{.}}</li>
+                <button onclick="deleteUser({{.}})">Eliminar usuario</button>
+            {{end}}
         {{end}}
     </ul>
+
+    {{if not .Emails}}
+        <h2>Ningun usuario mas en el sistema por añadir al proyecto</h2>
+    {{else}}
+        <label for="users">Usuarios del sistema:</label>
+        <select name="users" id="users">
+        {{range .Emails}}
+            <option value="{{.}}">{{.}}</option>
+        {{end}}
+        </select>
+        <button onclick="addUserProyect()">Añadir usuario</button>
+    {{end}}
+
 </body>
 </html>
 
@@ -35,7 +53,7 @@
 
     function addUserProyect(){
         let proyectID = document.querySelector('#proyectID').textContent;
-        let userEmail = "prueba"
+        let userEmail = document.querySelector('#users').value
         addUserProyectGO(userEmail, proyectID).then(
             function(response){
                 if (response){
@@ -46,4 +64,33 @@
             }
         )
     }
+
+
+    function updateProyect(){
+        let proyectID = document.querySelector('#proyectID').textContent;
+        let proyectName = document.querySelector('#proyectName').textContent;
+        let proyectDescription = document.querySelector('#proyectDescription').textContent;
+        
+        let usersHTML = document.querySelectorAll('li')
+        let users = []
+        for (let index = 0; index < usersHTML.length; index++) {
+            users.push(usersHTML[index].textContent)
+        }
+
+        let proyect = {
+            "ID" : proyectID,
+            "Name" : proyectName,
+            "Description" : proyectDescription,
+            "Users" : users,
+        }
+
+        updateProyectGO(proyect).then(
+            function(response){
+                if (response){
+                    alert('Se actualizo el proyecto')
+                }
+            }
+        )
+    }
+
 </script>

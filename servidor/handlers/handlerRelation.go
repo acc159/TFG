@@ -124,3 +124,17 @@ func GetRelationsByUserProyect(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(relation)
 	}
 }
+
+func GetRelationsByUserList(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	email := params["userEmail"]
+	listID := params["listID"]
+	relationList := models.GetRelationsByUserList(email, listID)
+	if relationList.ListID.Hex() == "000000000000000000000000" {
+		w.WriteHeader(400)
+		w.Write([]byte("No existe dicha lista en la relacion para ese proyecto y usuario"))
+		return
+	} else {
+		json.NewEncoder(w).Encode(relationList)
+	}
+}

@@ -25,13 +25,13 @@ type User struct {
 	Kaes       []byte             `bson:"Kaes"`
 }
 
-type DatosUser struct {
+type DataUser struct {
 	Proyecto Proyect
 	Listas   []List
 }
 
 //Contiene los proyectos y listas del usuario
-var DatosUsuario []DatosUser
+var DatosUsuario []DataUser
 
 //Contiene los datos del usuario
 var UserSesion User
@@ -65,9 +65,9 @@ func Register(email string, password string) bool {
 	UserSesion.ServerKey = KservidorHash
 	//Obtenemos las Claves RSA
 	privateKey, publicKey := utils.GeneratePrivatePublicKeys()
-	//La clave publica la almaceno directamente
+	//La clave publica la almaceno directamente en formato PEM
 	UserSesion.PublicKey = utils.PublicKeyToPem(&publicKey)
-	//La clave privada primero la paso a []byte
+	//La clave privada primero la paso a PEM
 	privateKeyPem := utils.PrivateKeyToPem(privateKey)
 	//La cifro con AES
 	privateKeyCipher := utils.CifrarAES(Kaes, IV, privateKeyPem)
@@ -75,7 +75,6 @@ func Register(email string, password string) bool {
 	UserSesion.PrivateKey = privateKeyCipher
 	//Guardo Kaes para la sesion del usuario
 	UserSesion.Kaes = Kaes
-
 	//Enviamos los datos al servidor
 	userIDstring := RegisterServer(UserSesion)
 	if userIDstring == "" {
@@ -103,14 +102,13 @@ func RegisterServer(user User) string {
 	}
 	req.Header.Set("Content-Type", "application/json")
 	client := &http.Client{}
-
 	//Realizo la peticion
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
+		return ""
 	}
 	defer resp.Body.Close()
-
 	//Respuesta
 	//En caso de fallo del registro del usuario en el servidor
 	if resp.StatusCode == 400 {
@@ -148,7 +146,6 @@ func LogInServer() User {
 	if err != nil {
 		fmt.Println(err)
 	}
-
 	url := config.URLbase + "login"
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(userJSON))
 	if err != nil {
@@ -156,14 +153,12 @@ func LogInServer() User {
 	}
 	req.Header.Set("Content-Type", "application/json")
 	client := &http.Client{}
-
 	//Realizo la peticion
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
-
 	if resp.StatusCode == 400 {
 		fmt.Println("El usuario no esta registrado")
 		return User{}
@@ -178,7 +173,7 @@ func LogInServer() User {
 //Cerrar la sesion
 func LogOut() {
 	UserSesion = User{}
-	DatosUsuario = []DatosUser{}
+	DatosUsuario = []DataUser{}
 }
 
 //Recupero todos los usuarios
@@ -189,7 +184,6 @@ func GetUsers() []User {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
-
 	//Compruebo si no hay ningun usuario
 	if resp.StatusCode == 404 {
 		fmt.Println("Ningun usuario encontrado")
@@ -207,7 +201,6 @@ func GetUserByEmail(userEmail string) User {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
-
 	//Compruebo si no hay ningun usuario
 	if resp.StatusCode == 404 {
 		fmt.Println("Ningun usuario encontrado")
@@ -221,7 +214,7 @@ func GetUserByEmail(userEmail string) User {
 //Obtengo las relaciones junto a los proyectos y sus listas asociadas para el usuario
 func GetUserProyectsLists() {
 	//Limpio los datos del usuario
-	DatosUsuario = []DatosUser{}
+	DatosUsuario = []DataUser{}
 	//Obtengo mi clave privada
 	privateKey := GetPrivateKeyUser()
 	//Recupero las relaciones
@@ -262,7 +255,7 @@ func GetUserProyectsLists() {
 			// 	listsDescifradas = append(listsDescifradas, DescifrarLista(lists[index], listKey))
 			// }
 
-			datos := DatosUser{
+			datos := DataUser{
 				Proyecto: proyectoDescifrado,
 				Listas:   lists,
 			}
@@ -273,7 +266,7 @@ func GetUserProyectsLists() {
 
 //Elimina a un usuario del sistema borrandolo de todo proyectos, listas y tareas
 func DeleteUser(userEmail string) {
-	DatosUsuario = []DatosUser{}
+	DatosUsuario = []DataUser{}
 	//Recupero las relaciones junto a los proyectos y las listas Mejorable el pensar en llamar a una funcion que no descifre todo porque no lo necesitamos
 	GetUserProyectsLists()
 	for i := 0; i < len(DatosUsuario); i++ {
@@ -293,9 +286,7 @@ func DeleteUser(userEmail string) {
 				} else {
 					//Quito al usuario del array Users de la Lista
 					DeleteUserList(DatosUsuario[i].Listas[j].ID, userEmail)
-
 					//Traer las tareas de la lista y quitar al usuario de todas ellas
-
 				}
 			}
 		}
@@ -326,6 +317,19 @@ func DeleteUserByEmail(userEmail string) bool {
 	} else {
 		return true
 	}
+}
+
+func EncryptKeyWithPublicKey(userEmail string, Krandom []byte) []byte {
+	publicKeyUser := GetUserByEmail(userEmail).PublicKey
+	publicKey := utils.PemToPublicKey(publicKeyUser)
+	KrandomCipher := utils.CifrarRSA(publicKey, Krandom)
+	return KrandomCipher
+}
+
+func GetPublicKey(userEmail string) *rsa.PublicKey {
+	publicKeyUserPem := GetUserByEmail(userEmail).PublicKey
+	publicKey := utils.PemToPublicKey(publicKeyUserPem)
+	return publicKey
 }
 
 /*

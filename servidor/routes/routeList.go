@@ -18,11 +18,8 @@ func List(r *mux.Router) {
 	r.HandleFunc("/list/users/{id}", handlers.GetUsersList).Methods("GET")
 	//Recupero una lista por su ID
 	r.HandleFunc("/list/{id}", handlers.GetList).Methods("GET")
-
-	//Sin Usar
 	//Actualizar una lista
 	r.HandleFunc("/lists/{id}", handlers.UpdateList).Methods("PUT")
-
 	//Añado un usuario al campo Users de la lista
 	r.HandleFunc("/list/users/{id}/{email}", handlers.AddUserList).Methods("POST")
 	//Borro un usuario del campo Users de la lista

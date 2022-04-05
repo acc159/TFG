@@ -16,14 +16,13 @@ func GenerateKeyIV() ([]byte, []byte) {
 	if _, err := io.ReadFull(rand.Reader, generate); err != nil {
 		panic(err)
 	}
-
 	data := sha512.Sum512(generate)
-
 	iv := data[:aes.BlockSize]     //16 Byte
 	Kaes := data[aes.BlockSize:48] // 32 Byte
 	return Kaes, iv
 }
 
+//Cifrado AES Modo OFB
 func CifrarAES(key []byte, iv []byte, plainText []byte) []byte {
 	block, err := aes.NewCipher(key)
 	if err != nil {
@@ -34,31 +33,31 @@ func CifrarAES(key []byte, iv []byte, plainText []byte) []byte {
 	//Cifro
 	stream := cipher.NewOFB(block, iv)
 	stream.XORKeyStream(ciphertext[aes.BlockSize:], plainText)
-
 	//Almaceno el IV en los primeros 16 bytes del textoCifrado
 	copy(ciphertext, iv)
-
 	//Para pasarlo a string
 	stringCipher := hex.EncodeToString(ciphertext[:])
 	fmt.Println(stringCipher)
-
 	//Para pasarlo a []byte desde string
 	byteCipher, _ := hex.DecodeString(stringCipher)
 	fmt.Println(byteCipher)
 	return ciphertext
 }
 
+//Descifrado AES Modo OFB
 func DescifrarAES(key []byte, ciphertext []byte) []byte {
-
 	iv := ciphertext[:aes.BlockSize]
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		panic(err)
 	}
-
-	plaintext2 := make([]byte, len(ciphertext)-aes.BlockSize)
+	plaintext := make([]byte, len(ciphertext)-aes.BlockSize)
 	stream := cipher.NewOFB(block, iv)
-	stream.XORKeyStream(plaintext2, ciphertext[aes.BlockSize:])
-	fmt.Println(string(plaintext2))
-	return plaintext2
+	stream.XORKeyStream(plaintext, ciphertext[aes.BlockSize:])
+	return plaintext
+}
+
+//Devolvera el IV para el texto cifrado dado
+func GetIV(ciphertext []byte) []byte {
+	return ciphertext[:aes.BlockSize]
 }

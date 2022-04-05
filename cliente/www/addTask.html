@@ -31,22 +31,28 @@
 <script>
         function changeToTasks(){
         let listID = document.querySelector('#listID').textContent
-        
         changeToTasksGO(listID).then(
             function(){
-
             }
         )
     }
 
-
     function addTask(){
         let listID = document.querySelector('#listID').textContent
         let date = document.querySelector('#date').value
-        let taskName = document.querySelector('#taskName').textContent
+        let taskName = document.querySelector('#taskName').value
+        let description = document.querySelector('#description').value
+        let state = document.querySelector('#state').value
         let task = {
-            Nombre : taskName,
+            "Name" : taskName,
+            "Description" : description,
+            "Date" : date,
+            "State" : state,
+            "Users" : ["Maria", "Adrian"]
         }
+
+
+        
         addTaskGO(listID, task, date).then(
             function(resultado){
                 if (resultado){

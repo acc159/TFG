@@ -7,21 +7,32 @@
 </head>
 <body>
     <button onclick="changeHome()">Volver al Home</button>
-    <button onclick="addUserList()">Añadir usuario</button>
+    <button onclick="updateList()">Actualizar Lista</button>
     <h1>Configuración de la Lista</h1>
-    {{.List.ID}}
-    {{.List.Name}}
-
+    <h2>Nombre: </h2>
+    <h3 contenteditable id="listName">{{.List.Name}}</h3>
+    <h2>Descripcion: </h2>
+    <p contenteditable id="listDescription">{{.List.Description}}</p>
+    <h2>Usuarios del proyecto al que pertenece la lista: {{len .Proyect.Users}}</h2>
     <ul class="users_list">
         {{range .List.Users}}
-            <li id={{.}}>
-                {{.}}
-            </li>
+            <li id={{.}}>{{.}}</li>
             <button onclick="deleteUser({{.}})">Eliminar usuario</button>
         {{end}}
     </ul>
 
-    <h2>Usuarios del proyecto al que pertenece la lista: {{len .Proyect.Users}}</h2>
+    {{if not .Emails}}
+        <h2>Ningun usuario mas en el proyecto por añadir a la lista</h2>
+    {{else}}
+        <label for="users">Usuarios del proyecto:</label>
+        <select name="users" id="users">
+        {{range .Emails}}
+            <option value="{{.}}">{{.}}</option>
+        {{end}}
+        </select>
+        <button onclick="addUserList()">Añadir usuario</button>
+    {{end}}
+    
     <h2 id="proyectID">{{.Proyect.ID}}</h2>
     <h2 id="listID">{{.List.ID}}</h2>
 </body>
@@ -42,7 +53,7 @@
     function addUserList(){
         let listID = document.querySelector('#listID').textContent;
         let proyectID = document.querySelector('#proyectID').textContent;
-        let userEmail = "prueba"
+        let userEmail = document.querySelector('#users').value
         addUserListGO(userEmail, proyectID, listID).then(
             function(response){
                 if (response){
@@ -53,4 +64,33 @@
             }
         )
     }
+
+
+    function updateList(){
+        let proyectID = document.querySelector('#proyectID').textContent;
+        let listID = document.querySelector('#listID').textContent;
+        let listName = document.querySelector('#listName').textContent;
+        let listDescription = document.querySelector('#listDescription').textContent;
+        let usersHTML = document.querySelectorAll('li')
+        let users = []
+        for (let index = 0; index < usersHTML.length; index++) {
+            users.push(usersHTML[index].textContent)
+        }
+        let list = {
+            "ID" : listID,
+            "Name" : listName,
+            "Description" : listDescription,
+            "Users" : users,
+            "ProyectID" : proyectID,
+        }
+        updateListGO(list).then(
+            function(response){
+                if (response){
+                    alert('Se actualizo la lista')
+                }
+            }
+        )
+    }
+
+
 </script>

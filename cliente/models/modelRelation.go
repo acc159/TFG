@@ -194,3 +194,20 @@ func GetRelationUserProyect(userEmail string, proyectID string) Relation {
 		return relation
 	}
 }
+
+//Devolver una relaciond de tipo lista para un usuario y lista dado
+func GetRelationListByUser(userEmail string, listID string) RelationLists {
+	resp, err := http.Get(config.URLbase + "relations/list/" + userEmail + "/" + listID)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer resp.Body.Close()
+	var relationList RelationLists
+	if resp.StatusCode == 400 {
+		fmt.Println("No existe la lista para dicho usuario")
+		return relationList
+	} else {
+		json.NewDecoder(resp.Body).Decode(&relationList)
+		return relationList
+	}
+}

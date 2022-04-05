@@ -17,6 +17,7 @@ type List struct {
 	Name        string   `bson:"name,omitempty"`
 	Description string   `bson:"description,omitempty"`
 	Users       []string `bson:"users,omitempty"`
+	ProyectID   string   `bson:"proyectID,omitempty"`
 }
 
 type ListCipher struct {
@@ -28,10 +29,8 @@ type ListCipher struct {
 
 //Creo una lista con el proyectID correspondiente
 func CreateList(list List, proyectIDstring string) string {
-
 	//1.Generamos la clave aleatoria que se utilizara en el cifrado AES
 	Krandom, IVrandom := utils.GenerateKeyIV()
-
 	//Ciframos la lista
 	listCipher := CifrarLista(list, Krandom, IVrandom)
 	proyectID, _ := primitive.ObjectIDFromHex(proyectIDstring)
@@ -48,30 +47,27 @@ func CreateList(list List, proyectIDstring string) string {
 	}
 	req.Header.Set("Content-Type", "application/json")
 	client := &http.Client{}
-
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
-
 	if resp.StatusCode == 400 {
 		fmt.Println("El proyecto no pudo ser creado")
 		return ""
 	} else {
 		var listID string
 		json.NewDecoder(resp.Body).Decode(&listID)
-
 		//Añado la lista a la relacion de cada usuario miembro de la lista
-		for i := 0; i < len(list.Users); i++ {
-			//Recupero para cada usuario su Public Key y la uso para cifrar la Krandom
-			publicKeyUser := GetUserByEmail(list.Users[i]).PublicKey
-			publicKey := utils.PemToPublicKey(publicKeyUser)
-			KrandomCipher := utils.CifrarRSA(publicKey, Krandom)
-			AddListToRelation(proyectIDstring, listID, list.Users[i], KrandomCipher)
-		}
-
+		CreateListRelations(listID, proyectIDstring, Krandom, list.Users)
 		return listID
+	}
+}
+
+func CreateListRelations(listID string, proyectID string, Krandom []byte, users []string) {
+	for i := 0; i < len(users); i++ {
+		KrandomCipher := EncryptKeyWithPublicKey(users[i], Krandom)
+		AddListToRelation(proyectID, listID, users[i], KrandomCipher)
 	}
 }
 
@@ -188,21 +184,14 @@ func DeleteUserList(listID string, userEmail string) bool {
 
 //Añadir usuario a una lista
 func AddUserList(userEmail string, proyectID string, listID string) bool {
-	//Recupero la relacion para el usuario actual para poder descifrar la clave del proyecto que necesitare cifrar para añadir a la relacion del nuevo usuario
-	relationUser := GetRelationUserProyect(UserSesion.Email, proyectID)
-	//Obtengo la clave para la lista determinada
-	var listKey []byte
-	for i := 0; i < len(relationUser.Lists); i++ {
-		if relationUser.Lists[i].ListID == listID {
-			listKey = relationUser.Lists[i].ListKey
-		}
-	}
-
-	//Cifro para el nuevo usuario
-
+	//Recupero la clave publica que usare para cifrar la clave del proyecto
+	publicKey := GetPublicKey(userEmail)
+	//Recupero la clave de la lista descifrada
+	listKey := GetListKey(listID)
+	//Cifro la clave de la lista con la clave publica del usuario nuevo añadido
+	newListKey := utils.CifrarRSA(publicKey, listKey)
 	//Añado la lista a la relacion
-	AddListToRelation(proyectID, listID, userEmail, listKey)
-
+	AddListToRelation(proyectID, listID, userEmail, newListKey)
 	//Añado el usuario al array Users de la lista
 	url := config.URLbase + "list/users/" + listID + "/" + userEmail
 	req, err := http.NewRequest("POST", url, nil)
@@ -228,6 +217,49 @@ func GetUserList(listID string, listKeyCipher []byte, privateKey *rsa.PrivateKey
 	listKey := utils.DescifrarRSA(privateKey, listKeyCipher)
 	listCipher := GetList(listID)
 	return DescifrarLista(listCipher, listKey)
+}
+
+func UpdateList(newList List) bool {
+	relation := GetRelationUserProyect(UserSesion.Email, newList.ProyectID)
+	var listKeyCipher []byte
+	//Busco la Clave cifrada de la lista
+	for i := 0; i < len(relation.Lists); i++ {
+		if relation.Lists[i].ListID == newList.ID {
+			listKeyCipher = relation.Lists[i].ListKey
+		}
+	}
+	//Descifro la clave con la clave del usuario actual
+	privateKey := GetPrivateKeyUser()
+	listKey := utils.DescifrarRSA(privateKey, listKeyCipher)
+	//Genero un nuevo IV
+	_, IV := utils.GenerateKeyIV()
+	//Cifro la nueva lista
+	listCipher := CifrarLista(newList, listKey, IV)
+	listCipher.ID, _ = primitive.ObjectIDFromHex(newList.ID)
+
+	//Actualizo la lista en el servidor
+	listJSON, err := json.Marshal(listCipher)
+	if err != nil {
+		fmt.Println(err)
+	}
+	url := config.URLbase + "lists/" + newList.ID
+	req, err := http.NewRequest("PUT", url, bytes.NewBuffer(listJSON))
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode == 400 {
+		fmt.Println("La lista no pudo ser actualizada")
+		return false
+	} else {
+		return true
+	}
 }
 
 //Cifrado y Descifrado
@@ -263,7 +295,6 @@ func CifrarLista(list List, key []byte, IV []byte) ListCipher {
 	listBytes := ListToBytes(list)
 	//Cifro
 	listCipherBytes := utils.CifrarAES(key, IV, listBytes)
-
 	listCipher := ListCipher{
 		Cipherdata: listCipherBytes,
 		Users:      list.Users,
@@ -283,4 +314,12 @@ func BytesToList(datos []byte) List {
 		fmt.Println("error:", err)
 	}
 	return list
+}
+
+func GetListKey(stringListID string) []byte {
+	listKeyCipher := GetRelationListByUser(UserSesion.Email, stringListID).ListKey
+	//Descifro la clave
+	privateKey := GetPrivateKeyUser()
+	listKey := utils.DescifrarRSA(privateKey, listKeyCipher)
+	return listKey
 }

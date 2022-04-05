@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"cliente/config"
 	"cliente/models"
 
 	"html/template"
@@ -16,7 +17,7 @@ var UI lorca.UI
 
 type Data struct {
 	User  models.User
-	Datos []models.DatosUser
+	Datos []models.DataUser
 }
 
 type DataList struct {
@@ -32,13 +33,15 @@ type DataTask struct {
 type DataConfig struct {
 	Proyect models.Proyect
 	List    models.List
+	Emails  []string
+	User    string
 }
 
 func InitUI() {
 	//Inicializo
 	UI, _ = lorca.New("", "", 800, 700)
 	//Cargo la primera vista
-	ChangeView("www/login.html")
+	ChangeView(config.PreView + "login.html")
 }
 
 //Cambia las vistas entre login y register
@@ -99,15 +102,16 @@ func ChangeViewTasks(nombreVista string, tasks []models.Task, listID string) {
 	UI.Load(loadableContents)
 }
 
-func ChangeViewConfig(nombreVista string, proyect models.Proyect, list models.List) {
+func ChangeViewConfig(nombreVista string, proyect models.Proyect, list models.List, emails []string, userEmail string) {
 	tmpl, err := template.ParseFiles(nombreVista)
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	dataStruct := DataConfig{
 		Proyect: proyect,
 		List:    list,
+		Emails:  emails,
+		User:    userEmail,
 	}
 	buff := bytes.Buffer{}
 	tmpl.Execute(&buff, dataStruct)

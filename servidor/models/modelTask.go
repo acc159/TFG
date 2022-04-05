@@ -13,7 +13,7 @@ import (
 
 type Task struct {
 	ID         primitive.ObjectID `bson:"_id,omitempty"`
-	Cipherdata string             `bson:"cipherdata,omitempty"`
+	Cipherdata []byte             `bson:"cipherdata,omitempty"`
 	ListID     primitive.ObjectID `bson:"listID,omitempty"`
 }
 

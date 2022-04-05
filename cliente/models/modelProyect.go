@@ -22,7 +22,6 @@ type ProyectCipher struct {
 	ID         primitive.ObjectID `bson:"_id,omitempty"`
 	Cipherdata []byte             `bson:"cipherdata,omitempty"`
 	Users      []string           `bson:"users,omitempty"`
-	Lists      []string           `bson:"lists,omitempty"`
 }
 
 //Recupero un proyecto dado su ID
@@ -49,12 +48,10 @@ func GetProyect(proyectID string) ProyectCipher {
 func CreateProyect(newProyect Proyect) bool {
 	//Añadimos el email del usuario que esta creando el proyecto
 	newProyect.Users = append(newProyect.Users, UserSesion.Email)
-
-	//Ciframos el proyecto
-	//1.Generamos la clave aleatoria que se utilizara en el cifrado AES
+	//Generamos la clave aleatoria que se utilizara en el cifrado AES
 	Krandom, IVrandom := utils.GenerateKeyIV()
+	//Ciframos el proyecto
 	proyectCipher := CifrarProyecto(newProyect, Krandom, IVrandom)
-
 	//Enviamos el proyecto cifrado al servidor
 	proyectJSON, err := json.Marshal(proyectCipher)
 	if err != nil {
@@ -80,14 +77,20 @@ func CreateProyect(newProyect Proyect) bool {
 	var proyectID string
 	json.NewDecoder(resp.Body).Decode(&proyectID)
 	//Creamos la relacion para el usuario que crea el proyecto y para cada uno de los usuarios del campo user
-	for i := 0; i < len(newProyect.Users); i++ {
-		//Recupero para cada usuario su Public Key y la uso para cifrar la Krandom
-		publicKeyUser := GetUserByEmail(newProyect.Users[i]).PublicKey
-		publicKey := utils.PemToPublicKey(publicKeyUser)
-		KrandomCipher := utils.CifrarRSA(publicKey, Krandom)
-		CreateRelation(newProyect.Users[i], proyectID, KrandomCipher)
-	}
+	CreateProyectRelations(proyectID, Krandom, newProyect.Users)
 	return true
+}
+
+//Le paso el ID del proyecto junto a su clave de cifrado y creo relaciones Usuario-Proyecto para cada usuario pasado
+func CreateProyectRelations(proyectID string, Krandom []byte, users []string) {
+	for i := 0; i < len(users); i++ {
+		//Recupero para cada usuario su Public Key y la uso para cifrar la Krandom
+		// publicKeyUser := GetUserByEmail(users[i]).PublicKey
+		// publicKey := utils.PemToPublicKey(publicKeyUser)
+		// KrandomCipher := utils.CifrarRSA(publicKey, Krandom)
+		KrandomCipher := EncryptKeyWithPublicKey(users[i], Krandom)
+		CreateRelation(users[i], proyectID, KrandomCipher)
+	}
 }
 
 //Eliminar un proyecto
@@ -158,16 +161,24 @@ func DeleteUserProyect(proyectID string, userEmail string) bool {
 	}
 }
 
+//Devuelve la clave del proyecto descifrada
+func GetProyectKey(proyectIDstring string, userEmail string) []byte {
+	relation := GetRelationUserProyect(UserSesion.Email, proyectIDstring)
+	ProyectKeyCipher := relation.ProyectKey
+	privateKey := GetPrivateKeyUser()
+	proyectKey := utils.DescifrarRSA(privateKey, ProyectKeyCipher)
+	return proyectKey
+}
+
 //Añadir un usuario a un proyecto
 func AddUserProyect(proyectIDstring string, userEmail string) bool {
-
-	//Recupero la relacion para el usuario actual para poder descifrar la clave del proyecto que necesitare cifrar para añadir a la relacion del nuevo usuario
-	relationUser := GetRelationUserProyect(UserSesion.Email, proyectIDstring)
-
-	//Desciframos y obtenemos una nueva
-	proyectKey := relationUser.ProyectKey
-	CreateRelation(userEmail, proyectIDstring, proyectKey)
-
+	//Recupero la clave publica que usare para cifrar la clave del proyecto
+	publicKey := GetPublicKey(userEmail)
+	//Recupero la clave del proyecto descifrada
+	proyectKey := GetProyectKey(proyectIDstring, UserSesion.Email)
+	//Cifro la clave del proyecto con la clave publica del usuario nuevo añadido
+	newProyectKey := utils.CifrarRSA(publicKey, proyectKey)
+	CreateRelation(userEmail, proyectIDstring, newProyectKey)
 	//Añado el usuario al array de usuarios del proyecto
 	url := config.URLbase + "proyect/users/" + proyectIDstring + "/" + userEmail
 	req, err := http.NewRequest("POST", url, nil)
@@ -205,7 +216,6 @@ func CifrarProyecto(proyect Proyect, key []byte, IV []byte) ProyectCipher {
 	proyectBytes := ProyectToBytes(proyect)
 	//Cifro
 	proyectCipherBytes := utils.CifrarAES(key, IV, proyectBytes)
-
 	proyectCipher := ProyectCipher{
 		Cipherdata: proyectCipherBytes,
 		Users:      proyect.Users,
@@ -225,4 +235,48 @@ func BytesToProyect(datos []byte) Proyect {
 		fmt.Println("error:", err)
 	}
 	return proyect
+}
+
+func UpdateProyect(newProyect Proyect) bool {
+
+	//Recupero la relacion del proyecto para obtener la Key de cifrado
+	relation := GetRelationUserProyect(UserSesion.Email, newProyect.ID)
+	ProyectKeyCipher := relation.ProyectKey
+	//Descifro la clave con mi clave privada
+	privateKey := GetPrivateKeyUser()
+	proyectKey := utils.DescifrarRSA(privateKey, ProyectKeyCipher)
+
+	// //Recupero el IV del proyecto cifrado
+	// oldProyect := GetProyect(newProyect.ID)
+	// IV := utils.GetIV(oldProyect.Cipherdata)
+
+	//Genero un nuevo IV
+	_, IV := utils.GenerateKeyIV()
+	//Cifro el nuevo proyecto y me quedo con la parte de los datos cifrados
+	proyectCipher := CifrarProyecto(newProyect, proyectKey, IV)
+	proyectCipher.ID, _ = primitive.ObjectIDFromHex(newProyect.ID)
+
+	//Actualizo el proyecto en el servidor
+	proyectJSON, err := json.Marshal(proyectCipher)
+	if err != nil {
+		fmt.Println(err)
+	}
+	url := config.URLbase + "proyects/" + newProyect.ID
+	req, err := http.NewRequest("PUT", url, bytes.NewBuffer(proyectJSON))
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode == 400 {
+		fmt.Println("El proyecto no pudo ser actualizado")
+		return false
+	} else {
+		return true
+	}
 }

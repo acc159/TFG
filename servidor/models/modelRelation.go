@@ -153,3 +153,24 @@ func UpdateRelationList(relation Relation) bool {
 	err := coleccion.FindOneAndReplace(ctx, filter, relation)
 	return err.Err() == nil
 }
+
+func GetRelationsByUserList(userEmail string, listIDstring string) RelationLists {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	coleccion := config.InstanceDB.DB.Collection("users_proyects_lists")
+	listID, _ := primitive.ObjectIDFromHex(listIDstring)
+
+	filter := bson.D{{Key: "userEmail", Value: userEmail}, {Key: "lists.listID", Value: listID}}
+	var relation Relation
+	err := coleccion.FindOne(ctx, filter).Decode(&relation)
+	if err != nil {
+		log.Println(err)
+	}
+	for i := 0; i < len(relation.Lists); i++ {
+		if relation.Lists[i].ListID == listID {
+			return relation.Lists[i]
+		}
+	}
+
+	return RelationLists{}
+}
