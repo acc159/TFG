@@ -1,0 +1,137 @@
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tarea</title>
+</head>
+<body>
+    <button onclick="changeHome()">Volver al Home</button>
+    <button onclick="changeToTasks()">Ver Tareas de la lista</button>
+    <button onclick="UpdateTask()">Actualizar Tarea</button>
+
+    <h1 id="listID" hidden>{{.List.ID}}</h1>
+    <h1 id="taskID" hidden>{{.Task.ID}}</h1>
+    <h1 contenteditable  id="name">{{.Task.Name}}</h1>
+    <h2 contenteditable id="state">{{.Task.State}}</h2>
+    <p contenteditable id="description">{{.Task.Description}}</p>
+    <input type="date" id="date" name="date" value="{{.Task.Date}}" contenteditable>
+    
+    <h2>Usuarios asignados a la tarea:</h2>
+    <div id="usersTask">    
+        {{range .Task.Users}}
+            <div id="{{.}}">
+                <span>{{.}}</span>
+                <button onclick="deleteUserTask(event)">Eliminar usuario</button>
+            </div>
+        {{end}}
+    </div>
+
+
+    <h2>Usuarios de la lista por añadir a la tarea:</h2>
+    <div id="usersListDiv">
+        <select name="usersList" id="usersList" multiple>
+            {{range .List.Users}}
+                <option value={{.}}>{{.}}</option>
+            {{end}}
+        </select>
+        <button onclick="addUserTask()">Asignar usuarios a la tarea</button>
+    </div>
+
+
+</body>
+</html>
+<script>
+    function changeToTasks(){
+        let listID = document.querySelector('#listID').textContent
+        changeToTasksGO(listID).then(
+            function(){
+            }
+        )
+    }
+
+    function deleteUserTask(){
+        var div = event.target.closest('div');
+        let option = document.createElement('option');
+        option.value = div.id;
+        option.textContent= div.id;
+        document.querySelector('select').appendChild(option);
+        div.remove();
+    }
+
+
+    function addUserTask(){
+       let selectedUsers = document.querySelector('select').selectedOptions;
+       if (selectedUsers.length > 0){
+            let usersNames = []
+            for (let index = selectedUsers.length; index > 0; index--) {
+                    usersNames.push(selectedUsers[index - 1].value)
+                    selectedUsers[index - 1].remove();
+            }
+            //Ahora los meto en la lista de usuarios de la tarea
+            let usersTask = document.querySelector('#usersTask');
+            for (let i = 0; i < usersNames.length; i++) {
+                let newDiv = document.createElement('div');
+                newDiv.id = usersNames[i];
+                span = document.createElement('span');
+                span.textContent = usersNames[i];
+                let button = document.createElement('button');
+                button.innerHTML = "Eliminar usuario";
+                button.onclick = function () {deleteUserTask(event)};
+                newDiv.appendChild(span)
+                newDiv.innerHTML += " "
+                newDiv.appendChild(button)
+                usersTask.appendChild(newDiv)
+            }
+       }else{
+           alert('Marca algun usuario para añadirlo asignarlo a la tarea')
+       }
+    }
+
+
+    //Sin usar actualmente
+    function ComprobarUsersList(){
+        let numUsersList = document.querySelector('#usersList').querySelectorAll('option').length
+        if (numUsersList == 0){
+            let h2 = document.createElement('h2');
+            h2.textContent = "No hay ningun usuario mas por añadir"
+            document.querySelector('#usersListDiv').innerHTML = "";
+            document.querySelector('#usersListDiv').append(h2);
+        }
+    }
+
+    function UpdateTask(){
+        //Recupero los campos de la tarea
+        let taskID = document.querySelector('#taskID').textContent;
+        let listID = document.querySelector('#listID').textContent;
+        let name = document.querySelector('#name').textContent;
+        let date = document.querySelector('#date').value;
+        let state = document.querySelector('#state').textContent;
+        let description = document.querySelector('#description').textContent;
+        let usersTaskDivs = document.querySelector('#usersTask').querySelectorAll('div');
+        let usersTask = [];
+        for (let index = 0; index < usersTaskDivs.length; index++) {
+            usersTask.push(usersTaskDivs[index].id)
+        }
+        let newTask = {
+            "ID" : taskID,
+            "Name" : name,
+            "Description" : description,
+            "Date" : date,
+            "State" : state,
+            "Users" : usersTask,
+        }
+
+        updateTaskGO(newTask, listID).then(
+            function(resultado){
+                if (resultado){
+                    alert('La tarea fue actualizada')
+                    changeToTaskConfigGO(taskID, listID)
+                }else{
+                    alert('La tarea no pudo ser actualizada')
+                }
+            }
+        )
+    }
+
+</script>

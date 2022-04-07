@@ -66,7 +66,8 @@ func CreateList(list List, proyectIDstring string) string {
 
 func CreateListRelations(listID string, proyectID string, Krandom []byte, users []string) {
 	for i := 0; i < len(users); i++ {
-		KrandomCipher := EncryptKeyWithPublicKey(users[i], Krandom)
+		publicKeyUser := GetPublicKey(users[i])
+		KrandomCipher := utils.EncryptKeyWithPublicKey(publicKeyUser, Krandom)
 		AddListToRelation(proyectID, listID, users[i], KrandomCipher)
 	}
 }
@@ -153,15 +154,22 @@ func GetList(listID string) ListCipher {
 		fmt.Println("Lista no encontrada")
 		return ListCipher{}
 	} else {
-		var list ListCipher
-		json.NewDecoder(resp.Body).Decode(&list)
+		var listCipher ListCipher
+		json.NewDecoder(resp.Body).Decode(&listCipher)
 		//Descifro
-		return list
+		return listCipher
 	}
 }
 
 //Elimino al usuario del array Users de la lista
 func DeleteUserList(listID string, userEmail string) bool {
+	//Elimino al usuario como usuario asignado de todas las tareas de la lista
+	tasks := GetTasksByList(listID)
+	for i := 0; i < len(tasks); i++ {
+		tasks[i].Users = utils.FindAndDelete(tasks[i].Users, userEmail)
+		UpdateTask(listID, tasks[i])
+	}
+
 	url := config.URLbase + "list/users/" + listID + "/" + userEmail
 	req, err := http.NewRequest("DELETE", url, nil)
 	if err != nil {

@@ -24,12 +24,17 @@
     <label for="date">Fecha de la tarea</label>
     <input type="date" id="date" name="date"><br><br>
 
+    <select name="usuarios" id="usuarios" multiple>
+        {{range .ListUsers}}
+        <option value={{.}}>{{.}}</option>
+        {{end}}
+    </select>
 
     <button onclick="addTask()">Añadir Tarea</button>
 </body>
 </html>
 <script>
-        function changeToTasks(){
+    function changeToTasks(){
         let listID = document.querySelector('#listID').textContent
         changeToTasksGO(listID).then(
             function(){
@@ -43,20 +48,23 @@
         let taskName = document.querySelector('#taskName').value
         let description = document.querySelector('#description').value
         let state = document.querySelector('#state').value
+        let users = document.querySelector('#usuarios').selectedOptions
+        let usersNames = []
+        for (let index = 0; index < users.length; index++) {
+            usersNames.push(users[index].value)
+        }
         let task = {
             "Name" : taskName,
             "Description" : description,
             "Date" : date,
             "State" : state,
-            "Users" : ["Maria", "Adrian"]
+            "Users" : usersNames,
         }
-
-
-        
         addTaskGO(listID, task, date).then(
             function(resultado){
                 if (resultado){
-                    alert('La tarea fue creada con exito')
+                    alert('La tarea se creo')
+                    changeToTasks(listID)
                 }else{
                     alert('La tarea no se creo')
                 }

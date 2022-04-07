@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"cliente/config"
 	"cliente/models"
+	"cliente/utils"
 
 	"html/template"
 	"io/ioutil"
@@ -26,8 +27,9 @@ type DataList struct {
 }
 
 type DataTask struct {
-	Tasks  []models.Task
-	ListID string
+	Tasks     []models.Task
+	ListID    string
+	ListUsers []string
 }
 
 type DataConfig struct {
@@ -37,9 +39,14 @@ type DataConfig struct {
 	User    string
 }
 
+type DataConfigTask struct {
+	Task models.Task
+	List models.List
+}
+
 func InitUI() {
 	//Inicializo
-	UI, _ = lorca.New("", "", 800, 700)
+	UI, _ = lorca.New("", "", 800, 700, "--allow-insecure-localhost")
 	//Cargo la primera vista
 	ChangeView(config.PreView + "login.html")
 }
@@ -87,14 +94,15 @@ func ChangeViewAddList(nombreVista string, proyectID string, usersProyect []stri
 	UI.Load(loadableContents)
 }
 
-func ChangeViewTasks(nombreVista string, tasks []models.Task, listID string) {
+func ChangeViewTasks(nombreVista string, tasks []models.Task, listID string, listUsers []string) {
 	tmpl, err := template.ParseFiles(nombreVista)
 	if err != nil {
 		log.Fatal(err)
 	}
 	dataStruct := DataTask{
-		Tasks:  tasks,
-		ListID: listID,
+		Tasks:     tasks,
+		ListID:    listID,
+		ListUsers: listUsers,
 	}
 	buff := bytes.Buffer{}
 	tmpl.Execute(&buff, dataStruct)
@@ -117,4 +125,32 @@ func ChangeViewConfig(nombreVista string, proyect models.Proyect, list models.Li
 	tmpl.Execute(&buff, dataStruct)
 	loadableContents := "data:text/html," + url.PathEscape(buff.String())
 	UI.Load(loadableContents)
+}
+
+func ChangeViewConfigTask(nombreVista string, task models.Task, list models.List) {
+	tmpl, err := template.ParseFiles(nombreVista)
+	if err != nil {
+		log.Fatal(err)
+	}
+	dataStruct := DataConfigTask{
+		Task: task,
+		List: list,
+	}
+
+	buff := bytes.Buffer{}
+	tmpl.Execute(&buff, dataStruct)
+	loadableContents := "data:text/html," + url.PathEscape(buff.String())
+	UI.Load(loadableContents)
+}
+
+func LoadTask(taskID string, listID string) {
+	task := models.GetTask(taskID, listID)
+	listCipher := models.GetList(listID)
+	list := models.DescifrarLista(listCipher, models.GetListKey(listID))
+	//Limpio de los usuarios de la lista aquellos que estan en la tarea
+	for i := 0; i < len(task.Users); i++ {
+		list.Users = utils.FindAndDelete(list.Users, task.Users[i])
+	}
+	//Recuperamos la tarea la desciframos
+	ChangeViewConfigTask(config.PreView+"configTask.html", task, list)
 }

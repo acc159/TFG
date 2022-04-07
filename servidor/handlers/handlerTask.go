@@ -12,7 +12,6 @@ func CreateTask(w http.ResponseWriter, r *http.Request) {
 	var task models.Task
 	json.NewDecoder(r.Body).Decode(&task)
 	respuesta := models.CreateTask(task)
-
 	if respuesta == "000000000000000000000000" {
 		w.WriteHeader(400)
 		respuesta := "No se creo la tarea"
@@ -22,18 +21,32 @@ func CreateTask(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func GetTasksByList(w http.ResponseWriter, r *http.Request) {
+func GetTaskByID(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	taskID := params["taskID"]
+	task := models.GetTaskByID(taskID)
+	if task.ID.Hex() == "000000000000000000000000" {
+		w.WriteHeader(400)
+		json.NewEncoder(w).Encode(task)
+	} else {
+		json.NewEncoder(w).Encode(task)
+	}
+}
 
+func GetTasksByList(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	listID := params["listID"]
-
 	tasks := models.GetTasksByList(listID)
 	json.NewEncoder(w).Encode(tasks)
-
+	if len(tasks) == 0 {
+		w.WriteHeader(400)
+		json.NewEncoder(w).Encode(tasks)
+	} else {
+		json.NewEncoder(w).Encode(tasks)
+	}
 }
 
 func UpdateTask(w http.ResponseWriter, r *http.Request) {
-
 	params := mux.Vars(r)
 	id := params["id"]
 	var newTask models.Task
@@ -50,10 +63,8 @@ func UpdateTask(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteTask(w http.ResponseWriter, r *http.Request) {
-
 	params := mux.Vars(r)
 	id := params["id"]
-
 	borrada := models.DeleteTask(id)
 	if borrada {
 		respuesta := "Se borro la tarea"
@@ -64,5 +75,4 @@ func DeleteTask(w http.ResponseWriter, r *http.Request) {
 		respuesta := "No se pudo borrar la tarea"
 		json.NewEncoder(w).Encode(respuesta)
 	}
-
 }

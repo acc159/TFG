@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/pem"
+	"fmt"
 )
 
 //Genero el par de claves Privada y Publica
@@ -70,4 +71,42 @@ func DescifrarRSA(privateKey *rsa.PrivateKey, cipherText []byte) []byte {
 		panic(err)
 	}
 	return dataBytes
+}
+
+func GetHash(data []byte) []byte {
+	dataHash := sha256.New()
+	_, err := dataHash.Write(data)
+	if err != nil {
+		panic(err)
+	}
+	dataHashsum := dataHash.Sum(nil)
+	return dataHashsum
+}
+
+//Cifro una clave aleatoria que se utilizara en AES con la clave publica del usuario pasado
+func EncryptKeyWithPublicKey(publicKey *rsa.PublicKey, Krandom []byte) []byte {
+	KrandomCipher := CifrarRSA(publicKey, Krandom)
+	return KrandomCipher
+}
+
+//Firma digital -> Devuelve la firma digital de los datos pasados como parametro
+func Sign(data []byte, privateKey *rsa.PrivateKey) []byte {
+	//Obtenemos el hash de los datos
+	hash := GetHash(data)
+	//Firmamos el hash
+	signature, err := rsa.SignPSS(rand.Reader, privateKey, crypto.SHA256, hash, nil)
+	if err != nil {
+		panic(err)
+	}
+	return signature
+}
+
+func CheckSign(signature []byte, data []byte, publicKey *rsa.PublicKey) bool {
+	hash := GetHash(data)
+	err := rsa.VerifyPSS(publicKey, crypto.SHA256, hash, signature, nil)
+	if err != nil {
+		fmt.Println("Firma incorrecta")
+		return false
+	}
+	return true
 }

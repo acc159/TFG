@@ -40,7 +40,7 @@ func GetProyectsListsByUser(userEmail string) []Relation {
 	}
 }
 
-//Creo una relacion sin listas FALTA RELLENAR EL CAMPO PROYECT KEY
+//Creo una relacion sin listas
 func CreateRelation(userEmail string, proyectStringID string, proyectKey []byte) bool {
 	//userID, _ := primitive.ObjectIDFromHex(userStringID)
 	proyectID, _ := primitive.ObjectIDFromHex(proyectStringID)
@@ -69,12 +69,8 @@ func CreateRelation(userEmail string, proyectStringID string, proyectKey []byte)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode == 400 {
-		fmt.Println("La relacion no pudo ser creada")
 		return false
 	} else {
-		var responseObject string
-		json.NewDecoder(resp.Body).Decode(&responseObject)
-		fmt.Println(responseObject)
 		return true
 	}
 }
@@ -195,7 +191,7 @@ func GetRelationUserProyect(userEmail string, proyectID string) Relation {
 	}
 }
 
-//Devolver una relaciond de tipo lista para un usuario y lista dado
+//Devolver una relacion de tipo lista para un usuario y lista dado
 func GetRelationListByUser(userEmail string, listID string) RelationLists {
 	resp, err := http.Get(config.URLbase + "relations/list/" + userEmail + "/" + listID)
 	if err != nil {

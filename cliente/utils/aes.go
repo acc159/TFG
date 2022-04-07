@@ -5,8 +5,6 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"crypto/sha512"
-	"encoding/hex"
-	"fmt"
 	"io"
 )
 
@@ -35,12 +33,6 @@ func CifrarAES(key []byte, iv []byte, plainText []byte) []byte {
 	stream.XORKeyStream(ciphertext[aes.BlockSize:], plainText)
 	//Almaceno el IV en los primeros 16 bytes del textoCifrado
 	copy(ciphertext, iv)
-	//Para pasarlo a string
-	stringCipher := hex.EncodeToString(ciphertext[:])
-	fmt.Println(stringCipher)
-	//Para pasarlo a []byte desde string
-	byteCipher, _ := hex.DecodeString(stringCipher)
-	fmt.Println(byteCipher)
 	return ciphertext
 }
 

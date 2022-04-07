@@ -28,32 +28,29 @@ type TaskCipher struct {
 	ListID     primitive.ObjectID `bson:"listID,omitempty"`
 }
 
-// //Recupero una tarea por su ID
-// func GetTask(taskID string) []Task {
-// 	resp, err := http.Get(config.URLbase + "tasks/" + taskID)
-// 	if err != nil {
-// 		fmt.Println(err)
-// 	}
-// 	defer resp.Body.Close()
-// 	var tasks []Task
-// 	if resp.StatusCode == 400 {
-// 		fmt.Println("Ningun tarea para dicha lista")
-// 		return tasks
-// 	} else {
-// 		var tasksCipher []TaskCipher
-// 		json.NewDecoder(resp.Body).Decode(&tasksCipher)
-// 		var tasks []Task
-// 		listKey := GetListKey(listID)
-// 		for i := 0; i < len(tasksCipher); i++ {
-// 			tasks = append(tasks, DescifrarTarea(tasksCipher[i], listKey))
-// 		}
-// 		return tasks
-// 	}
-// }
+//Recupero una tarea por su ID
+func GetTask(taskID string, listID string) Task {
+	resp, err := http.Get(config.URLbase + "tasks/" + taskID)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer resp.Body.Close()
+	var task Task
+	if resp.StatusCode == 400 {
+		fmt.Println("Ningun tarea para dicha lista")
+		return task
+	} else {
+		var taskCipher TaskCipher
+		json.NewDecoder(resp.Body).Decode(&taskCipher)
+		listKey := GetListKey(listID)
+		task = DescifrarTarea(taskCipher, listKey)
+		return task
+	}
+}
 
 //Recupero las tareas por su ListID
 func GetTasksByList(listID string) []Task {
-	resp, err := http.Get(config.URLbase + "tasks/" + listID)
+	resp, err := http.Get(config.URLbase + "tasks/list/" + listID)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -99,7 +96,6 @@ func CreateTask(stringListID string, task Task) bool {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
-
 	if resp.StatusCode == 400 {
 		fmt.Println("La tarea no pudo ser creada")
 		return false
@@ -111,42 +107,39 @@ func CreateTask(stringListID string, task Task) bool {
 	}
 }
 
-func UpdateTask() {
-	listID, _ := primitive.ObjectIDFromHex("6239fb356f2ad453296c5807")
-	task := TaskCipher{
-		Cipherdata: []byte("ACTUALIZADA"),
-		ListID:     listID,
-	}
-
-	taskJSON, err := json.Marshal(task)
+//Actualizar una tarea dado su ID y el de la lista
+func UpdateTask(listIDstring string, task Task) bool {
+	listKey := GetListKey(listIDstring)
+	taskCipher := CifrarTarea(task, listKey)
+	taskID, _ := primitive.ObjectIDFromHex(task.ID)
+	taskCipher.ID = taskID
+	listID, _ := primitive.ObjectIDFromHex(listIDstring)
+	taskCipher.ListID = listID
+	taskJSON, err := json.Marshal(taskCipher)
 	if err != nil {
 		fmt.Println(err)
 	}
-
-	url := config.URLbase + "tasks/" + "623b64ef2945dc21f09354d9"
-
+	url := config.URLbase + "tasks/" + task.ID
 	req, err := http.NewRequest("PUT", url, bytes.NewBuffer(taskJSON))
 	if err != nil {
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 	client := &http.Client{}
-
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
-
 	if resp.StatusCode == 400 {
 		fmt.Println("La tarea no pudo ser actualizada")
+		return false
 	} else {
-		var newTaskID string
-		json.NewDecoder(resp.Body).Decode(&newTaskID)
-		fmt.Println(newTaskID)
+		return true
 	}
 }
 
+//Borrar una tarea
 func DeleteTask(taskID string) bool {
 	url := config.URLbase + "tasks/" + taskID
 	req, err := http.NewRequest("DELETE", url, nil)
@@ -190,6 +183,12 @@ func CifrarTarea(task Task, listKey []byte) TaskCipher {
 		Cipherdata: taskCipherBytes,
 	}
 	return taskCipher
+}
+
+func DeleteUserTask(task *Task, user string) {
+	newUsers := utils.FindAndDelete(task.Users, user)
+	task.Users = newUsers
+
 }
 
 //Paso de Tarea a []Bytes

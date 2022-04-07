@@ -31,7 +31,6 @@ func GetProyect(proyectID string) ProyectCipher {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
-
 	//Compruebo si no hay ningun usuario
 	if resp.StatusCode == 404 {
 		fmt.Println("Proyecto no encontrado")
@@ -84,11 +83,8 @@ func CreateProyect(newProyect Proyect) bool {
 //Le paso el ID del proyecto junto a su clave de cifrado y creo relaciones Usuario-Proyecto para cada usuario pasado
 func CreateProyectRelations(proyectID string, Krandom []byte, users []string) {
 	for i := 0; i < len(users); i++ {
-		//Recupero para cada usuario su Public Key y la uso para cifrar la Krandom
-		// publicKeyUser := GetUserByEmail(users[i]).PublicKey
-		// publicKey := utils.PemToPublicKey(publicKeyUser)
-		// KrandomCipher := utils.CifrarRSA(publicKey, Krandom)
-		KrandomCipher := EncryptKeyWithPublicKey(users[i], Krandom)
+		publicKeyUser := GetPublicKey(users[i])
+		KrandomCipher := utils.EncryptKeyWithPublicKey(publicKeyUser, Krandom)
 		CreateRelation(users[i], proyectID, KrandomCipher)
 	}
 }
@@ -133,14 +129,12 @@ func GetUsersProyect(proyectID string) []string {
 
 //Elimino al usuario del array Users del proyecto
 func DeleteUserProyect(proyectID string, userEmail string) bool {
-
 	//Recupero la relacion para quitar tambien al usuario de las listas del proyecto donde este
 	relation := GetRelationUserProyect(userEmail, proyectID)
 	//Para cada lista que tiene el proyecto elimino al usuario de dicha lista
 	for i := 0; i < len(relation.Lists); i++ {
 		DeleteUserList(relation.Lists[i].ListID, userEmail)
 	}
-
 	url := config.URLbase + "proyect/users/" + proyectID + "/" + userEmail
 	req, err := http.NewRequest("DELETE", url, nil)
 	if err != nil {
@@ -200,10 +194,22 @@ func AddUserProyect(proyectIDstring string, userEmail string) bool {
 	}
 }
 
+func GetEmailsNotInProyect(proyect Proyect) []string {
+	usersAll := GetUsers()
+	var emails []string
+	for i := 0; i < len(usersAll); i++ {
+		emails = append(emails, usersAll[i].Email)
+	}
+	//Elimino a los usuarios que ya pertenecen al proyecto
+	emailsProyect := proyect.Users
+	for i := 0; i < len(emailsProyect); i++ {
+		emails = utils.FindAndDelete(emails, emailsProyect[i])
+	}
+	return emails
+}
+
 //Cifrado y Descifrado
-
 func DescifrarProyecto(proyectCipher ProyectCipher, key []byte) Proyect {
-
 	descifradoBytes := utils.DescifrarAES(key, proyectCipher.Cipherdata)
 	proyect := BytesToProyect(descifradoBytes)
 	proyect.ID = proyectCipher.ID.Hex()
@@ -238,7 +244,6 @@ func BytesToProyect(datos []byte) Proyect {
 }
 
 func UpdateProyect(newProyect Proyect) bool {
-
 	//Recupero la relacion del proyecto para obtener la Key de cifrado
 	relation := GetRelationUserProyect(UserSesion.Email, newProyect.ID)
 	ProyectKeyCipher := relation.ProyectKey
@@ -255,7 +260,6 @@ func UpdateProyect(newProyect Proyect) bool {
 	//Cifro el nuevo proyecto y me quedo con la parte de los datos cifrados
 	proyectCipher := CifrarProyecto(newProyect, proyectKey, IV)
 	proyectCipher.ID, _ = primitive.ObjectIDFromHex(newProyect.ID)
-
 	//Actualizo el proyecto en el servidor
 	proyectJSON, err := json.Marshal(proyectCipher)
 	if err != nil {

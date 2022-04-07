@@ -12,16 +12,18 @@
     <h1>Tareas de la lista: {{.ListID}}</h1>
     <h2>Numero de tareas: {{len .Tasks}}</h2>
     {{range .Tasks}}
-        <button onclick="changeToTaskConfig({{.ID}})">Ver Tarea</button>
-        <h2>Nombre: {{.Name}}</h2>
-        <p>Description: {{.Description}}</p>
-        <h3>Fecha: {{.Date}}</h3>
-        <h3>{{.State}}</h3>
-        <h3>Usuarios asignados: </h3>
-        {{range .Users}}
-            <h4>{{.}}</h4>
-        {{end}}
-        <button onclick="DeleteTask({{.ID}})">Eliminar Tarea</button>
+        <div id="{{.ID}}">
+            <h2>Nombre: {{.Name}}</h2>
+            <p>Description: {{.Description}}</p>
+            <h3>Fecha: {{.Date}}</h3>
+            <h3>{{.State}}</h3>
+            <h3>Usuarios asignados: </h3>
+            {{range .Users}}
+                <h4>{{.}}</h4>
+            {{end}}
+            <button onclick="changeToTaskConfig(event)">Ver Tarea</button>
+            <button onclick="DeleteTask(event)">Eliminar Tarea</button>
+        </div>
     {{end}}
 </body>
 </html>
@@ -31,13 +33,14 @@
         let listID = document.querySelector('#listID').textContent
         changeToAddTaskGO(listID).then(
             function(){
-
             }
         )
     }
 
 
-    function changeToTaskConfig(taskID){
+    function changeToTaskConfig(event){
+        var div = event.target.closest('div');
+        taskID = div.id;
         let listID = document.querySelector('#listID').textContent
         changeToTaskConfigGO(taskID, listID).then(
             function(){
@@ -45,7 +48,9 @@
         )
     }
 
-    function DeleteTask(taskID){
+    function DeleteTask(event){
+        var div = event.target.closest('div');
+        taskID = div.id;
         let listID = document.querySelector('#listID').textContent
         deleteTaskGO(taskID).then(
             function(resultado){

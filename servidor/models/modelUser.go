@@ -118,12 +118,10 @@ func GetUser(email string) User {
 func CreateUser(usuario User) string {
 	//Creo un contexto
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-
 	//Obtengo la coleccion
 	coleccion := config.InstanceDB.DB.Collection("users")
 	//Inserto el usuario pasado por parametro
 	result, err := coleccion.InsertOne(ctx, usuario)
-
 	if err != nil {
 		//Compruebo si el error que se me da es por valor duplicado
 		textoError := err.Error()
@@ -132,7 +130,6 @@ func CreateUser(usuario User) string {
 		}
 		return "0"
 	}
-
 	//Paso el primitive.ObjectID a un string
 	stringObjectID := result.InsertedID.(primitive.ObjectID).Hex()
 	fmt.Println(stringObjectID)

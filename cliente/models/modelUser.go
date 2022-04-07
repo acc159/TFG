@@ -41,9 +41,8 @@ func GetPrivateKeyUser() *rsa.PrivateKey {
 	return utils.PemToPrivateKey(utils.DescifrarAES(UserSesion.Kaes, UserSesion.PrivateKey))
 }
 
-//Generamos a partir de un hash del usuario y contraseña :  Kservidor 16 Bytes, IV 16 Bytes y Kaes 32 Bytes
+//Generamos a partir de un hash del usuario y contraseña:  Kservidor 16 Bytes, IV 16 Bytes y Kaes 32 Bytes
 func HashUser(user_pass []byte) ([]byte, []byte, []byte) {
-
 	hash := sha512.Sum512(user_pass)
 	Kservidor := hash[:16]
 	IV := hash[aes.BlockSize : aes.BlockSize*2]
@@ -194,6 +193,7 @@ func GetUsers() []User {
 	}
 }
 
+//Recupero un usuario por su email
 func GetUserByEmail(userEmail string) User {
 	var usersResponse User
 	resp, err := http.Get(config.URLbase + "users/" + userEmail)
@@ -234,27 +234,6 @@ func GetUserProyectsLists() {
 				list := GetUserList(relations[i].Lists[j].ListID, relations[i].Lists[j].ListKey, privateKey)
 				lists = append(lists, list)
 			}
-
-			//Listas VIEJO BORRAR TRAS REVISAR
-			// var ListsIDs []string
-			// var listKeysCipher [][]byte
-			// for j := 0; j < len(relations[i].Lists); j++ {
-			// 	ListsIDs = append(ListsIDs, relations[i].Lists[j].ListID)
-			// 	listKeysCipher = append(listKeysCipher, relations[i].Lists[j].ListKey)
-			// }
-			// var lists []ListCipher
-			// if len(ListsIDs) > 0 {
-			// 	lists = GetListsByIDs(ListsIDs)
-			// }
-
-			// //Desciframos las listas del proyecto
-			// var listsDescifradas []List
-			// for index := 0; index < len(lists); index++ {
-			// 	//Descifro la Key de la lista antes de descifrar la lista en si
-			// 	listKey := utils.DescifrarRSA(privateKey, listKeysCipher[index])
-			// 	listsDescifradas = append(listsDescifradas, DescifrarLista(lists[index], listKey))
-			// }
-
 			datos := DataUser{
 				Proyecto: proyectoDescifrado,
 				Listas:   lists,
@@ -284,9 +263,8 @@ func DeleteUser(userEmail string) {
 					//Borro la lista
 					DeleteList(DatosUsuario[i].Listas[j].ID)
 				} else {
-					//Quito al usuario del array Users de la Lista
+					//Quito al usuario del array Users de la Lista y de las tareas
 					DeleteUserList(DatosUsuario[i].Listas[j].ID, userEmail)
-					//Traer las tareas de la lista y quitar al usuario de todas ellas
 				}
 			}
 		}
@@ -319,49 +297,9 @@ func DeleteUserByEmail(userEmail string) bool {
 	}
 }
 
-func EncryptKeyWithPublicKey(userEmail string, Krandom []byte) []byte {
-	publicKeyUser := GetUserByEmail(userEmail).PublicKey
-	publicKey := utils.PemToPublicKey(publicKeyUser)
-	KrandomCipher := utils.CifrarRSA(publicKey, Krandom)
-	return KrandomCipher
-}
-
+//Recupero la clave publica de un usuario
 func GetPublicKey(userEmail string) *rsa.PublicKey {
 	publicKeyUserPem := GetUserByEmail(userEmail).PublicKey
 	publicKey := utils.PemToPublicKey(publicKeyUserPem)
 	return publicKey
 }
-
-/*
-func PostUser() {
-	//Creo el usuario que voy a mandar al servidor
-	user := UserCipher{Cipherdata: "enviandoDesdeCliente"}
-
-	//Convertimos el user de tipo objeto GO a un JSON
-	userJSON, err := json.Marshal(user)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	//Preparo la peticion POST
-	url := config.URLbase + "user"
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(userJSON))
-	if err != nil {
-		panic(err)
-	}
-	req.Header.Set("Content-Type", "application/json")
-	client := &http.Client{}
-
-	//Realizo la peticion
-	resp, err := client.Do(req)
-	if err != nil {
-		fmt.Println(err)
-	}
-	defer resp.Body.Close()
-
-	//Respuesta
-	var response string
-	json.NewDecoder(resp.Body).Decode(&response)
-	fmt.Println(response)
-}
-*/

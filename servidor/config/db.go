@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -21,32 +22,38 @@ type MongoConection struct {
 
 var InstanceDB MongoConection
 
+/*
+func InitMongoDB() {
+	cmd := exec.Command("mongod")
+	err := cmd.Run()
+	if err != nil {
+		fmt.Println("Base de datos no iniciada")
+	}
+}
+*/
+
 func ConnectDB() {
-
-	cadena_conexion := "mongodb://127.0.0.1:27017"
-
-	client, err := mongo.NewClient(options.Client().ApplyURI(cadena_conexion))
+	cadena := os.Getenv("CADENA_CONEXION")
+	//cadena_conexion := "mongodb://127.0.0.1:27017"
+	client, err := mongo.NewClient(options.Client().ApplyURI(cadena))
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	//Establecemos un context antes de conectarnos
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	err = client.Connect(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	err = client.Ping(ctx, readpref.Primary())
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	InstanceDB = MongoConection{
 		DB:     client.Database(nombreDB),
 		Client: client,
 	}
-
+	//Creo los indices
 	CreateIndexUniqueUsers()
 	CreateIndexComposeUserProyectList()
 	CreateIndexListIDinTask()
@@ -64,7 +71,6 @@ func CreateIndexUniqueUsers() {
 	if err != nil {
 		fmt.Println(err)
 	}
-
 }
 
 func CreateIndexListIDinTask() {
@@ -75,11 +81,9 @@ func CreateIndexListIDinTask() {
 			Keys: bson.D{{Key: "listID", Value: 1}},
 		},
 	)
-
 	if err != nil {
 		fmt.Println(err)
 	}
-
 }
 
 func CreateIndexComposeUserProyectList() {

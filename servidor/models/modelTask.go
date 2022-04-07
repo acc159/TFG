@@ -24,11 +24,8 @@ func GetTasksByList(idString string) []Task {
 	defer cancel()
 	//Obtengo la coleccion
 	coleccion := config.InstanceDB.DB.Collection("tasks")
-
 	listID, _ := primitive.ObjectIDFromHex(idString)
-
 	filter := bson.M{"listID": listID}
-
 	result, err := coleccion.Find(ctx, filter)
 	if err != nil {
 		log.Println(err)
@@ -38,8 +35,23 @@ func GetTasksByList(idString string) []Task {
 	if err != nil {
 		log.Println(err)
 	}
-
 	return tasks
+}
+
+func GetTaskByID(taskIDstring string) Task {
+	//Creo un contexto
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	//Obtengo la coleccion
+	coleccion := config.InstanceDB.DB.Collection("tasks")
+	taskID, _ := primitive.ObjectIDFromHex(taskIDstring)
+	filter := bson.M{"_id": taskID}
+	var task Task
+	err := coleccion.FindOne(ctx, filter).Decode(&task)
+	if err != nil {
+		log.Println(err)
+	}
+	return task
 }
 
 //Crear una tarea
@@ -50,15 +62,12 @@ func CreateTask(task Task) string {
 	//Obtengo la coleccion
 	coleccion := config.InstanceDB.DB.Collection("tasks")
 	result, err := coleccion.InsertOne(ctx, task)
-
 	if err != nil {
 		fmt.Println(err)
 	}
-
 	stringObjectID := result.InsertedID.(primitive.ObjectID).Hex()
 	fmt.Println(stringObjectID)
 	return stringObjectID
-
 }
 
 //Para borrar una tarea
@@ -68,10 +77,8 @@ func DeleteTask(idString string) bool {
 	defer cancel()
 	//Obtengo la coleccion
 	coleccion := config.InstanceDB.DB.Collection("tasks")
-
 	id, _ := primitive.ObjectIDFromHex(idString)
 	filter := bson.D{{Key: "_id", Value: id}}
-
 	err := coleccion.FindOneAndDelete(ctx, filter)
 	if err.Err() != nil {
 		return false
@@ -85,7 +92,6 @@ func UpdateTask(newTask Task, idString string) bool {
 	defer cancel()
 	//Obtengo la coleccion
 	coleccion := config.InstanceDB.DB.Collection("tasks")
-
 	id, _ := primitive.ObjectIDFromHex(idString)
 	filter := bson.D{{Key: "_id", Value: id}}
 	update := bson.M{"$set": newTask}
@@ -106,7 +112,6 @@ func DeleteTasksByListID(idString string) bool {
 	defer cancel()
 	//Obtengo la coleccion
 	coleccion := config.InstanceDB.DB.Collection("tasks")
-
 	id, _ := primitive.ObjectIDFromHex(idString)
 	filter := bson.D{{Key: "listID", Value: id}}
 	results, err := coleccion.DeleteMany(ctx, filter)
