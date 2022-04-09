@@ -35,7 +35,9 @@
             let user_pass = [email, password];
             registerGO(user_pass).then(
                 function(valorDesdeGO){
-                    if (valorDesdeGO == false){
+                    if (valorDesdeGO == "serverOFF"){
+                        alert('El servidor se encuentra caido')
+                    }else{
                         alert('El usuario no se a registrado')
                     }
                 }

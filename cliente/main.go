@@ -27,20 +27,23 @@ func main() {
 		ChangeView(config.PreView + "register.html")
 	})
 
-	//Cambiar a la pantalla de añadir un proyecto
-	UI.Bind("changeToAddProyect", func() {
-		ChangeViewWithValues(config.PreView + "addProyect.html")
+	//Cambiar a la pantalla de inicio de sesion
+	UI.Bind("changeToLogin", func() {
+		ChangeView(config.PreView + "login.html")
 	})
 
 	//Cambiar a la pantalla de Home
 	UI.Bind("changeHome", func() {
+		//Traigo del servidor todos los proyectos y listas del usuario
 		models.GetUserProyectsLists()
-		ChangeViewWithValues(config.PreView + "index.html")
+		ChangeViewWithValues(config.PreView+"index.html", nil)
 	})
 
-	//Cambiar a la pantalla de inicio de sesion
-	UI.Bind("changeToLogin", func() {
-		ChangeView(config.PreView + "login.html")
+	//Cambiar a la pantalla de añadir un proyecto
+	UI.Bind("changeToAddProyect", func() {
+		emails := models.GetEmails()
+		emails = utils.FindAndDelete(emails, models.UserSesion.Email)
+		ChangeViewWithValues(config.PreView+"addProyect.html", emails)
 	})
 
 	//Cambiar a la pantalla de añadir una lista
@@ -109,12 +112,15 @@ func main() {
 	/*------------------------------------------------------------------------- Binds Funcionalidades  ------------------------------------------------------------------*/
 
 	//Registro del usuario
-	UI.Bind("registerGO", func(user_pass []string) bool {
-		result := models.Register(user_pass[0], user_pass[1])
-		if result {
-			ChangeViewWithValues(config.PreView + "index.html")
+	UI.Bind("registerGO", func(user_pass []string) string {
+		result, err := models.Register(user_pass[0], user_pass[1])
+		if err {
+			return "serverOFF"
 		}
-		return false
+		if result {
+			ChangeViewWithValues(config.PreView+"index.html", nil)
+		}
+		return "false"
 	})
 
 	//Login del usuario
@@ -122,7 +128,7 @@ func main() {
 		result := models.LogIn(user_pass[0], user_pass[1])
 		if result {
 			models.GetUserProyectsLists()
-			ChangeViewWithValues(config.PreView + "index.html")
+			ChangeViewWithValues(config.PreView+"index.html", nil)
 		}
 		return false
 	})
@@ -203,7 +209,7 @@ func main() {
 		if userEmail == models.UserSesion.Email {
 			//Si el usuario borrado es el que es el actual de la sesion lo redirijo a la home
 			models.GetUserProyectsLists()
-			ChangeViewWithValues(config.PreView + "index.html")
+			ChangeViewWithValues(config.PreView+"index.html", nil)
 		} else {
 			listCipher := models.GetList(listID)
 			proyectCipher := models.GetProyect(proyectID)

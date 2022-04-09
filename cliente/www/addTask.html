@@ -30,10 +30,23 @@
         {{end}}
     </select>
 
+    <input type="file" id="subir_archivo"/>
+
     <button onclick="addTask()">Añadir Tarea</button>
+
+    <button onclick="leerArchivo()">Adjuntar archivo</button>
+
+    
+    <div id="archivosAdjuntos">
+        <h3>Archivos adjuntos</h3>
+    </div>
+
 </body>
 </html>
 <script>
+
+
+
     function changeToTasks(){
         let listID = document.querySelector('#listID').textContent
         changeToTasksGO(listID).then(
@@ -42,7 +55,71 @@
         )
     }
 
+
+
+    let extensionAllow = ['jpg', 'jpeg', 'png', 'pdf', 'txt'];
+
+    function leerArchivo(){
+        let elemento = document.querySelector('#subir_archivo');
+        if (elemento.files.length > 0){
+            let nombreArchivo = elemento.files[0].name
+            let extension = elemento.files[0].name.split('.').pop().toLowerCase()
+            if (extensionAllow.indexOf(extension) > -1){
+                if(elemento.files.length != 0){
+                    var file = elemento.files[0];
+                    var reader = new FileReader();
+                    reader.onloadend = function() {
+                        let divPadre = document.querySelector('#archivosAdjuntos');
+                        datosArchivo = reader.result
+                        let a = document.createElement('a')
+                        a.textContent = nombreArchivo
+                        a.href = datosArchivo
+                        a.download = nombreArchivo
+                        let button = document.createElement('button');
+                        button.innerHTML = "Eliminar archivo";
+                        button.onclick = function () {deleteFileTask(event)};
+                        let div = document.createElement('div');
+                        div.appendChild(a)
+                        div.appendChild(button)
+                        divPadre.appendChild(div)
+
+                        elemento.value = ""
+                    }
+                reader.readAsDataURL(file);
+                }
+            }else{
+                alert('Extension no permitida')
+                elemento.value = ""
+            }
+        }else{
+            alert('Añade un archivo para adjuntarlo')
+        }
+    }
+
+
+    function deleteFileTask(event){
+        var div = event.target.closest('div');
+        div.remove()
+    }
+
+
     function addTask(){
+
+        //Archivos
+        let archivosDiv = document.querySelector('#archivosAdjuntos').querySelectorAll('a');
+        let archivos = []
+        if (archivosDiv.length > 0) {
+            for (let index = 0; index < archivosDiv.length; index++) {
+                nombre = archivosDiv[index].textContent;
+                datos = archivosDiv[index].href;
+                let archivo = {
+                    "FileName" : nombre,
+                    "FileData" : datos,
+                }
+                archivos.push(archivo)
+            } 
+        }
+       
         let listID = document.querySelector('#listID').textContent
         let date = document.querySelector('#date').value
         let taskName = document.querySelector('#taskName').value
@@ -59,6 +136,7 @@
             "Date" : date,
             "State" : state,
             "Users" : usersNames,
+            "Files" : archivos
         }
         addTaskGO(listID, task, date).then(
             function(resultado){

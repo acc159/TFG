@@ -6,26 +6,32 @@ import (
 	"cliente/utils"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"net/http"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Task struct {
-	ID          string   `bson:"_id,omitempty"`
-	Name        string   `bson:"name"`
-	Description string   `bson:"description"`
-	Date        string   `bson:"date"`
-	State       string   `bson:"state"`
-	Files       string   `bson:"files"`
-	Links       string   `bson:"links"`
-	Users       []string `bson:"users"`
+	ID          string      `bson:"_id,omitempty"`
+	Name        string      `bson:"name"`
+	Description string      `bson:"description"`
+	Date        string      `bson:"date"`
+	State       string      `bson:"state"`
+	Files       []TaskFiles `bson:"files"`
+	Links       string      `bson:"links"`
+	Users       []string    `bson:"users"`
 }
 
 type TaskCipher struct {
 	ID         primitive.ObjectID `bson:"_id,omitempty"`
 	Cipherdata []byte             `bson:"cipherdata,omitempty"`
 	ListID     primitive.ObjectID `bson:"listID,omitempty"`
+}
+
+type TaskFiles struct {
+	FileName string
+	FileData template.URL
 }
 
 //Recupero una tarea por su ID

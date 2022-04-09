@@ -21,6 +21,15 @@
             {{range .Users}}
                 <h4>{{.}}</h4>
             {{end}}
+
+            
+            <div id="archivosAdjuntos">
+                <h3>Archivos adjuntos:</h3>
+                {{range .Files}}
+                    <a href="{{.FileData}}" download="{{.FileName}}">{{.FileName}}</a>
+                {{end}}
+            </div>
+
             <button onclick="changeToTaskConfig(event)">Ver Tarea</button>
             <button onclick="DeleteTask(event)">Eliminar Tarea</button>
         </div>

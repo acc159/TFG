@@ -17,8 +17,9 @@ import (
 var UI lorca.UI
 
 type Data struct {
-	User  models.User
-	Datos []models.DataUser
+	User   models.User
+	Datos  []models.DataUser
+	Emails []string
 }
 
 type DataList struct {
@@ -63,14 +64,15 @@ func ChangeView(nombreVista string) {
 }
 
 //Carga la pagina de Home con los proyectos y listas del usuario actual
-func ChangeViewWithValues(nombreVista string) {
+func ChangeViewWithValues(nombreVista string, emails []string) {
 	tmpl, err := template.ParseFiles(nombreVista)
 	if err != nil {
 		log.Fatal(err)
 	}
 	dataStruct := Data{
-		User:  models.UserSesion,
-		Datos: models.DatosUsuario,
+		User:   models.UserSesion,
+		Datos:  models.DatosUsuario,
+		Emails: emails,
 	}
 	buff := bytes.Buffer{}
 	tmpl.Execute(&buff, dataStruct)

@@ -13,8 +13,20 @@
         <label for="proyectName">Nombre del proyecto</label>
         <input type="text" id="proyectName" name="proyectName"><br><br>
         <label for="usuarios">Selecciona los usuarios:</label>
-        <select name="usuarios" id="usuarios" multiple>
-        </select>
+
+
+
+            {{if not .Emails}}
+                <h2>Ningun usuario mas aparte de ti en el sistema</h2>
+            {{else}}
+                <select name="usuarios" id="usuarios" multiple>
+                    {{range .Emails}}
+                        <option value="{{.}}">{{.}}</option>
+                    {{end}}
+                </select>
+            {{end}}
+
+       
         <button onclick="addProyect()">Añadir Proyecto</button>
     </div>
 </body>
@@ -23,7 +35,7 @@
 
 <script>
     function init(){
-        getUsersToAddProyect();
+        //getUsersToAddProyect();
     }
 
     //Para poder mostrar por pantalla los usuarios que se pueden añadir a un proyecto
@@ -44,10 +56,16 @@
     }
 
     function addProyect(){
-
         //Obtengo los campos metidos por el usuario
         let proyectName = document.querySelector('#proyectName').value;
-        let usuariosSeleccionados = document.querySelector('select').selectedOptions;
+        let usuarios = document.querySelector('select');
+        let usuariosSeleccionados;
+        if (usuarios == null){
+            usuariosSeleccionados = [];
+        }else{
+            usuariosSeleccionados = usuarios.selectedOptions;
+        }
+
         if (proyectName == ""){
             alert('Introduce todos los valores para añadir un proyecto')
         }else{
@@ -55,12 +73,10 @@
             for (let index = 0; index < usuariosSeleccionados.length; index++) {
                 usuariosProyect.push(usuariosSeleccionados[index].value);
             }
-
             let proyect = {
                 "Name" : proyectName,
                 "Users" : usuariosProyect
             }
-
             addProyectGO(proyect).then(
                 function(valorDesdeGO){
                     if (valorDesdeGO == false){

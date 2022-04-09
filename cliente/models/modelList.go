@@ -221,6 +221,7 @@ func AddUserList(userEmail string, proyectID string, listID string) bool {
 	}
 }
 
+//Devuelve una lista descifrada dado el id de una lista cifrada junto a la clave de la lista y la clave privada del usuario para descifrar dicha clave de la lista
 func GetUserList(listID string, listKeyCipher []byte, privateKey *rsa.PrivateKey) List {
 	listKey := utils.DescifrarRSA(privateKey, listKeyCipher)
 	listCipher := GetList(listID)
@@ -295,6 +296,7 @@ func DescifrarLista(listCipher ListCipher, key []byte) List {
 	list := BytesToList(descifradoBytes)
 	list.ID = listCipher.ID.Hex()
 	list.Users = listCipher.Users
+	list.ProyectID = listCipher.ProyectID.Hex()
 	return list
 }
 

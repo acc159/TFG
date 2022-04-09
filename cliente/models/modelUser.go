@@ -51,7 +51,7 @@ func HashUser(user_pass []byte) ([]byte, []byte, []byte) {
 }
 
 //Registro del usuario
-func Register(email string, password string) bool {
+func Register(email string, password string) (bool, bool) {
 	user_pass := []byte(email + password)
 	Kservidor, IV, Kaes := HashUser(user_pass)
 	KservidorHash, err := bcrypt.GenerateFromPassword(Kservidor, 12)
@@ -76,13 +76,16 @@ func Register(email string, password string) bool {
 	UserSesion.Kaes = Kaes
 	//Enviamos los datos al servidor
 	userIDstring := RegisterServer(UserSesion)
+	if userIDstring == "serverOFF" {
+		return false, true
+	}
 	if userIDstring == "" {
 		UserSesion = User{}
-		return false
+		return false, false
 	} else {
 		id, _ := primitive.ObjectIDFromHex(userIDstring)
 		UserSesion.ID = id
-		return true
+		return true, false
 	}
 }
 
@@ -105,7 +108,7 @@ func RegisterServer(user User) string {
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
-		return ""
+		return "serverOFF"
 	}
 	defer resp.Body.Close()
 	//Respuesta
@@ -230,6 +233,7 @@ func GetUserProyectsLists() {
 
 			//Listas
 			var lists []List
+			//Por cada lista del proyecto la recupero descifrada usando mi clave privada para descifrar la clave de descifrado de la lista
 			for j := 0; j < len(relations[i].Lists); j++ {
 				list := GetUserList(relations[i].Lists[j].ListID, relations[i].Lists[j].ListKey, privateKey)
 				lists = append(lists, list)
@@ -295,6 +299,16 @@ func DeleteUserByEmail(userEmail string) bool {
 	} else {
 		return true
 	}
+}
+
+//Recupero los emails de todos los usuarios del sistema
+func GetEmails() []string {
+	users := GetUsers()
+	var usersEmails []string
+	for i := 0; i < len(users); i++ {
+		usersEmails = append(usersEmails, users[i].Email)
+	}
+	return usersEmails
 }
 
 //Recupero la clave publica de un usuario
