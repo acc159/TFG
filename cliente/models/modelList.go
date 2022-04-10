@@ -29,6 +29,7 @@ type ListCipher struct {
 
 //Creo una lista con el proyectID correspondiente
 func CreateList(list List, proyectIDstring string) string {
+	list.Users = append(list.Users, UserSesion.Email)
 	//1.Generamos la clave aleatoria que se utilizara en el cifrado AES
 	Krandom, IVrandom := utils.GenerateKeyIV()
 	//Ciframos la lista
@@ -186,6 +187,13 @@ func DeleteUserList(listID string, userEmail string) bool {
 		fmt.Println("El usuario no pudo ser eliminado de la lista")
 		return false
 	} else {
+		for i := 0; i < len(DatosUsuario); i++ {
+			for j := 0; j < len(DatosUsuario[i].Listas); j++ {
+				if DatosUsuario[i].Listas[j].ID == listID {
+					DatosUsuario[i].Listas[j].Users = utils.FindAndDelete(DatosUsuario[i].Listas[j].Users, userEmail)
+				}
+			}
+		}
 		return true
 	}
 }
@@ -217,6 +225,14 @@ func AddUserList(userEmail string, proyectID string, listID string) bool {
 		fmt.Println("El usuario no pudo ser añadido a la lista")
 		return false
 	} else {
+		//Lo añado al usuario en local
+		for i := 0; i < len(DatosUsuario); i++ {
+			for j := 0; j < len(DatosUsuario[i].Listas); j++ {
+				if DatosUsuario[i].Listas[j].ID == listID {
+					DatosUsuario[i].Listas[j].Users = append(DatosUsuario[i].Listas[j].Users, userEmail)
+				}
+			}
+		}
 		return true
 	}
 }

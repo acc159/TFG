@@ -6,21 +6,31 @@
     <title>Document</title>
 </head>
 <body>
+    <button onclick="changeHome()">Volver al Home</button>
+    <button onclick="AddList()">Añadir Lista</button>
     <h1>Añadir una lista al proyecto {{.ProyectID}}</h1>
     <h1 id="proyectID">{{.ProyectID}}</h1>
-    <button onclick="AddList()">Añadir Lista</button>
-
     <label for="name">Nombre de la lista</label>
     <input type="text" id="name" name="name"><br><br>
     <label for="description">Descripción de la lista</label>
-    <input type="text" id="description" name="description"><br><br>
+    <textarea name="" id="description" cols="30" rows="10"></textarea>
+    <!-- <input type="text" id="description" name="description"><br><br> -->
 
-    <select name="usuarios" id="usuarios" multiple>
-        {{range .UsersProyect}}
-        <option value={{.}}>{{.}}</option>
-        {{end}}
-    </select>
-    <button onclick="changeHome()">Volver al Home</button>
+
+    {{$userActual:=.User.Email}}
+    {{if eq (len .UsersProyect) 1}}
+        <h2>Solo estas tu en el proyecto</h2>
+    {{else}}
+        <h2>Selecciona los usuarios para añadir a la lista </h2>
+        <select name="usuarios" id="usuarios" multiple>
+            {{range .UsersProyect}}
+                    {{if ne $userActual .}}
+                        <option value={{.}}>{{.}}</option>
+                    {{end}}
+            {{end}}
+        </select>
+    {{end}}
+
 </body>
 </html>
 
@@ -29,19 +39,20 @@
     function AddList(){
         let listName = document.querySelector('#name').value
         let description = document.querySelector('#description').value
-        let usuariosSeleccionados = document.querySelector('select').selectedOptions;
         let usersList = []
-        for (let index = 0; index < usuariosSeleccionados.length; index++) {
-            usersList.push(usuariosSeleccionados[index].value);
+        let usuarios = document.querySelector('select')
+        if(usuarios != null){
+            let usuariosSeleccionados = usuarios.selectedOptions;
+            for (let index = 0; index < usuariosSeleccionados.length; index++) {
+                usersList.push(usuariosSeleccionados[index].value);
+            }
         }
         let lista = {
             Users : usersList,
             Name : listName,
             Description : description,
         }
-
         let proyectID = document.querySelector('#proyectID').textContent;
-
         addListGO(lista, proyectID).then(
             function(response){
                 if (response == false){

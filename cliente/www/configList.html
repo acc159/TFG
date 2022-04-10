@@ -35,6 +35,9 @@
     
     <h2 id="proyectID">{{.Proyect.ID}}</h2>
     <h2 id="listID">{{.List.ID}}</h2>
+
+
+    <span hidden id="usuarioActual">{{.User}}</span>
 </body>
 </html>
 
@@ -43,8 +46,25 @@
         let proyectID = document.querySelector('#proyectID').textContent;
         let listID = document.querySelector('#listID').textContent;
         deleteUserListGO(userEmail, listID, proyectID).then(
-            function(){
+            function(resultado){
+                if (resultado){
+                    let usuarioActual = document.querySelector('#usuarioActual').textContent;
+                    if (userEmail == usuarioActual){
+                        changeHome();
+                    }else{
+                        alert('Usuario borrado')
+                        changeToListConfigGO(listID, proyectID)
+                    }
+                }else{
+                    alert('No se pudo borrar al usuario')
+                }
+            }
+        )
+    }
 
+    function changeToListConfig(listID, proyectID){
+        changeToListConfigGO(listID, proyectID).then(
+            function(){
             }
         )
     }
@@ -58,6 +78,7 @@
             function(response){
                 if (response){
                     alert('Usuario añadido')
+                    changeToListConfig(listID, proyectID)
                 }else{
                     alert('No se añadio el usuario')
                 }

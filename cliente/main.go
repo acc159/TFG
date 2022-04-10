@@ -165,11 +165,9 @@ func main() {
 	})
 
 	//Borrar un usuario de un Proyecto
-	UI.Bind("deleteUserProyectGO", func(userEmail string, proyectID string) {
-		//Borro al usuario del proyecto
-		models.DeleteUserProyect(proyectID, userEmail)
-		//Borro la relacion
-		models.DeleteUserProyectRelation(userEmail, proyectID)
+	UI.Bind("deleteUserProyectGO", func(userEmail string, proyectID string) bool {
+		//Borro al usuario del proyecto y la relacion se borra automaticamente en el servidor
+		return models.DeleteUserProyect(proyectID, userEmail)
 	})
 
 	//Añadir un usuario al proyecto
@@ -201,24 +199,26 @@ func main() {
 	})
 
 	//Borrar un usuario de una Lista
-	UI.Bind("deleteUserListGO", func(userEmail string, listID string, proyectID string) {
+	UI.Bind("deleteUserListGO", func(userEmail string, listID string, proyectID string) bool {
 		//Borro al usuario de la lista
 		models.DeleteUserList(listID, userEmail)
+
 		//Borro la lista en la relacion donde aparece
-		models.DeleteRelationList(proyectID, listID, userEmail)
-		if userEmail == models.UserSesion.Email {
-			//Si el usuario borrado es el que es el actual de la sesion lo redirijo a la home
-			models.GetUserProyectsLists()
-			ChangeViewWithValues(config.PreView+"index.html", nil)
-		} else {
-			listCipher := models.GetList(listID)
-			proyectCipher := models.GetProyect(proyectID)
-			//Descifro
-			list := models.DescifrarLista(listCipher, models.GetListKey(listID))
-			proyect := models.DescifrarProyecto(proyectCipher, models.GetProyectKey(proyectID, userEmail))
-			emailsProyect := models.GetProyect(proyectID).Users
-			ChangeViewConfig(config.PreView+"configList.html", proyect, list, emailsProyect, models.UserSesion.Email)
-		}
+		return models.DeleteRelationList(proyectID, listID, userEmail)
+
+		// if userEmail == models.UserSesion.Email {
+		// 	//Si el usuario borrado es el que es el actual de la sesion lo redirijo a la home
+		// 	models.GetUserProyectsLists()
+		// 	ChangeViewWithValues(config.PreView+"index.html", nil)
+		// } else {
+		// 	listCipher := models.GetList(listID)
+		// 	proyectCipher := models.GetProyect(proyectID)
+		// 	//Descifro
+		// 	list := models.DescifrarLista(listCipher, models.GetListKey(listID))
+		// 	proyect := models.DescifrarProyecto(proyectCipher, models.GetProyectKey(proyectID, userEmail))
+		// 	emailsProyect := models.GetProyect(proyectID).Users
+		// 	ChangeViewConfig(config.PreView+"configList.html", proyect, list, emailsProyect, models.UserSesion.Email)
+		// }
 	})
 
 	//Actualizar una lista

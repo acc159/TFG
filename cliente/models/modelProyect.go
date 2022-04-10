@@ -151,6 +151,12 @@ func DeleteUserProyect(proyectID string, userEmail string) bool {
 		fmt.Println("El usuario no pudo ser eliminado del proyecto")
 		return false
 	} else {
+		//Actualizo el proyecto en local
+		for i := 0; i < len(DatosUsuario); i++ {
+			if DatosUsuario[i].Proyecto.ID == proyectID {
+				DatosUsuario[i].Proyecto.Users = utils.FindAndDelete(DatosUsuario[i].Proyecto.Users, userEmail)
+			}
+		}
 		return true
 	}
 }
@@ -190,6 +196,12 @@ func AddUserProyect(proyectIDstring string, userEmail string) bool {
 		fmt.Println("El usuario no pudo ser añadido al proyecto")
 		return false
 	} else {
+		//Actualizo el proyecto en local
+		for i := 0; i < len(DatosUsuario); i++ {
+			if DatosUsuario[i].Proyecto.ID == proyectIDstring {
+				DatosUsuario[i].Proyecto.Users = append(DatosUsuario[i].Proyecto.Users, userEmail)
+			}
+		}
 		return true
 	}
 }

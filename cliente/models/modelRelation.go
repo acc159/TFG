@@ -107,7 +107,7 @@ func AddListToRelation(proyectID string, listIDstring string, userEmail string, 
 }
 
 //Elimino una lista dado su id en una relacion
-func DeleteRelationList(proyectStringID string, listStringID string, userEmail string) {
+func DeleteRelationList(proyectStringID string, listStringID string, userEmail string) bool {
 	url := config.URLbase + "relations/list/" + userEmail + "/" + proyectStringID + "/" + listStringID
 	req, err := http.NewRequest("DELETE", url, nil)
 	if err != nil {
@@ -123,10 +123,9 @@ func DeleteRelationList(proyectStringID string, listStringID string, userEmail s
 	defer resp.Body.Close()
 	if resp.StatusCode == 400 {
 		fmt.Println("La lista en la relacion no pudo ser borrada")
+		return false
 	} else {
-		var resultado string
-		json.NewDecoder(resp.Body).Decode(&resultado)
-		fmt.Println(resultado)
+		return true
 	}
 }
 

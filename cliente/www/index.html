@@ -10,17 +10,36 @@
 
 
 <body>
-    <button onclick="changeToAddProyect()">Añadir un proyecto</button>
-    <button onclick="exitSesion()">Salir de la sesion</button>
-    <button onclick="deleteUserGO()">Borrar Usuario</button>
- 
-    <h1>En pruebas</h1>
-    <h1 id="userEmail">{{.User.Email}}</h1>
 
+    <!-- <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-light">Light</button>
+                <button type="button" class="btn btn-light">Light</button>
+                <button type="button" class="btn btn-light">Light</button>
+            </div>
+            <div>
+                <form class="form-inline">
+                    <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
+                    <button class="btn btn-outline-info my-2 my-sm-0" type="submit">Search</button>
+                  </form>
+            </div>
+      </nav> -->
 
-
-    <!-- Estructura REAL -->
-    <h1>Bienvenido: {{.User.Email}}</h1>
+     <nav class="navbar navbar-dark bg-dark">
+        <div class="btn-group btn-group" role="group" aria-label="...">
+            <button type="button" class="btn btn-light" onclick="changeToAddProyect()">Añadir un proyecto</button>
+            <button type="button"class="btn btn-light" onclick="exitSesion()">Salir de la sesion</button>
+            <button type="button" class="btn btn-light" onclick="deleteUserGO()">Borrar Usuario</button>
+        </div>
+        <div>
+            <form class="form-inline">
+                <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
+                <button class="btn btn-outline-info my-2 my-sm-0" type="submit">Search</button>
+              </form>
+        </div>
+        <h1 id="userEmail">{{.User.Email}}</h1>
+    </nav>
+    
     {{$email:=.User.Email}}
 
     <div id="proyectos">

@@ -23,6 +23,7 @@ type Data struct {
 }
 
 type DataList struct {
+	User         models.User
 	ProyectID    string
 	UsersProyect []string
 }
@@ -87,6 +88,7 @@ func ChangeViewAddList(nombreVista string, proyectID string, usersProyect []stri
 		log.Fatal(err)
 	}
 	dataStruct := DataList{
+		User:         models.UserSesion,
 		ProyectID:    proyectID,
 		UsersProyect: usersProyect,
 	}

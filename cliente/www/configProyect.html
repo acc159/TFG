@@ -17,13 +17,19 @@
     <p contenteditable id="proyectDescription">  {{.Proyect.Name}}</p>
     <ul class="users_proyect">
 
-        {{$email:=.User}}
+        {{range .Proyect.Users}}
+            <li id={{.}}>{{.}}</li>
+            <button onclick="deleteUser({{.}})">Eliminar usuario</button>
+        {{end}}
+
+        <!-- Con esta version no muestro al usuario actual del proyecto -->
+        <!-- {{$email:=.User}}
         {{range .Proyect.Users}}
             {{if ne $email .}}
                 <li id={{.}}>{{.}}</li>
                 <button onclick="deleteUser({{.}})">Eliminar usuario</button>
             {{end}}
-        {{end}}
+        {{end}} -->
     </ul>
 
     {{if not .Emails}}
@@ -38,6 +44,8 @@
         <button onclick="addUserProyect()">Añadir usuario</button>
     {{end}}
 
+    <span hidden id="usuarioActual">{{.User}}</span>
+
 </body>
 </html>
 
@@ -45,8 +53,19 @@
     function deleteUser(userEmail){
         let proyectID = document.querySelector('#proyectID').textContent;
         deleteUserProyectGO(userEmail, proyectID).then(
-            function(){
-
+            function(resultado){
+                if (resultado){
+                    let usuarioActual = document.querySelector('#usuarioActual').textContent;
+                    if (userEmail == usuarioActual){
+                        changeHome();
+                    }else{
+                        alert('Usuario borrado')
+                        changeToProyectConfig(proyectID)
+                    }
+                }else{
+                    alert('No se pudo borrar al usuario')
+                }
+                
             }
         )
     }
@@ -58,6 +77,7 @@
             function(response){
                 if (response){
                     alert('Usuario añadido')
+                    changeToProyectConfig(proyectID)
                 }else{
                     alert('No se añadio el usuario')
                 }
@@ -89,6 +109,14 @@
                 if (response){
                     alert('Se actualizo el proyecto')
                 }
+            }
+        )
+    }
+
+
+    function changeToProyectConfig(proyectID){
+        changeToProyectConfigGO(proyectID).then(
+            function(){ 
             }
         )
     }
