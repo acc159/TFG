@@ -27,13 +27,15 @@ func GetTasksByList(idString string) []Task {
 	listID, _ := primitive.ObjectIDFromHex(idString)
 	filter := bson.M{"listID": listID}
 	result, err := coleccion.Find(ctx, filter)
+	var tasks []Task
 	if err != nil {
 		log.Println(err)
+		return tasks
 	}
-	var tasks []Task
 	err = result.All(ctx, &tasks)
 	if err != nil {
 		log.Println(err)
+		return tasks
 	}
 	return tasks
 }

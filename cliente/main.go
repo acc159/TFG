@@ -39,6 +39,11 @@ func main() {
 		ChangeViewWithValues(config.PreView+"index.html", nil)
 	})
 
+	//Cambiar a la pantalla de registro
+	UI.Bind("changeToAdminGO", func() {
+		ChangeViewAdminPanel(config.PreView + "admin.html")
+	})
+
 	//Cambiar a la pantalla de añadir un proyecto
 	UI.Bind("changeToAddProyect", func() {
 		emails := models.GetEmails()
@@ -47,16 +52,16 @@ func main() {
 	})
 
 	//Cambiar a la pantalla de añadir una lista
-	UI.Bind("changeToAddListGO", func(proyectID string) {
+	UI.Bind("changeToAddListGO", func(proyectID string, proyectName string) {
 		//Recupero los usuarios del proyecto
 		usersProyect := models.GetUsersProyect(proyectID)
-		ChangeViewAddList(config.PreView+"addList.html", proyectID, usersProyect)
+		ChangeViewAddList(config.PreView+"addList.html", proyectID, proyectName, usersProyect)
 	})
 
 	//Cambiar a la pestaña de ver las tareas de una lista dado el ID de la lista
-	UI.Bind("changeToTasksGO", func(listID string) {
+	UI.Bind("changeToTasksGO", func(listID string, listName string) {
 		tasks := models.GetTasksByList(listID)
-		ChangeViewTasks(config.PreView+"tasks.html", tasks, listID, nil)
+		ChangeViewTasks(config.PreView+"tasks.html", tasks, listID, nil, listName)
 	})
 
 	//REVISAR SI QUIERO TRAERME DEL SERVIDOR O DE LOCAL
@@ -101,7 +106,7 @@ func main() {
 		listCipher := models.GetList(listID)
 		list := models.DescifrarLista(listCipher, models.GetListKey(listID))
 		listUsers := list.Users
-		ChangeViewTasks(config.PreView+"addTask.html", nil, listID, listUsers)
+		ChangeViewTasks(config.PreView+"addTask.html", nil, listID, listUsers, "")
 	})
 
 	//Cambiar a la pestaña de añadir Tareas
@@ -148,6 +153,7 @@ func main() {
 		models.LogOut()
 		ChangeView(config.PreView + "login.html")
 	})
+
 	//Elimino a un usuario de todo el sistema
 	UI.Bind("deleteUserGO", func() {
 		models.DeleteUser(models.UserSesion.Email)
@@ -205,20 +211,6 @@ func main() {
 
 		//Borro la lista en la relacion donde aparece
 		return models.DeleteRelationList(proyectID, listID, userEmail)
-
-		// if userEmail == models.UserSesion.Email {
-		// 	//Si el usuario borrado es el que es el actual de la sesion lo redirijo a la home
-		// 	models.GetUserProyectsLists()
-		// 	ChangeViewWithValues(config.PreView+"index.html", nil)
-		// } else {
-		// 	listCipher := models.GetList(listID)
-		// 	proyectCipher := models.GetProyect(proyectID)
-		// 	//Descifro
-		// 	list := models.DescifrarLista(listCipher, models.GetListKey(listID))
-		// 	proyect := models.DescifrarProyecto(proyectCipher, models.GetProyectKey(proyectID, userEmail))
-		// 	emailsProyect := models.GetProyect(proyectID).Users
-		// 	ChangeViewConfig(config.PreView+"configList.html", proyect, list, emailsProyect, models.UserSesion.Email)
-		// }
 	})
 
 	//Actualizar una lista

@@ -10,93 +10,106 @@
 
 
 <body>
-
-    <!-- <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-            <div class="btn-group" role="group">
-                <button type="button" class="btn btn-light">Light</button>
-                <button type="button" class="btn btn-light">Light</button>
-                <button type="button" class="btn btn-light">Light</button>
-            </div>
-            <div>
-                <form class="form-inline">
-                    <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
-                    <button class="btn btn-outline-info my-2 my-sm-0" type="submit">Search</button>
-                  </form>
-            </div>
-      </nav> -->
-
-     <nav class="navbar navbar-dark bg-dark">
-        <div class="btn-group btn-group" role="group" aria-label="...">
-            <button type="button" class="btn btn-light" onclick="changeToAddProyect()">Añadir un proyecto</button>
-            <button type="button"class="btn btn-light" onclick="exitSesion()">Salir de la sesion</button>
-            <button type="button" class="btn btn-light" onclick="deleteUserGO()">Borrar Usuario</button>
-        </div>
-        <div>
-            <form class="form-inline">
-                <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
-                <button class="btn btn-outline-info my-2 my-sm-0" type="submit">Search</button>
-              </form>
-        </div>
-        <h1 id="userEmail">{{.User.Email}}</h1>
-    </nav>
-    
     {{$email:=.User.Email}}
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" type="button" onclick="changeHome()">Home</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item btn-outline-secondary" type="button">
+                    <a class="nav-link" role="button" onclick="changeToAddProyect()">Añadir un proyecto</a>
+                </li>
 
-    <div id="proyectos">
-        {{if not .Datos}}
-        <h1>No tienes ningun proyecto</h1>
-        {{else}}
-        <h1>Proyectos totales: {{len .Datos}}</h1>
-            {{range .Datos}}
-            <div id="{{.Proyecto.ID}}">
-                <button onclick="changeToProyectConfig(event)">Configuracion del proyecto</button>
-                <button onclick="changeToAddList(event)">Añadir Lista al proyecto</button>
-                <button class="deleteProyect" onclick="deleteProyect(event)">Eliminar Proyecto</button>
-                <h1>{{.Proyecto.Name}}</h1>
-                <p>{{.Proyecto.Description}}</p>
-                <h2>Usuarios del proyecto:</h2>
-                <ul>
-                    {{range .Proyecto.Users}}
-                        {{if eq . $email}}
-                        {{else}}
-                            <li>{{.}}</li>
-                        {{end}}
-                    {{end}}
-                </ul>
-                {{if not .Listas}}
-                    <h2>Ninguna Lista que mostrar</h2>
-                {{else}}
-                    <h3>Numero de listas en el proyecto: {{len .Listas}}</h3>
-                    <ul class="listas">
-                        {{range .Listas}}
-                            <li id={{.ID}}>
-                                <button onclick="changeToListConfig(event)">Configuracion de la Lista</button>
-                                <button onclick="changeToTasks(event)">Ver Tareas de la lista</button>
-                                <button class="deleteList" onclick="deleteList(event)">Eliminar Lista</button>
-                                <h3> {{.Name}}</h3>
-                                <p>{{.Description}}</p>
-                                <h4>Usuarios de la lista:</h4>
-                                <ul id="users_list">
-                                    {{range .Users}}
-                                        <li>{{.}}</li>
-                                    {{end}}
-                                </ul>
-                            </li>
-                        {{end}}
-                    </ul>                    
-                {{end}}
-                <p>---------------------------------------------------------------------------</p>
-            </div>
-            {{end}}
-        {{end}}
-    </div>
-
-
-
-<!-- 
-    <button onclick="llamoDesdeJavaScriptaFuncionGO()">Pulsame para ejecutar la funcion en GOLANG</button>
-    <button onclick="llamarAprueba()">Traer Proyectos Usuario</button> -->
+                <li class="nav-item btn-outline-secondary" type="button">
+                    <a class="nav-link" role="button" onclick="deleteUserGO()">Borrar Usuario</a>
+                </li>
+            </ul>
+            <form class="form-inline my-2 my-lg-0">
+                <input class="form-control mr-sm-2" type="search" placeholder="Proyectos y Listas">
+                <button class="btn btn-outline-info my-2 my-sm-0" type="submit" onclick="buscar(event)">Buscar</button>
     
+            </form>
+            <form class="form-inline my-2 my-lg-0">
+                <div class="dropdown inline" type="button">  
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-person dropdown-toggle r-sm-2 my-2 my-sm-0" viewBox="0 0 16 16"  data-toggle="dropdown">
+                        <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/>
+                    </svg>
+                    <ul class="dropdown-menu dropdown-menu-right inline">  
+                        <li class="dropdown-item">Usuario: {{$email}} </li>  
+                        <li class="dropdown-item">Nº Proyectos: {{len .Datos}} </li> 
+                        <li class="dropdown-item" onclick="changeToAdmin()">Panel Admin</li> 
+                        <li class="dropdown-item" onclick="exitSesion()"> 
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-door-open-fill" viewBox="0 0 16 16">
+                                <path d="M1.5 15a.5.5 0 0 0 0 1h13a.5.5 0 0 0 0-1H13V2.5A1.5 1.5 0 0 0 11.5 1H11V.5a.5.5 0 0 0-.57-.495l-7 1A.5.5 0 0 0 3 1.5V15H1.5zM11 2h.5a.5.5 0 0 1 .5.5V15h-1V2zm-2.5 8c-.276 0-.5-.448-.5-1s.224-1 .5-1 .5.448.5 1-.224 1-.5 1z"/>
+                            </svg> Cerrar Sesión
+                        </li> 
+                    </ul>  
+                </div>
+            </form>
+        </div>
+    </nav>
+
+    
+        {{if not .Datos}}
+            <section class="text-center">
+                <h1>No tienes ningun proyecto</h1>
+            </section>
+        {{else}}
+            {{range .Datos}}
+            {{$proyectID:=.Proyecto.ID}}
+            {{$proyectName:=.Proyecto.Name}}
+                <section class="jumbotron text-center">
+                    <div class="container" >
+                        <h1 class="display-3">{{.Proyecto.Name}}</h1>
+                        <p>{{.Proyecto.Description}}</p>
+                        <h2>Listas en el proyecto: {{len .Listas}}</h2>
+                        <div class="btn-group btn-group" role="group" id="{{.Proyecto.ID}}" data-proyectName="{{.Proyecto.Name}}">
+                            <button type="button" class="btn btn-outline-dark" onclick="changeToProyectConfig(event)">Configuración del proyecto »</button>
+                            <button type="button" class="btn btn-outline-dark" onclick="changeToAddList(event)">Añadir Lista al proyecto »</button>
+                            <button type="button" class="btn btn-outline-dark" onclick="deleteProyect(event)">Eliminar Proyecto »</button>
+                        </p>
+                    </div>
+                </section>
+                {{if not .Listas}}
+                <section class="text-center">
+                    <h2>Ninguna Lista que mostrar</h2>
+                </section>
+                {{else}}
+                    <div class="album py-5 bg-light">
+                        <div class="container">
+                            <div class="row">   
+                                {{range .Listas}}
+                                    <div class="col-md-4">
+                                        <div class="card mb-4 box-shadow text-center">
+                                            <div class="card-header">
+                                                <h5 class="card-title" >{{.Name}}</h5>
+                                            </div>
+                                            <div class="card-body box-shadow">
+                                                {{if .Description}}
+                                                    <p class="card-text">{{.Description}}</p>
+                                                {{else}}
+                                                    <p class="card-text">Sin Descripción</p>
+                                                {{end}}
+                                                <div class="justify-content-between align-items-center">
+                                                    <div class="btn-group" id="{{.ID}}" data-proyectID="{{$proyectID}}" data-proyectName="{{$proyectName}}" data-listName="{{.Name}}">
+                                                        <button type="button" class="btn btn-sm btn-outline-secondary"onclick="changeToTasks(event)">Ver Tareas</button>
+                                                        <button type="button" class="btn btn-sm btn-outline-secondary"onclick="changeToListConfig(event)">Config</button>
+                                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deleteList(event)">Eliminar Lista</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {{end}}    
+                            </div>
+                        </div>
+                    </div>     
+                {{end}}     
+            {{end}}
+        {{end}}        
+               
 </body>
 
 
@@ -108,10 +121,29 @@
 
 <script>
 
+    function buscar(event){
+        let input = event.target.closest('div').querySelector('input')
+        let inputValue = input.value;
+        if (inputValue != ""){
+            let buscar = document.getElementsByName(inputValue)[0];
+            if (buscar != null){
+                buscar.scrollIntoView();
+            }else{
+                alert("Ningun proyecto o lista con ese nombre");
+            }
+        }else{
+            alert('No has introducido ningun valor para buscar');
+        }
+        input.value = "";
+    }
+
+    //Funciones de los proyectos
+
     function changeToAddList(event){
         var div = event.target.closest('div');
-        proyectID = div.id;
-        changeToAddListGO(proyectID).then(
+        proyectID = div.id
+        proyectName = div.dataset.proyectname;
+        changeToAddListGO(proyectID, proyectName).then(
             function(){
                 
             }
@@ -128,54 +160,10 @@
         )
     }
 
-    function changeToListConfig(event){
-        var div = event.target.closest('div');
-        proyectID = div.id;
-        var li = event.target.closest('li');
-        listID = li.id;
-        changeToListConfigGO(listID, proyectID).then(
-            function(){
-            }
-        )
-    }
-
-    function changeToTasks(event){
-        var li = event.target.closest('li');
-        listID = li.id;
-        changeToTasksGO(listID).then(
-            function(){
-            }
-        )
-    }
-
-
-
-
-    function deleteList(event){
-        var li = event.target.closest('li');
-        listID = li.id;
-
-        var div = event.target.closest('div');
-        proyectID = div.id;
-
-
-        deleteListGO(listID, proyectID).then(
-            function(valorDesdeGO){
-                if (valorDesdeGO == false){
-                    alert('La lista no se borro')
-                }else{
-                    changeHome()
-                }
-            }
-        )
-    }
-
-
 
     function deleteProyect(event){
         var div = event.target.closest('div');
         proyectID = div.id;
-
         deleteProyectGO(proyectID).then(
             function(valorDesdeGO){
                 if (valorDesdeGO == false){
@@ -188,118 +176,52 @@
     }
 
 
-    function init(){
+    //Funciones de las listas
 
-
-        //Añadimos el evento a los botones de borrado
-        // let botones = document.querySelectorAll('.deleteProyect')
-        // for (let i = 0; i < botones.length; i++){
-        //     botones[i].addEventListener('click', )
-        // }
-
-        //getUsersToAddProyect();
-
-        //alert("Bienvenido");
-        //let boton = document.querySelector('.deleteProyect').textContent;
-        //alert(boton);
-    }
-/*
-    //Para poder mostrar por pantalla los usuarios que se pueden añadir a un proyecto
-    function getUsersToAddProyect(){
-        getEmailsGO().then(
-            function(emails){
-                let userEmail = document.querySelector('#userEmail').textContent
-                for (let i = 0; i < emails.length; i++){
-                    if(emails[i] != userEmail){
-                        let email = document.createElement('option')
-                        email.value = emails[i]
-                        email.textContent = emails[i]
-                        document.querySelector('#usuarios').appendChild(email)
-                    }
-                }
+    function changeToListConfig(event){
+        var div = event.target.closest('div');
+        proyectID = div.dataset.proyectid;
+        listID = div.id;
+        changeToListConfigGO(listID, proyectID).then(
+            function(){
             }
         )
     }
 
-    function addProyect(){
-
-        //Obtengo los campos metidos por el usuario
-        let proyectName = document.querySelector('#proyectName').value;
-        let usuariosSeleccionados = document.querySelector('select').selectedOptions;
-        if (proyectName == ""){
-            alert('Introduce todos los valores para añadir un proyecto')
-        }else{
-            let usuariosProyect = []
-            for (let index = 0; index < usuariosSeleccionados.length; index++) {
-                usuariosProyect.push(usuariosSeleccionados[index].value);
-                
+    function changeToTasks(event){
+        var div = event.target.closest('div');
+        listID = div.id;
+        listName = div.dataset.listname;
+        changeToTasksGO(listID,listName).then(
+            function(){
             }
-
-            let proyect = {
-                "Name" : proyectName,
-                "Users" : usuariosProyect
-            }
-
-            addProyectGO(proyect).then(
-                function(valorDesdeGO){
-                    if (valorDesdeGO == false){
-                        alert('El proyecto no se a creado')
-                    }
-                }
-            )
-        }
-    }
-/*
-    //Crea un div por cada proyecto que este relacionado con el usuario
-    function createDivsProyects(relations){
-        let proyectsIDS = [];
-        //Primero creo un array con todos los ids de los proyectos , en este habran repetidos
-        for (let i in relations){
-            proyectsIDS.push(relations[i].ProyectID)
-        }
-
-        //Aqui limpio del array los ids repetidos
-        let idsSinRepetir = proyectsIDS.filter((item, index) => {
-            return proyectsIDS.indexOf(item) === index;   
-        })
-
-        //Creo un div dentro del div general de proyectos por cada proyectID
-        for (let index = 0; index < idsSinRepetir.length; index++){
-            var proyectos = document.querySelector('#proyectos');
-            var div = document.createElement("div");
-            div.id = idsSinRepetir[index];
-
-            var titulo_lista = document.createElement('h2')
-            titulo_lista.textContent = "Listas del proyecto"
-            div.appendChild(titulo_lista)
-
-            proyectos.appendChild(div)
-        }
+        )
     }
 
-    //Llamo a GO para obtener las relaciones del usuario
-    function callRecibirProyectosyListasenGO(){
-        recibirProyectosyListasenGO().then(
-            function(relations){  
 
-                if (relations == null) {
-                        alert('No hay proyectos para el usuario')
+
+
+    function deleteList(event){
+        var div = event.target.closest('div');
+        listID = div.id;
+        proyectID = div.dataset.proyectid;
+        deleteListGO(listID, proyectID).then(
+            function(valorDesdeGO){
+                if (valorDesdeGO == false){
+                    alert('La lista no se borro')
                 }else{
-                    createDivsProyects(relations)
-                    //Recorro cada relacion y agrego en el div correspondiente datos
-                    for (let indice = 0; indice < relations.length; indice++){
-                        //Obtengo el proyecto sobre el que meter la Lista
-                        div = document.getElementById(relations[indice].ProyectID)
-                        var tag = document.createElement("p");
-                        tag.textContent = relations[indice].ListKey;
-                        div.appendChild(tag);
-                    }
+                    changeHome()
                 }
             }
         )
     }
-*/
 
 
-    document.addEventListener('DOMContentLoaded',init,false);
+    function changeToAdmin(){
+        changeToAdminGO().then(
+            function(){
+            }
+        )
+    }
+
 </script>

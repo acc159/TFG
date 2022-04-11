@@ -25,12 +25,14 @@ type Data struct {
 type DataList struct {
 	User         models.User
 	ProyectID    string
+	ProyectName  string
 	UsersProyect []string
 }
 
 type DataTask struct {
 	Tasks     []models.Task
 	ListID    string
+	ListName  string
 	ListUsers []string
 }
 
@@ -44,6 +46,10 @@ type DataConfig struct {
 type DataConfigTask struct {
 	Task models.Task
 	List models.List
+}
+
+type AdminView struct {
+	Users []models.User
 }
 
 func InitUI() {
@@ -82,7 +88,7 @@ func ChangeViewWithValues(nombreVista string, emails []string) {
 }
 
 //Cargo la vista de añadir una lista
-func ChangeViewAddList(nombreVista string, proyectID string, usersProyect []string) {
+func ChangeViewAddList(nombreVista string, proyectID string, proyectName string, usersProyect []string) {
 	tmpl, err := template.ParseFiles(nombreVista)
 	if err != nil {
 		log.Fatal(err)
@@ -90,6 +96,7 @@ func ChangeViewAddList(nombreVista string, proyectID string, usersProyect []stri
 	dataStruct := DataList{
 		User:         models.UserSesion,
 		ProyectID:    proyectID,
+		ProyectName:  proyectName,
 		UsersProyect: usersProyect,
 	}
 	buff := bytes.Buffer{}
@@ -98,7 +105,7 @@ func ChangeViewAddList(nombreVista string, proyectID string, usersProyect []stri
 	UI.Load(loadableContents)
 }
 
-func ChangeViewTasks(nombreVista string, tasks []models.Task, listID string, listUsers []string) {
+func ChangeViewTasks(nombreVista string, tasks []models.Task, listID string, listUsers []string, listName string) {
 	tmpl, err := template.ParseFiles(nombreVista)
 	if err != nil {
 		log.Fatal(err)
@@ -106,6 +113,7 @@ func ChangeViewTasks(nombreVista string, tasks []models.Task, listID string, lis
 	dataStruct := DataTask{
 		Tasks:     tasks,
 		ListID:    listID,
+		ListName:  listName,
 		ListUsers: listUsers,
 	}
 	buff := bytes.Buffer{}
@@ -157,4 +165,20 @@ func LoadTask(taskID string, listID string) {
 	}
 	//Recuperamos la tarea la desciframos
 	ChangeViewConfigTask(config.PreView+"configTask.html", task, list)
+}
+
+func ChangeViewAdminPanel(nombreVista string) {
+	tmpl, err := template.ParseFiles(nombreVista)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	users := models.GetUsers()
+	dataStruct := AdminView{
+		Users: users,
+	}
+	buff := bytes.Buffer{}
+	tmpl.Execute(&buff, dataStruct)
+	loadableContents := "data:text/html," + url.PathEscape(buff.String())
+	UI.Load(loadableContents)
 }

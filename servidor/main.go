@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"servidor/config"
@@ -22,6 +21,7 @@ func LoadEnv() {
 func main() {
 
 	//Cargar variables de entorno
+
 	LoadEnv()
 	/*
 
@@ -62,6 +62,11 @@ func main() {
 	//Lanzo el servidor
 	http.ListenAndServe("localhost:8080", r)
 	//http.ListenAndServeTLS("localhost:443", "certs/server.crt", "certs/server.key", r)
-	fmt.Println("Servidor corriendo en el puerto 8080")
 
+	// sigChan := make(chan os.Signal)
+	// signal.Notify(sigChan)
+	// select {
+	// case <-sigChan:
+	// 	config.Hola()
+	// }
 }

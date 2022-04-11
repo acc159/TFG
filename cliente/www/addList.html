@@ -8,8 +8,8 @@
 <body>
     <button onclick="changeHome()">Volver al Home</button>
     <button onclick="AddList()">Añadir Lista</button>
-    <h1>Añadir una lista al proyecto {{.ProyectID}}</h1>
-    <h1 id="proyectID">{{.ProyectID}}</h1>
+    <h1>Añadir una lista al proyecto: {{.ProyectName}}</h1>
+    <h1 hidden id="proyectID">{{.ProyectID}}</h1>
     <label for="name">Nombre de la lista</label>
     <input type="text" id="name" name="name"><br><br>
     <label for="description">Descripción de la lista</label>

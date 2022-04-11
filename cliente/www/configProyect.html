@@ -14,12 +14,12 @@
     <h2>Nombre: </h2>
     <h3 contenteditable id="proyectName"> {{.Proyect.Name}}</h3>
     <h2>Descripcion: </h2>
-    <p contenteditable id="proyectDescription">  {{.Proyect.Name}}</p>
+    <p contenteditable id="proyectDescription">  {{.Proyect.Description}}</p>
     <ul class="users_proyect">
 
         {{range .Proyect.Users}}
             <li id={{.}}>{{.}}</li>
-            <button onclick="deleteUser({{.}})">Eliminar usuario</button>
+            <button onclick="deleteUser('{{.}}')">Eliminar usuario</button>
         {{end}}
 
         <!-- Con esta version no muestro al usuario actual del proyecto -->

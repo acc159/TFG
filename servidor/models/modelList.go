@@ -181,17 +181,17 @@ func DeleteUserList(listStringID string, user string) bool {
 }
 
 //Recupero una lista por su ID
-func GetList(idString string) Proyect {
+func GetList(idString string) List {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	coleccion := config.InstanceDB.DB.Collection("lists")
 	id, _ := primitive.ObjectIDFromHex(idString)
-	var proyecto Proyect
-	err := coleccion.FindOne(ctx, bson.M{"_id": id}).Decode(&proyecto)
+	var list List
+	err := coleccion.FindOne(ctx, bson.M{"_id": id}).Decode(&list)
 	if err != nil {
 		log.Println(err)
 	}
-	return proyecto
+	return list
 }
 
 /*

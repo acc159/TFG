@@ -22,6 +22,10 @@ type MongoConection struct {
 
 var InstanceDB MongoConection
 
+func Hola() {
+	fmt.Println("hOLA")
+}
+
 /*
 func InitMongoDB() {
 	cmd := exec.Command("mongod")

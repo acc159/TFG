@@ -130,6 +130,8 @@ func DeleteUserProyect(proyectStringID string, user string) bool {
 	}
 	if len(updateProyect.Users) == 0 {
 		DeleteProyect(proyectStringID)
+	} else {
+		DeleteRelation(user, proyectStringID)
 	}
 	return true
 }

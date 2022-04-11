@@ -37,7 +37,6 @@ func GetTasksByList(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	listID := params["listID"]
 	tasks := models.GetTasksByList(listID)
-	json.NewEncoder(w).Encode(tasks)
 	if len(tasks) == 0 {
 		w.WriteHeader(400)
 		json.NewEncoder(w).Encode(tasks)
