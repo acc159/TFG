@@ -4,50 +4,92 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Configuración del Proyecto</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
 </head>
 <body>
-    <button onclick="changeHome()">Volver al Home</button>
-  
-    <button onclick="updateProyect()">Actualizar Proyecto</button>
-    <h1>Configuracion del proyecto</h1>
-    <h2 id="proyectID">{{.Proyect.ID}}</h2>
-    <h2>Nombre: </h2>
-    <h3 contenteditable id="proyectName"> {{.Proyect.Name}}</h3>
-    <h2>Descripcion: </h2>
-    <p contenteditable id="proyectDescription">  {{.Proyect.Description}}</p>
-    <ul class="users_proyect">
-
-        {{range .Proyect.Users}}
-            <li id={{.}}>{{.}}</li>
-            <button onclick="deleteUser('{{.}}')">Eliminar usuario</button>
-        {{end}}
-
-        <!-- Con esta version no muestro al usuario actual del proyecto -->
-        <!-- {{$email:=.User}}
-        {{range .Proyect.Users}}
-            {{if ne $email .}}
-                <li id={{.}}>{{.}}</li>
-                <button onclick="deleteUser({{.}})">Eliminar usuario</button>
-            {{end}}
-        {{end}} -->
-    </ul>
-
-    {{if not .Emails}}
-        <h2>Ningun usuario mas en el sistema por añadir al proyecto</h2>
-    {{else}}
-        <label for="users">Usuarios del sistema:</label>
-        <select name="users" id="users">
-        {{range .Emails}}
-            <option value="{{.}}">{{.}}</option>
-        {{end}}
-        </select>
-        <button onclick="addUserProyect()">Añadir usuario</button>
-    {{end}}
-
+    <nav class="navbar navbar-light bg-light">
+        <form class="form-inline">
+            <a class="nav-link btn-outline-secondary" type="button" role="button" onclick="changeHome()">Volver al Home</a>
+            <a class="nav-link btn-outline-info" type="button" role="button" onclick="updateProyect()">Actualizar Proyecto</a>
+            <a class="nav-link btn-outline-info" type="button" role="button" onclick="deleteProyect('{{.Proyect.ID}}')">Eliminar Proyecto</a>
+        </form>
+    </nav>
+    <h2 hidden id="proyectID">{{.Proyect.ID}}</h2>
     <span hidden id="usuarioActual">{{.User}}</span>
+    <form>
 
+        <!-- <div class="container">
+            <div class="row">
+              <div class="col-sm">
+                <h2>Datos:</h2>
+                <label for="proyectName">Nombre del proyecto:</label>
+                <input contenteditable class="form-control" type="text" id="proyectName" name="proyectName" value="{{.Proyect.Name}}">
+                <label for="description">Descripción del proyecto:</label>
+                <textarea class="form-control" name="description" id="proyectDescription" cols="30" rows="10">{{.Proyect.Description}}</textarea>
+              </div>
+              <div class="col-sm">
+                
+                    <h2>Gestión Usuarios:</h2>
+                    <label for="">Usuarios del Proyecto:</label>
+                    <div id="usersProyect">
+                        {{range .Proyect.Users}}
+                            <ul class="list-group list-group-horizontal">
+                                <li class="list-group-item" id={{.}}>{{.}}</li>
+                                <button class="list-group-item" onclick="deleteUser('{{.}}')">Eliminar usuario</button>
+                            </ul>
+                        {{end}}
+                    </div>
+                    {{if not .Emails}}
+                        <h3>Ningun usuario mas en el sistema por añadir al proyecto</h3>
+                    {{else}}
+                        <label for="">Usuarios del Sistema:</label>
+                        <select class="form-control" name="users" id="users">
+                        {{range .Emails}}
+                            <option value="{{.}}">{{.}}</option>
+                        {{end}}
+                        </select>
+                        <button class="btn btn-outline-primary" onclick="addUserProyect()">Añadir usuario</button>
+                    {{end}}
+
+              </div>
+            </div>
+          </div> -->
+
+        <div class="container">
+            <h2 class="display-4 text-center">Datos</h2>
+            <label for="proyectName">Nombre del proyecto:</label>
+            <input contenteditable class="form-control" type="text" id="proyectName" name="proyectName" value="{{.Proyect.Name}}">
+            <label for="description">Descripción del proyecto:</label>
+            <textarea class="form-control" name="description" id="proyectDescription" cols="30" rows="10">{{.Proyect.Description}}</textarea>
+            <h2 class="display-4 text-center">Gestión Usuarios</h2>
+            <label for="">Usuarios del Proyecto:</label>
+            <div id="usersProyect">
+                {{range .Proyect.Users}}
+                    <ul class="list-group list-group-horizontal">
+                        <li class="list-group-item" id={{.}}>{{.}}</li>
+                        <button class="list-group-item" onclick="deleteUser('{{.}}')">Eliminar usuario</button>
+                    </ul>
+                {{end}}
+            </div>
+            {{if not .Emails}}
+                <h3>Ningun usuario mas en el sistema por añadir al proyecto</h3>
+            {{else}}
+                <label for="">Usuarios del Sistema:</label>
+                <select class="form-control" name="users" id="users">
+                {{range .Emails}}
+                    <option value="{{.}}">{{.}}</option>
+                {{end}}
+                </select>
+                <button class="btn btn-outline-primary" onclick="addUserProyect()">Añadir usuario</button>
+            {{end}}
+        </div>
+    </form>
 </body>
 </html>
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 
 <script>
     function deleteUser(userEmail){
@@ -88,10 +130,10 @@
 
     function updateProyect(){
         let proyectID = document.querySelector('#proyectID').textContent;
-        let proyectName = document.querySelector('#proyectName').textContent;
+        let proyectName = document.querySelector('#proyectName').value;
         let proyectDescription = document.querySelector('#proyectDescription').textContent;
         
-        let usersHTML = document.querySelectorAll('li')
+        let usersHTML = document.querySelector('#usersProyect').querySelectorAll('li');
         let users = []
         for (let index = 0; index < usersHTML.length; index++) {
             users.push(usersHTML[index].textContent)
@@ -117,6 +159,19 @@
     function changeToProyectConfig(proyectID){
         changeToProyectConfigGO(proyectID).then(
             function(){ 
+            }
+        )
+    }
+
+
+    function deleteProyect(proyectID){
+        deleteProyectGO(proyectID).then(
+            function(valorDesdeGO){
+                if (valorDesdeGO == false){
+                    alert('El proyecto no se borro')
+                }else{
+                    changeHome()
+                }
             }
         )
     }

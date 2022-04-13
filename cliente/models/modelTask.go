@@ -19,7 +19,7 @@ type Task struct {
 	Date        string      `bson:"date"`
 	State       string      `bson:"state"`
 	Files       []TaskFiles `bson:"files"`
-	Links       string      `bson:"links"`
+	Links       []TaskLinks `bson:"links"`
 	Users       []string    `bson:"users"`
 }
 
@@ -34,9 +34,21 @@ type TaskFiles struct {
 	FileData template.URL
 }
 
+type TaskLinks struct {
+	LinkName string
+	LinkUrl  string
+}
+
 //Recupero una tarea por su ID
 func GetTask(taskID string, listID string) Task {
-	resp, err := http.Get(config.URLbase + "tasks/" + taskID)
+	url := config.URLbase + "tasks/" + taskID
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	client := utils.GetClientHTTPS()
+	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -56,7 +68,14 @@ func GetTask(taskID string, listID string) Task {
 
 //Recupero las tareas por su ListID
 func GetTasksByList(listID string) []Task {
-	resp, err := http.Get(config.URLbase + "tasks/list/" + listID)
+	url := config.URLbase + "tasks/list/" + listID
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	client := utils.GetClientHTTPS()
+	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -96,7 +115,7 @@ func CreateTask(stringListID string, task Task) bool {
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	client := &http.Client{}
+	client := utils.GetClientHTTPS()
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
@@ -131,7 +150,7 @@ func UpdateTask(listIDstring string, task Task) bool {
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	client := &http.Client{}
+	client := utils.GetClientHTTPS()
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
@@ -153,7 +172,7 @@ func DeleteTask(taskID string) bool {
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	client := &http.Client{}
+	client := utils.GetClientHTTPS()
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)

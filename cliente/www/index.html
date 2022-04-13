@@ -6,8 +6,8 @@
     
     <title>Home</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    
 </head>
-
 
 <body>
     {{$email:=.User.Email}}
@@ -38,7 +38,7 @@
                     </svg>
                     <ul class="dropdown-menu dropdown-menu-right inline">  
                         <li class="dropdown-item">Usuario: {{$email}} </li>  
-                        <li class="dropdown-item">Nº Proyectos: {{len .Datos}} </li> 
+                        <li class="dropdown-item">Nº Proyectos: {{len .Datos}}</li> 
                         <li class="dropdown-item" onclick="changeToAdmin()">Panel Admin</li> 
                         <li class="dropdown-item" onclick="exitSesion()"> 
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-door-open-fill" viewBox="0 0 16 16">
@@ -82,7 +82,7 @@
                             <div class="row">   
                                 {{range .Listas}}
                                     <div class="col-md-4">
-                                        <div class="card mb-4 box-shadow text-center">
+                                        <div class="border shadow-lg card mb-4 box-shadow text-center">
                                             <div class="card-header">
                                                 <h5 class="card-title" >{{.Name}}</h5>
                                             </div>

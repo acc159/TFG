@@ -26,7 +26,15 @@ type ProyectCipher struct {
 
 //Recupero un proyecto dado su ID
 func GetProyect(proyectID string) ProyectCipher {
-	resp, err := http.Get(config.URLbase + "proyects/" + proyectID)
+
+	url := config.URLbase + "proyects/" + proyectID
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	client := utils.GetClientHTTPS()
+	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -62,7 +70,7 @@ func CreateProyect(newProyect Proyect) bool {
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	client := &http.Client{}
+	client := utils.GetClientHTTPS()
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
@@ -97,7 +105,7 @@ func DeleteProyect(proyectID string) bool {
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	client := &http.Client{}
+	client := utils.GetClientHTTPS()
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
@@ -113,7 +121,14 @@ func DeleteProyect(proyectID string) bool {
 
 //Recuperar los usuarios de un proyecto
 func GetUsersProyect(proyectID string) []string {
-	resp, err := http.Get(config.URLbase + "proyect/users/" + proyectID)
+	url := config.URLbase + "proyect/users/" + proyectID
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	client := utils.GetClientHTTPS()
+	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -141,7 +156,7 @@ func DeleteUserProyect(proyectID string, userEmail string) bool {
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	client := &http.Client{}
+	client := utils.GetClientHTTPS()
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
@@ -186,7 +201,7 @@ func AddUserProyect(proyectIDstring string, userEmail string) bool {
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	client := &http.Client{}
+	client := utils.GetClientHTTPS()
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
@@ -283,7 +298,7 @@ func UpdateProyect(newProyect Proyect) bool {
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	client := &http.Client{}
+	client := utils.GetClientHTTPS()
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)

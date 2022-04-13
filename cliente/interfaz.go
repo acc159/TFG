@@ -49,7 +49,8 @@ type DataConfigTask struct {
 }
 
 type AdminView struct {
-	Users []models.User
+	Users      []models.User
+	UserActual string
 }
 
 func InitUI() {
@@ -61,6 +62,7 @@ func InitUI() {
 
 //Cambia las vistas entre login y register
 func ChangeView(nombreVista string) {
+
 	content, err := ioutil.ReadFile(nombreVista)
 	if err != nil {
 		log.Fatal(err)
@@ -175,7 +177,8 @@ func ChangeViewAdminPanel(nombreVista string) {
 
 	users := models.GetUsers()
 	dataStruct := AdminView{
-		Users: users,
+		Users:      users,
+		UserActual: models.UserSesion.Email,
 	}
 	buff := bytes.Buffer{}
 	tmpl.Execute(&buff, dataStruct)

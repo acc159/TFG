@@ -4,11 +4,98 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Añadir Tarea</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
 </head>
 <body>
-    <button onclick="changeHome()">Volver al Home</button>
-    <button onclick="changeToTasks()">Volver a las tareas de la lista</button>
+
+    <nav class="navbar navbar-light bg-light">
+        <form class="form-inline">
+            <a class="nav-link btn-outline-secondary" type="button" role="button" onclick="changeHome()">Volver al Home</a>
+            <a class="nav-link btn-outline-info" type="button" role="button" onclick="changeToTasks()">Volver a las tareas de la lista</a>
+            <a class="nav-link btn-outline-info" type="button" role="button" onclick="addTask()">Añadir Tarea</a>
+        </form>
+    </nav>
     <h1 hidden id="listID">{{.ListID}}</h1>
+    <div class="container">
+        <div class="text-center">
+            <h1 class="display-3">Añadir Tarea</h1>
+            <h2 class="display-4">En la lista: {{.ListName}}</h2>
+        </div>
+        <div>
+            <form>
+                <div class="form-group">
+                    <label for="taskName">Nombre de la tarea</label>
+                    <input placeholder="Nombre" class="form-control" type="text" id="taskName" name="taskName">
+    
+                    <label for="description">Descripcion de la tarea</label>
+                    <textarea placeholder="Descripción" class="form-control" name="description" id="description" cols="10" rows="3"></textarea>
+    
+                    <label for="date">Fecha de la tarea</label>
+                    <input class="form-control" placeholder="Fecha" type="date" id="date" name="date">
+    
+                    <label for="state">Estado:</label>
+                    <select class="form-control" name="state" id="state">
+                        <option value="Por hacer">Por hacer</option>
+                        <option value="En progreso">En progreso</option>
+                        <option value="Hecho">Hecho</option>
+                    </select>
+    
+                    <label for="usuarios">Usuarios:</label>
+                    <select class="form-control" name="usuarios" id="usuarios" multiple>
+                        {{range .ListUsers}}
+                        <option value={{.}}>{{.}}</option>
+                        {{end}}
+                    </select>
+                </div>
+            </form>
+        </div>
+        <div class="row">
+            <div class="col-md-12 order-md-1">
+                <div class="d-flex mb-3 justify-content-between">
+                    <h4 class="">
+                        <span class="text-muted">Archivos Adjuntos</span>
+                        <span id="numArchivos" class="badge badge-secondary badge-pill">0</span>
+                    </h4>
+                    <div>
+                        <button class="btn btn-primary" onclick="leerArchivo()">Adjuntar</button>
+                    </div>
+                </div>
+
+                <ul id="archivosAdjuntos" class="list-group mb-3">
+                </ul>
+                <form class="card p-2">
+                    <div class="input-group row">
+                        <input type="file" id="subir_archivo" class="col-md-12 order-md-1">                       
+                    </div>
+                </form>
+
+            </div>
+            <div class="col-md-12 order-md-2 mb-4">
+
+                <div class="d-flex mb-3 justify-content-between">
+                    <h4 class="">
+                        <span class="text-muted">Enlaces Adjuntos</span>
+                        <span id="numUrls" class="badge badge-secondary badge-pill">0</span>
+                    </h4>
+                    <div>
+                        <button class="btn btn-primary" onclick="AddLink()">Adjuntar</button>
+                    </div>
+                </div>
+
+                <ul id="enlacesAdjuntos" class="list-group mb-3">
+                </ul>
+                <form class="card p-2">
+                    <div class="input-group">
+                        <input class="col-md-6 order-md-1 form-control" type="url" name="link" id="link" placeholder="Url">
+                        <input class="col-md-6 order-md-2 form-control" type="text" name="linkName" id="linkName" placeholder="Nombre Url">
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- <h1 hidden id="listID">{{.ListID}}</h1>
     <label for="taskName">Nombre de la tarea</label>
     <input type="text" id="taskName" name="taskName"><br><br>
     <label for="description">Descripcion de la tarea</label>
@@ -27,26 +114,130 @@
         {{end}}
     </select>
     <input type="file" id="subir_archivo"/>
-
-    <button onclick="addTask()">Añadir Tarea</button>
     <button onclick="leerArchivo()">Adjuntar archivo</button>
 
     <div id="archivosAdjuntos">
         <h3>Archivos adjuntos</h3>
     </div>
 
+    <input type="url" name="link" id="link" placeholder="Url">
+    <input type="url" name="linkName" id="linkName" placeholder="Nombre Url">
+    <button onclick="AddLink()">Añadir enlace</button>
+    <ul id="links">
+    </ul> -->
+
 </body>
 </html>
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+
+
 <script>
 
-
-
     function changeToTasks(){
-        let listID = document.querySelector('#listID').textContent
+        let listID = document.querySelector('#listID').textContent;
         changeToTasksGO(listID, "").then(
             function(){
             }
         )
+    }
+
+    function signFile(event){
+        li = event.target.closest('li')
+        console.log(li)
+    }
+
+    function signUrl(event){
+        li = event.target.closest('li')
+        console.log(li)
+    }
+
+    function AddUrl(datosArchivo, nombreArchivo){
+        let ulPadre = document.querySelector('#enlacesAdjuntos');
+        let li = document.createElement('li')
+        li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'lh-condensed')
+        let divPadre = document.createElement('div')   
+        divPadre.classList.add('container', 'row')   
+        //Creamos los tres divs
+        let divFile = document.createElement('div')  
+        divFile.classList.add('col-md-6', 'order-md-1')        
+        let divDelete = document.createElement('div')
+        divDelete.classList.add('col-md-3', 'order-md-2')           
+        let divSign = document.createElement('div')  
+        divSign.classList.add('col-md-3', 'order-md-3') 
+        let aFile = document.createElement('a')
+        aFile.setAttribute('target', '_blank');
+        aFile.classList.add('url')
+        aFile.textContent = nombreArchivo
+        aFile.href = datosArchivo
+        aFile.download = nombreArchivo
+        divFile.appendChild(aFile)
+        let aDelete = document.createElement('a')
+        aDelete.onclick = function () {deleteUrl(event)};
+        aDelete.textContent = "Eliminar"
+        aDelete.classList.add('text-muted')
+        aDelete.setAttribute("type", "button")
+        aDelete.setAttribute("role", "button")
+        divDelete.appendChild(aDelete)
+        let aSign = document.createElement('a')
+        aSign.onclick = function () {signUrl(event)};
+        aSign.textContent = "Firmar"
+        aSign.classList.add('text-muted')
+        aSign.setAttribute("type", "button")
+        aSign.setAttribute("role", "button")
+        divSign.appendChild(aSign)
+        divPadre.appendChild(divFile)
+        divPadre.appendChild(divDelete)
+        divPadre.appendChild(divSign)
+        li.appendChild(divPadre)
+        ulPadre.appendChild(li)
+    }
+
+
+
+
+    function AddFile(datosArchivo, nombreArchivo){
+        let ulPadre = document.querySelector('#archivosAdjuntos');
+        let li = document.createElement('li')
+        li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'lh-condensed')
+        let divPadre = document.createElement('div')   
+        divPadre.classList.add('container', 'row')   
+        //Creamos los tres divs
+        let divFile = document.createElement('div')  
+        divFile.classList.add('col-md-6', 'order-md-1')        
+        let divDelete = document.createElement('div')
+        divDelete.classList.add('col-md-3', 'order-md-2')           
+        let divSign = document.createElement('div')  
+        divSign.classList.add('col-md-3', 'order-md-3') 
+        let aFile = document.createElement('a')
+        aFile.setAttribute('target', '_blank');
+        aFile.classList.add('file')
+        aFile.textContent = nombreArchivo
+        aFile.href = datosArchivo
+        aFile.download = nombreArchivo
+        divFile.appendChild(aFile)
+        let aDelete = document.createElement('a')
+        aDelete.onclick = function () {deleteFile(event)};
+        aDelete.textContent = "Eliminar"
+        aDelete.classList.add('text-muted')
+        aDelete.setAttribute("type", "button")
+        aDelete.setAttribute("role", "button")
+        divDelete.appendChild(aDelete)
+        let aSign = document.createElement('a')
+        aSign.onclick = function () {signFile(event)};
+        aSign.textContent = "Firmar"
+        aSign.classList.add('text-muted')
+        aSign.setAttribute("type", "button")
+        aSign.setAttribute("role", "button")
+        divSign.appendChild(aSign)
+        divPadre.appendChild(divFile)
+        divPadre.appendChild(divDelete)
+        divPadre.appendChild(divSign)
+        li.appendChild(divPadre)
+        ulPadre.appendChild(li)
     }
 
 
@@ -63,21 +254,13 @@
                     var file = elemento.files[0];
                     var reader = new FileReader();
                     reader.onloadend = function() {
-                        let divPadre = document.querySelector('#archivosAdjuntos');
                         datosArchivo = reader.result
-                        let a = document.createElement('a')
-                        a.textContent = nombreArchivo
-                        a.href = datosArchivo
-                        a.download = nombreArchivo
-                        let button = document.createElement('button');
-                        button.innerHTML = "Eliminar archivo";
-                        button.onclick = function () {deleteFileTask(event)};
-                        let div = document.createElement('div');
-                        div.appendChild(a)
-                        div.appendChild(button)
-                        divPadre.appendChild(div)
-
+                        AddFile(datosArchivo, nombreArchivo)
                         elemento.value = ""
+                        let numeroFiles = document.querySelector('#numArchivos').textContent 
+                        numeroFiles = parseInt(numeroFiles)
+                        numeroFiles++
+                        document.querySelector('#numArchivos').textContent = numeroFiles
                     }
                 reader.readAsDataURL(file);
                 }
@@ -91,16 +274,28 @@
     }
 
 
-    function deleteFileTask(event){
-        var div = event.target.closest('div');
-        div.remove()
+    function deleteFile(event){
+        li = event.target.closest('li')
+        li.remove()
+        let numeroFiles = document.querySelector('#numArchivos').textContent 
+        numeroFiles = parseInt(numeroFiles)
+        numeroFiles--
+        document.querySelector('#numArchivos').textContent = numeroFiles
+    }
+    function deleteUrl(event){
+        li = event.target.closest('li')
+        li.remove()
+        let numUrls = document.querySelector('#numUrls').textContent 
+        numUrls = parseInt(numUrls)
+        numUrls--
+        document.querySelector('#numUrls').textContent = numUrls
     }
 
 
     function addTask(){
 
         //Archivos
-        let archivosDiv = document.querySelector('#archivosAdjuntos').querySelectorAll('a');
+        let archivosDiv = document.querySelector('#archivosAdjuntos').querySelectorAll('.file');
         let archivos = []
         if (archivosDiv.length > 0) {
             for (let index = 0; index < archivosDiv.length; index++) {
@@ -124,13 +319,15 @@
         for (let index = 0; index < users.length; index++) {
             usersNames.push(users[index].value)
         }
+        let TaskLinks = GetLinks();
         let task = {
             "Name" : taskName,
             "Description" : description,
             "Date" : date,
             "State" : state,
             "Users" : usersNames,
-            "Files" : archivos
+            "Files" : archivos,
+            "Links" : TaskLinks
         }
         addTaskGO(listID, task, date).then(
             function(resultado){
@@ -143,5 +340,48 @@
             }
         )
     }
+
+
+
+    function GetLinks(){
+        let TaskLinks = []
+        let links = document.querySelector('#enlacesAdjuntos').querySelectorAll('.url');
+        for (let i = 0; i < links.length; i++) {
+            let LinkStruct = {
+                "LinkName" : links[i].textContent,
+                "LinkUrl" : links[i].getAttribute('href'),
+            }
+            TaskLinks.push(LinkStruct)
+        }
+        return TaskLinks
+    }
+
+    function AddLink(){
+        let link = document.querySelector('#link').value;
+        let linkName = document.querySelector('#linkName').value;
+        if (link != "" && linkName != "")
+        {
+            // let links = document.querySelector('#links');
+            // let li = document.createElement('li');
+            // let a = document.createElement('a');
+            // a.setAttribute('target', '_blank');
+            // a.href = link;
+            // a.textContent = linkName;
+            // let button = document.createElement('button');
+            // button.innerHTML = "Eliminar enlace";
+            // button.onclick = function () {deleteLinkTask(event)};
+            // li.appendChild(a);
+            // li.appendChild(button);
+            // links.appendChild(li);
+            AddUrl(link, linkName)
+            let numUrls = document.querySelector('#numUrls').textContent 
+            numUrls = parseInt(numUrls)
+            numUrls++
+            document.querySelector('#numUrls').textContent = numUrls
+        }else{
+            alert('Introduce un enlace para añadirlo');
+        }
+    }
+
 
 </script>

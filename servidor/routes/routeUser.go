@@ -2,6 +2,7 @@ package routes
 
 import (
 	"servidor/handlers"
+	"servidor/middlewares"
 
 	"github.com/gorilla/mux"
 )
@@ -19,7 +20,7 @@ func User(r *mux.Router) {
 
 	//SIN USAR
 	//Recuperar Usuarios
-	r.HandleFunc("/users", handlers.GetUsers).Methods("GET")
+	r.HandleFunc("/users", middlewares.ValidateTokenMiddleware(handlers.GetUsers)).Methods("GET")
 
 	//Crear Usuario
 	r.HandleFunc("/user", handlers.CreateUser).Methods("POST")

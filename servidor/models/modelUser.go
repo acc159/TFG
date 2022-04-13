@@ -10,6 +10,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type User struct {
@@ -18,6 +19,7 @@ type User struct {
 	ServerKey  []byte             `bson:"server_key,omitempty"`
 	PublicKey  []byte             `bson:"public_key,omitempty"`
 	PrivateKey []byte             `bson:"private_key,omitempty"`
+	Token      string             `bson:"token,omitempty"`
 }
 
 //Metodo para comprobar si el usuario esta vacio o tiene datos
@@ -27,6 +29,12 @@ func (u User) Empty() bool {
 
 //Registro del usuario devolviendo el ID del documento creado en la base de datos
 func SignUp(user User) string {
+	//Bcrypt
+	KservidorHash, err := bcrypt.GenerateFromPassword(user.ServerKey, 12)
+	if err != nil {
+		fmt.Println("Error al hashear")
+	}
+	user.ServerKey = KservidorHash
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	coleccion := config.InstanceDB.DB.Collection("users")
 	result, err := coleccion.InsertOne(ctx, user)
@@ -35,20 +43,25 @@ func SignUp(user User) string {
 		return ""
 	}
 	stringObjectID := result.InsertedID.(primitive.ObjectID).Hex()
-	fmt.Println(stringObjectID)
 	return stringObjectID
 }
 
 //Login del Usuario -> En este caso solo recuperamos el usuario la comprobacion sobre este la realizo en el cliente, devuelvo el usuario
-func Login(user User) User {
+func Login(userLogin User) User {
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	coleccion := config.InstanceDB.DB.Collection("users")
 	var usuario User
-	err := coleccion.FindOne(ctx, bson.M{"email": user.Email}).Decode(&usuario)
+	err := coleccion.FindOne(ctx, bson.M{"email": userLogin.Email}).Decode(&usuario)
 	if err != nil {
 		return usuario
 	}
-	return usuario
+	//Comparo
+	err = bcrypt.CompareHashAndPassword(usuario.ServerKey, userLogin.ServerKey)
+	if err != nil {
+		return User{}
+	} else {
+		return usuario
+	}
 }
 
 //Revisar

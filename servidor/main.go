@@ -19,7 +19,6 @@ func LoadEnv() {
 }
 
 func main() {
-
 	//Cargar variables de entorno
 
 	LoadEnv()
@@ -60,8 +59,8 @@ func main() {
 	routes.Relation(r)
 
 	//Lanzo el servidor
-	http.ListenAndServe("localhost:8080", r)
-	//http.ListenAndServeTLS("localhost:443", "certs/server.crt", "certs/server.key", r)
+	//http.ListenAndServe("localhost:8080", r)
+	http.ListenAndServeTLS("localhost:443", "certs/server.crt", "certs/server.key", r)
 
 	// sigChan := make(chan os.Signal)
 	// signal.Notify(sigChan)

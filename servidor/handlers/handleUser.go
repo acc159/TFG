@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"servidor/models"
+	"servidor/utils"
 
 	"github.com/gorilla/mux"
 )
@@ -26,7 +27,6 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 
 //Login del Usuario
 func Login(w http.ResponseWriter, r *http.Request) {
-
 	var user models.User
 	json.NewDecoder(r.Body).Decode(&user)
 	usuario := models.Login(user)
@@ -35,6 +35,10 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		respuesta := "No existe el usuario"
 		json.NewEncoder(w).Encode(respuesta)
 	} else {
+		//Genero el token para el usuario
+		jwtToken := utils.GenerateJWT(usuario.Email)
+		usuario.Token = jwtToken
+		w.Header().Set("token", jwtToken)
 		json.NewEncoder(w).Encode(usuario)
 	}
 }

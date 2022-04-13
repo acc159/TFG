@@ -6,17 +6,34 @@
     <title>Admin Panel</title>
 </head>
 <body>
+    <h1 hidden id="userActual">{{.UserActual}}</h1>
     <button onclick="changeHome()">Volver al Home</button>
     <h1>Panel de Administrador</h1>
-
-
     {{range .Users}}
         <ul>
             <li>
                 <h2>User: {{.Email}}</h2>
-                <button>Borrar Usuario</button>
+                <button onclick="deleteUser('{{.Email}}')">Borrar Usuario</button>
             </li>
         </ul>
     {{end}}
 </body>
 </html>
+
+<script>
+    function deleteUser(userEmail){
+        let userActual = document.querySelector('#userActual').textContent;
+        deleteUserGO(userEmail).then(
+            function(resultado){
+                if (resultado){
+                    alert('Usuario borrado');
+                    if(userEmail == userActual){
+                        changeToLogin();
+                    }else{
+                        changeToAdminGO();
+                    }
+                }
+            }
+        )
+    }
+</script>

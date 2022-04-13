@@ -106,7 +106,7 @@ func main() {
 		listCipher := models.GetList(listID)
 		list := models.DescifrarLista(listCipher, models.GetListKey(listID))
 		listUsers := list.Users
-		ChangeViewTasks(config.PreView+"addTask.html", nil, listID, listUsers, "")
+		ChangeViewTasks(config.PreView+"addTask.html", nil, listID, listUsers, list.Name)
 	})
 
 	//Cambiar a la pestaña de añadir Tareas
@@ -155,9 +155,8 @@ func main() {
 	})
 
 	//Elimino a un usuario de todo el sistema
-	UI.Bind("deleteUserGO", func() {
-		models.DeleteUser(models.UserSesion.Email)
-		ChangeView(config.PreView + "login.html")
+	UI.Bind("deleteUserGO", func(userEmail string) bool {
+		return models.DeleteUser(userEmail)
 	})
 
 	//Añadir un Proyecto

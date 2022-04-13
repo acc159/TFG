@@ -47,7 +47,7 @@ func CreateList(list List, proyectIDstring string) string {
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	client := &http.Client{}
+	client := utils.GetClientHTTPS()
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
@@ -85,7 +85,7 @@ func GetListsByIDs(stringsIDs []string) []ListCipher {
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	client := &http.Client{}
+	client := utils.GetClientHTTPS()
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
@@ -110,7 +110,7 @@ func DeleteList(listsID string) bool {
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	client := &http.Client{}
+	client := utils.GetClientHTTPS()
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -128,7 +128,17 @@ func DeleteList(listsID string) bool {
 
 //Recupero los usuarios de una lista
 func GetUsersList(listID string) []string {
-	resp, err := http.Get(config.URLbase + "list/users/" + listID)
+	url := config.URLbase + "list/users/" + listID
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	client := utils.GetClientHTTPS()
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+	}
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -144,12 +154,19 @@ func GetUsersList(listID string) []string {
 
 //Recupero una lista dado su ID
 func GetList(listID string) ListCipher {
-	resp, err := http.Get(config.URLbase + "list/" + listID)
+
+	url := config.URLbase + "list/" + listID
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	client := utils.GetClientHTTPS()
+	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
-
 	//Compruebo si no hay ningun usuario
 	if resp.StatusCode == 404 {
 		fmt.Println("Lista no encontrada")
@@ -177,7 +194,7 @@ func DeleteUserList(listID string, userEmail string) bool {
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	client := &http.Client{}
+	client := utils.GetClientHTTPS()
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
@@ -215,7 +232,7 @@ func AddUserList(userEmail string, proyectID string, listID string) bool {
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	client := &http.Client{}
+	client := utils.GetClientHTTPS()
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
@@ -273,7 +290,7 @@ func UpdateList(newList List) bool {
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	client := &http.Client{}
+	client := utils.GetClientHTTPS()
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
@@ -286,25 +303,6 @@ func UpdateList(newList List) bool {
 		return true
 	}
 }
-
-//Cifrado y Descifrado
-
-// func DescifrarLista(listCipher ListCipher) List {
-// 	list := List{
-// 		ID:          listCipher.ID.Hex(),
-// 		Name:        "Nombre de la lista",
-// 		Description: "Descripcion de la lista",
-// 		Users:       listCipher.Users,
-// 	}
-// 	return list
-// }
-
-// func CifrarLista(listCipher List) ListCipher {
-// 	return ListCipher{
-// 		Cipherdata: "DASFSDFASDFSDF",
-// 		Users:      listCipher.Users,
-// 	}
-// }
 
 func DescifrarLista(listCipher ListCipher, key []byte) List {
 

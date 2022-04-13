@@ -12,7 +12,6 @@ import (
 	"net/http"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type User struct {
@@ -23,6 +22,7 @@ type User struct {
 	PrivateKey []byte             `bson:"private_key"`
 	Rol        string             `bson:"rol"`
 	Kaes       []byte             `bson:"Kaes"`
+	Token      string             `bson:"token,omitempty"`
 }
 
 type DataUser struct {
@@ -50,42 +50,65 @@ func HashUser(user_pass []byte) ([]byte, []byte, []byte) {
 	return Kservidor, IV, Kaes
 }
 
+func CheckUserExist(email string) bool {
+	url := config.URLbase + "users/" + email
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	client := utils.GetClientHTTPS()
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode == 400 {
+		return false
+	} else {
+		return true
+	}
+}
+
 //Registro del usuario
 func Register(email string, password string) (bool, bool) {
-	user_pass := []byte(email + password)
-	Kservidor, IV, Kaes := HashUser(user_pass)
-	KservidorHash, err := bcrypt.GenerateFromPassword(Kservidor, 12)
-	if err != nil {
-		fmt.Println("Error al hashear")
-	}
-	//Asigno los valores del usuario
-	UserSesion.Email = email
-	//La clave del servidor
-	UserSesion.ServerKey = KservidorHash
-	//Obtenemos las Claves RSA
-	privateKey, publicKey := utils.GeneratePrivatePublicKeys()
-	//La clave publica la almaceno directamente en formato PEM
-	UserSesion.PublicKey = utils.PublicKeyToPem(&publicKey)
-	//La clave privada primero la paso a PEM
-	privateKeyPem := utils.PrivateKeyToPem(privateKey)
-	//La cifro con AES
-	privateKeyCipher := utils.CifrarAES(Kaes, IV, privateKeyPem)
-	//La almaceno cifrada
-	UserSesion.PrivateKey = privateKeyCipher
-	//Guardo Kaes para la sesion del usuario
-	UserSesion.Kaes = Kaes
-	//Enviamos los datos al servidor
-	userIDstring := RegisterServer(UserSesion)
-	if userIDstring == "serverOFF" {
-		return false, true
-	}
-	if userIDstring == "" {
-		UserSesion = User{}
+	//Compruebo que el usuario con ese email no esta ya registrado
+	existe := CheckUserExist(email)
+	if existe {
 		return false, false
 	} else {
-		id, _ := primitive.ObjectIDFromHex(userIDstring)
-		UserSesion.ID = id
-		return true, false
+		//Envio los datos del registro
+		user_pass := []byte(email + password)
+		Kservidor, IV, Kaes := HashUser(user_pass)
+		//Asigno los valores del usuario
+		UserSesion.Email = email
+		//La clave del servidor
+		UserSesion.ServerKey = Kservidor
+		//Obtenemos las Claves RSA
+		privateKey, publicKey := utils.GeneratePrivatePublicKeys()
+		//La clave publica la almaceno directamente en formato PEM
+		UserSesion.PublicKey = utils.PublicKeyToPem(&publicKey)
+		//La clave privada primero la paso a PEM
+		privateKeyPem := utils.PrivateKeyToPem(privateKey)
+		//La cifro con AES
+		privateKeyCipher := utils.CifrarAES(Kaes, IV, privateKeyPem)
+		//La almaceno cifrada
+		UserSesion.PrivateKey = privateKeyCipher
+		//Guardo Kaes para la sesion del usuario
+		UserSesion.Kaes = Kaes
+		//Enviamos los datos al servidor
+		userIDstring := RegisterServer(UserSesion)
+		if userIDstring == "serverOFF" {
+			return false, true
+		}
+		if userIDstring == "" {
+			UserSesion = User{}
+			return false, false
+		} else {
+			id, _ := primitive.ObjectIDFromHex(userIDstring)
+			UserSesion.ID = id
+			return true, false
+		}
 	}
 }
 
@@ -103,7 +126,7 @@ func RegisterServer(user User) string {
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	client := &http.Client{}
+	client := utils.GetClientHTTPS()
 	//Realizo la peticion
 	resp, err := client.Do(req)
 	if err != nil {
@@ -111,7 +134,6 @@ func RegisterServer(user User) string {
 		return "serverOFF"
 	}
 	defer resp.Body.Close()
-	//Respuesta
 	//En caso de fallo del registro del usuario en el servidor
 	if resp.StatusCode == 400 {
 		fmt.Println("El usuario no se ha registrado")
@@ -124,27 +146,26 @@ func RegisterServer(user User) string {
 	}
 }
 
-//Login del usuario
+//Login del usuario. Para el login solo envio al servidor el email y la Kservidor la cual se comprueba alli y si es correcta me devuelve todos los datos del usuario
 func LogIn(email string, password string) bool {
 	user_pass := []byte(email + password)
 	Kservidor, _, Kaes := HashUser(user_pass)
-	UserSesion.Email = email
-	UserSesion = LogInServer()
-	err := bcrypt.CompareHashAndPassword(UserSesion.ServerKey, Kservidor)
-	if err != nil {
-		UserSesion = User{}
-		return false
-	} else {
-		fmt.Println("La contraseña coincide")
-		//Guardo Kaes para la sesion del usuario
+	userLogin := User{
+		Email:     email,
+		ServerKey: Kservidor,
+	}
+	UserSesion = LogInServer(userLogin)
+	if UserSesion.Email != "" {
 		UserSesion.Kaes = Kaes
 		return true
+	} else {
+		return false
 	}
 }
 
 //Login del usuario en el servidor
-func LogInServer() User {
-	userJSON, err := json.Marshal(UserSesion)
+func LogInServer(userLogin User) User {
+	userJSON, err := json.Marshal(userLogin)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -154,7 +175,7 @@ func LogInServer() User {
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	client := &http.Client{}
+	client := utils.GetClientHTTPS()
 	//Realizo la peticion
 	resp, err := client.Do(req)
 	if err != nil {
@@ -162,12 +183,15 @@ func LogInServer() User {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode == 400 {
-		fmt.Println("El usuario no esta registrado")
 		return User{}
 	} else {
 		//Si todo fue correcto en el servidor devuelvo el id del usuario creado
 		var resultado User
 		json.NewDecoder(resp.Body).Decode(&resultado)
+
+		//Asigno el token que genero el servidor
+		token := resp.Header.Get("token")
+		UserSesion.Token = token
 		return resultado
 	}
 }
@@ -181,7 +205,14 @@ func LogOut() {
 //Recupero todos los usuarios
 func GetUsers() []User {
 	var usersResponse []User
-	resp, err := http.Get(config.URLbase + "users")
+	url := config.URLbase + "users"
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	client := utils.GetClientHTTPS()
+	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -199,7 +230,14 @@ func GetUsers() []User {
 //Recupero un usuario por su email
 func GetUserByEmail(userEmail string) User {
 	var usersResponse User
-	resp, err := http.Get(config.URLbase + "users/" + userEmail)
+	url := config.URLbase + "users/" + userEmail
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	client := utils.GetClientHTTPS()
+	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -248,7 +286,7 @@ func GetUserProyectsLists() {
 }
 
 //Elimina a un usuario del sistema borrandolo de todo proyectos, listas y tareas
-func DeleteUser(userEmail string) {
+func DeleteUser(userEmail string) bool {
 	DatosUsuario = []DataUser{}
 	//Recupero las relaciones junto a los proyectos y las listas Mejorable el pensar en llamar a una funcion que no descifre todo porque no lo necesitamos
 	GetUserProyectsLists()
@@ -277,6 +315,7 @@ func DeleteUser(userEmail string) {
 	DeleteUserRelation(userEmail)
 	//Borro al usuario
 	DeleteUserByEmail(userEmail)
+	return true
 }
 
 //Elimino al usuario del sistema
@@ -287,7 +326,7 @@ func DeleteUserByEmail(userEmail string) bool {
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	client := &http.Client{}
+	client := utils.GetClientHTTPS()
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)

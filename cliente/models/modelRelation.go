@@ -3,6 +3,7 @@ package models
 import (
 	"bytes"
 	"cliente/config"
+	"cliente/utils"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -25,7 +26,15 @@ type RelationLists struct {
 
 //Recupero las relaciones para un usuario dado su email
 func GetProyectsListsByUser(userEmail string) []Relation {
-	resp, err := http.Get(config.URLbase + "relations/" + userEmail)
+
+	url := config.URLbase + "relations/" + userEmail
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	client := utils.GetClientHTTPS()
+	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -62,7 +71,7 @@ func CreateRelation(userEmail string, proyectStringID string, proyectKey []byte)
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	client := &http.Client{}
+	client := utils.GetClientHTTPS()
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
@@ -93,7 +102,7 @@ func AddListToRelation(proyectID string, listIDstring string, userEmail string, 
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	client := &http.Client{}
+	client := utils.GetClientHTTPS()
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
@@ -114,7 +123,7 @@ func DeleteRelationList(proyectStringID string, listStringID string, userEmail s
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	client := &http.Client{}
+	client := utils.GetClientHTTPS()
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -137,7 +146,7 @@ func DeleteUserRelation(userEmail string) bool {
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	client := &http.Client{}
+	client := utils.GetClientHTTPS()
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
@@ -159,7 +168,7 @@ func DeleteUserProyectRelation(userEmail string, proyectID string) bool {
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	client := &http.Client{}
+	client := utils.GetClientHTTPS()
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
@@ -175,7 +184,14 @@ func DeleteUserProyectRelation(userEmail string, proyectID string) bool {
 
 //Devolver una relacion para un usuario y proyecto dado
 func GetRelationUserProyect(userEmail string, proyectID string) Relation {
-	resp, err := http.Get(config.URLbase + "relations/" + userEmail + "/" + proyectID)
+	url := config.URLbase + "relations/" + userEmail + "/" + proyectID
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	client := utils.GetClientHTTPS()
+	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -192,7 +208,14 @@ func GetRelationUserProyect(userEmail string, proyectID string) Relation {
 
 //Devolver una relacion de tipo lista para un usuario y lista dado
 func GetRelationListByUser(userEmail string, listID string) RelationLists {
-	resp, err := http.Get(config.URLbase + "relations/list/" + userEmail + "/" + listID)
+	url := config.URLbase + "relations/list/" + userEmail + "/" + listID
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	client := utils.GetClientHTTPS()
+	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
 	}
