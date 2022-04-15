@@ -47,6 +47,7 @@ func GetTask(taskID string, listID string) Task {
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req = AddTokenHeader(req)
 	client := utils.GetClientHTTPS()
 	resp, err := client.Do(req)
 	if err != nil {
@@ -74,6 +75,7 @@ func GetTasksByList(listID string) []Task {
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req = AddTokenHeader(req)
 	client := utils.GetClientHTTPS()
 	resp, err := client.Do(req)
 	if err != nil {
@@ -115,6 +117,7 @@ func CreateTask(stringListID string, task Task) bool {
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req = AddTokenHeader(req)
 	client := utils.GetClientHTTPS()
 	resp, err := client.Do(req)
 	if err != nil {
@@ -150,6 +153,7 @@ func UpdateTask(listIDstring string, task Task) bool {
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req = AddTokenHeader(req)
 	client := utils.GetClientHTTPS()
 	resp, err := client.Do(req)
 	if err != nil {
@@ -172,6 +176,7 @@ func DeleteTask(taskID string) bool {
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req = AddTokenHeader(req)
 	client := utils.GetClientHTTPS()
 	resp, err := client.Do(req)
 	if err != nil {

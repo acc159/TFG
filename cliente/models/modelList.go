@@ -28,7 +28,7 @@ type ListCipher struct {
 }
 
 //Creo una lista con el proyectID correspondiente
-func CreateList(list List, proyectIDstring string) string {
+func CreateList(list List, proyectIDstring string) (bool, bool) {
 	list.Users = append(list.Users, UserSesion.Email)
 	//1.Generamos la clave aleatoria que se utilizara en el cifrado AES
 	Krandom, IVrandom := utils.GenerateKeyIV()
@@ -47,21 +47,26 @@ func CreateList(list List, proyectIDstring string) string {
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req = AddTokenHeader(req)
 	client := utils.GetClientHTTPS()
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode == 400 {
+	switch resp.StatusCode {
+	case 400:
 		fmt.Println("El proyecto no pudo ser creado")
-		return ""
-	} else {
+		return false, false
+	case 401:
+		fmt.Println("Token Expirado")
+		return false, true
+	default:
 		var listID string
 		json.NewDecoder(resp.Body).Decode(&listID)
 		//Añado la lista a la relacion de cada usuario miembro de la lista
 		CreateListRelations(listID, proyectIDstring, Krandom, list.Users)
-		return listID
+		return true, false
 	}
 }
 
@@ -81,6 +86,7 @@ func GetListsByIDs(stringsIDs []string) []ListCipher {
 	}
 	url := config.URLbase + "lists/ids"
 	req, err := http.NewRequest("GET", url, bytes.NewBuffer(relationJSON))
+	req = AddTokenHeader(req)
 	if err != nil {
 		panic(err)
 	}
@@ -110,6 +116,7 @@ func DeleteList(listsID string) bool {
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req = AddTokenHeader(req)
 	client := utils.GetClientHTTPS()
 
 	resp, err := client.Do(req)
@@ -134,6 +141,7 @@ func GetUsersList(listID string) []string {
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req = AddTokenHeader(req)
 	client := utils.GetClientHTTPS()
 	resp, err := client.Do(req)
 	if err != nil {
@@ -161,6 +169,7 @@ func GetList(listID string) ListCipher {
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req = AddTokenHeader(req)
 	client := utils.GetClientHTTPS()
 	resp, err := client.Do(req)
 	if err != nil {
@@ -194,6 +203,7 @@ func DeleteUserList(listID string, userEmail string) bool {
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req = AddTokenHeader(req)
 	client := utils.GetClientHTTPS()
 	resp, err := client.Do(req)
 	if err != nil {
@@ -232,6 +242,7 @@ func AddUserList(userEmail string, proyectID string, listID string) bool {
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req = AddTokenHeader(req)
 	client := utils.GetClientHTTPS()
 	resp, err := client.Do(req)
 	if err != nil {
@@ -262,7 +273,7 @@ func GetUserList(listID string, listKeyCipher []byte, privateKey *rsa.PrivateKey
 }
 
 func UpdateList(newList List) bool {
-	relation := GetRelationUserProyect(UserSesion.Email, newList.ProyectID)
+	relation, _ := GetRelationUserProyect(UserSesion.Email, newList.ProyectID)
 	var listKeyCipher []byte
 	//Busco la Clave cifrada de la lista
 	for i := 0; i < len(relation.Lists); i++ {
@@ -286,6 +297,7 @@ func UpdateList(newList List) bool {
 	}
 	url := config.URLbase + "lists/" + newList.ID
 	req, err := http.NewRequest("PUT", url, bytes.NewBuffer(listJSON))
+	req = AddTokenHeader(req)
 	if err != nil {
 		panic(err)
 	}

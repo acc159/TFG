@@ -33,6 +33,7 @@ func GetProyect(proyectID string) ProyectCipher {
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req = AddTokenHeader(req)
 	client := utils.GetClientHTTPS()
 	resp, err := client.Do(req)
 	if err != nil {
@@ -52,7 +53,8 @@ func GetProyect(proyectID string) ProyectCipher {
 }
 
 //Creo un proyecto
-func CreateProyect(newProyect Proyect) bool {
+func CreateProyect(newProyect Proyect) (bool, bool) {
+
 	//Añadimos el email del usuario que esta creando el proyecto
 	newProyect.Users = append(newProyect.Users, UserSesion.Email)
 	//Generamos la clave aleatoria que se utilizara en el cifrado AES
@@ -70,22 +72,27 @@ func CreateProyect(newProyect Proyect) bool {
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req = AddTokenHeader(req)
 	client := utils.GetClientHTTPS()
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode == 400 {
+	switch resp.StatusCode {
+	case 400:
 		fmt.Println("El proyecto no pudo ser creado")
-		return false
+		return false, false
+	case 401:
+		fmt.Println("Token Expirado")
+		return false, true
+	default:
+		var proyectID string
+		json.NewDecoder(resp.Body).Decode(&proyectID)
+		//Creamos la relacion para el usuario que crea el proyecto y para cada uno de los usuarios del campo user
+		CreateProyectRelations(proyectID, Krandom, newProyect.Users)
+		return true, false
 	}
-	//Si el proyecto se crea con exito nos devuelve el ID del proyecto creado
-	var proyectID string
-	json.NewDecoder(resp.Body).Decode(&proyectID)
-	//Creamos la relacion para el usuario que crea el proyecto y para cada uno de los usuarios del campo user
-	CreateProyectRelations(proyectID, Krandom, newProyect.Users)
-	return true
 }
 
 //Le paso el ID del proyecto junto a su clave de cifrado y creo relaciones Usuario-Proyecto para cada usuario pasado
@@ -98,24 +105,30 @@ func CreateProyectRelations(proyectID string, Krandom []byte, users []string) {
 }
 
 //Eliminar un proyecto
-func DeleteProyect(proyectID string) bool {
+func DeleteProyect(proyectID string) (bool, bool) {
 	url := config.URLbase + "proyects/" + proyectID
 	req, err := http.NewRequest("DELETE", url, nil)
 	if err != nil {
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req = AddTokenHeader(req)
 	client := utils.GetClientHTTPS()
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode == 400 {
+
+	switch resp.StatusCode {
+	case 400:
 		fmt.Println("El proyecto no pudo ser borrado")
-		return false
-	} else {
-		return true
+		return false, false
+	case 401:
+		fmt.Println("Token Expirado")
+		return false, true
+	default:
+		return true, false
 	}
 }
 
@@ -127,6 +140,7 @@ func GetUsersProyect(proyectID string) []string {
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req = AddTokenHeader(req)
 	client := utils.GetClientHTTPS()
 	resp, err := client.Do(req)
 	if err != nil {
@@ -143,42 +157,52 @@ func GetUsersProyect(proyectID string) []string {
 }
 
 //Elimino al usuario del array Users del proyecto
-func DeleteUserProyect(proyectID string, userEmail string) bool {
+func DeleteUserProyect(proyectID string, userEmail string) (bool, bool) {
 	//Recupero la relacion para quitar tambien al usuario de las listas del proyecto donde este
-	relation := GetRelationUserProyect(userEmail, proyectID)
-	//Para cada lista que tiene el proyecto elimino al usuario de dicha lista
-	for i := 0; i < len(relation.Lists); i++ {
-		DeleteUserList(relation.Lists[i].ListID, userEmail)
-	}
-	url := config.URLbase + "proyect/users/" + proyectID + "/" + userEmail
-	req, err := http.NewRequest("DELETE", url, nil)
-	if err != nil {
-		panic(err)
-	}
-	req.Header.Set("Content-Type", "application/json")
-	client := utils.GetClientHTTPS()
-	resp, err := client.Do(req)
-	if err != nil {
-		fmt.Println(err)
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode == 400 {
-		fmt.Println("El usuario no pudo ser eliminado del proyecto")
-		return false
+	relation, tokenExpire := GetRelationUserProyect(userEmail, proyectID)
+	if tokenExpire {
+		return false, true
 	} else {
-		//Actualizo el proyecto en local
-		for i := 0; i < len(DatosUsuario); i++ {
-			if DatosUsuario[i].Proyecto.ID == proyectID {
-				DatosUsuario[i].Proyecto.Users = utils.FindAndDelete(DatosUsuario[i].Proyecto.Users, userEmail)
-			}
+		//Para cada lista que tiene el proyecto elimino al usuario de dicha lista
+		for i := 0; i < len(relation.Lists); i++ {
+			DeleteUserList(relation.Lists[i].ListID, userEmail)
 		}
-		return true
+		url := config.URLbase + "proyect/users/" + proyectID + "/" + userEmail
+		req, err := http.NewRequest("DELETE", url, nil)
+		if err != nil {
+			panic(err)
+		}
+		req.Header.Set("Content-Type", "application/json")
+		req = AddTokenHeader(req)
+		client := utils.GetClientHTTPS()
+		resp, err := client.Do(req)
+		if err != nil {
+			fmt.Println(err)
+		}
+		defer resp.Body.Close()
+
+		switch resp.StatusCode {
+		case 400:
+			fmt.Println("El usuario no pudo ser eliminado del proyecto")
+			return false, false
+		case 401:
+			fmt.Println("Token Expirado")
+			return false, true
+		default:
+			//Actualizo el proyecto en local
+			for i := 0; i < len(DatosUsuario); i++ {
+				if DatosUsuario[i].Proyecto.ID == proyectID {
+					DatosUsuario[i].Proyecto.Users = utils.FindAndDelete(DatosUsuario[i].Proyecto.Users, userEmail)
+				}
+			}
+			return true, false
+		}
 	}
 }
 
 //Devuelve la clave del proyecto descifrada
 func GetProyectKey(proyectIDstring string, userEmail string) []byte {
-	relation := GetRelationUserProyect(UserSesion.Email, proyectIDstring)
+	relation, _ := GetRelationUserProyect(UserSesion.Email, proyectIDstring)
 	ProyectKeyCipher := relation.ProyectKey
 	privateKey := GetPrivateKeyUser()
 	proyectKey := utils.DescifrarRSA(privateKey, ProyectKeyCipher)
@@ -186,7 +210,7 @@ func GetProyectKey(proyectIDstring string, userEmail string) []byte {
 }
 
 //Añadir un usuario a un proyecto
-func AddUserProyect(proyectIDstring string, userEmail string) bool {
+func AddUserProyect(proyectIDstring string, userEmail string) (bool, bool) {
 	//Recupero la clave publica que usare para cifrar la clave del proyecto
 	publicKey := GetPublicKey(userEmail)
 	//Recupero la clave del proyecto descifrada
@@ -201,23 +225,28 @@ func AddUserProyect(proyectIDstring string, userEmail string) bool {
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req = AddTokenHeader(req)
 	client := utils.GetClientHTTPS()
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode == 400 {
+	switch resp.StatusCode {
+	case 400:
 		fmt.Println("El usuario no pudo ser añadido al proyecto")
-		return false
-	} else {
+		return false, false
+	case 401:
+		fmt.Println("Token Expirado")
+		return false, true
+	default:
 		//Actualizo el proyecto en local
 		for i := 0; i < len(DatosUsuario); i++ {
 			if DatosUsuario[i].Proyecto.ID == proyectIDstring {
 				DatosUsuario[i].Proyecto.Users = append(DatosUsuario[i].Proyecto.Users, userEmail)
 			}
 		}
-		return true
+		return true, false
 	}
 }
 
@@ -270,18 +299,13 @@ func BytesToProyect(datos []byte) Proyect {
 	return proyect
 }
 
-func UpdateProyect(newProyect Proyect) bool {
+func UpdateProyect(newProyect Proyect) (bool, bool) {
 	//Recupero la relacion del proyecto para obtener la Key de cifrado
-	relation := GetRelationUserProyect(UserSesion.Email, newProyect.ID)
+	relation, _ := GetRelationUserProyect(UserSesion.Email, newProyect.ID)
 	ProyectKeyCipher := relation.ProyectKey
 	//Descifro la clave con mi clave privada
 	privateKey := GetPrivateKeyUser()
 	proyectKey := utils.DescifrarRSA(privateKey, ProyectKeyCipher)
-
-	// //Recupero el IV del proyecto cifrado
-	// oldProyect := GetProyect(newProyect.ID)
-	// IV := utils.GetIV(oldProyect.Cipherdata)
-
 	//Genero un nuevo IV
 	_, IV := utils.GenerateKeyIV()
 	//Cifro el nuevo proyecto y me quedo con la parte de los datos cifrados
@@ -298,16 +322,22 @@ func UpdateProyect(newProyect Proyect) bool {
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req = AddTokenHeader(req)
 	client := utils.GetClientHTTPS()
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode == 400 {
+
+	switch resp.StatusCode {
+	case 400:
 		fmt.Println("El proyecto no pudo ser actualizado")
-		return false
-	} else {
-		return true
+		return false, false
+	case 401:
+		fmt.Println("Token Expirado")
+		return false, true
+	default:
+		return true, false
 	}
 }

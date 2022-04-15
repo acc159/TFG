@@ -69,26 +69,23 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 
 <script>
-    function init(){
-        //getUsersToAddProyect();
-    }
 
     //Para poder mostrar por pantalla los usuarios que se pueden añadir a un proyecto
-    function getUsersToAddProyect(){
-        getEmailsGO().then(
-            function(emails){
-                let userEmail = document.querySelector('#userEmail').textContent
-                for (let i = 0; i < emails.length; i++){
-                    if(emails[i] != userEmail){
-                        let email = document.createElement('option')
-                        email.value = emails[i]
-                        email.textContent = emails[i]
-                        document.querySelector('#usuarios').appendChild(email)
-                    }
-                }
-            }
-        )
-    }
+    // function getUsersToAddProyect(){
+    //     getEmailsGO().then(
+    //         function(emails){
+    //             let userEmail = document.querySelector('#userEmail').textContent
+    //             for (let i = 0; i < emails.length; i++){
+    //                 if(emails[i] != userEmail){
+    //                     let email = document.createElement('option')
+    //                     email.value = emails[i]
+    //                     email.textContent = emails[i]
+    //                     document.querySelector('#usuarios').appendChild(email)
+    //                 }
+    //             }
+    //         }
+    //     )
+    // }
 
     function addProyect(){
         //Obtengo los campos metidos por el usuario
@@ -115,14 +112,28 @@
                 "Users" : usuariosProyect
             }
             addProyectGO(proyect).then(
-                function(valorDesdeGO){
-                    if (valorDesdeGO == false){
-                        alert('El proyecto no se a creado')
+                function(resultados){
+                    let tokenExpire = resultados[1];
+                    let proyectOk = resultados[0];
+                    if (tokenExpire){
+                        alert('El Token de la sesión expiro')
+                        exitSesion();
                     }else{
-                        changeHome()
+                        if (proyectOk == false){
+                            alert('El proyecto no se a creado')
+                        }else{
+                            changeHome()
+                        }
                     }
                 }
             )
+        }
+    }
+
+    function init () {
+        let forms = document.querySelectorAll('form');
+        for (let i = 0; i < forms.length; i++) {
+            forms[i].addEventListener('submit',(event) => {event.preventDefault();}, false)
         }
     }
 

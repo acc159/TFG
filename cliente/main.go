@@ -118,20 +118,15 @@ func main() {
 
 	//Registro del usuario
 	UI.Bind("registerGO", func(user_pass []string) string {
-		result, err := models.Register(user_pass[0], user_pass[1])
-		if err {
-			return "serverOFF"
-		}
-		if result {
-			ChangeViewWithValues(config.PreView+"index.html", nil)
-		}
-		return "false"
+		result := models.Register(user_pass[0], user_pass[1])
+		return result
 	})
 
 	//Login del usuario
 	UI.Bind("loginGO", func(user_pass []string) bool {
 		result := models.LogIn(user_pass[0], user_pass[1])
 		if result {
+			utils.CheckExpirationTimeToken(models.UserSesion.Token)
 			models.GetUserProyectsLists()
 			ChangeViewWithValues(config.PreView+"index.html", nil)
 		}
@@ -139,14 +134,14 @@ func main() {
 	})
 
 	//Recuperar los emails de los usuarios registrados
-	UI.Bind("getEmailsGO", func() []string {
-		users := models.GetUsers()
-		var usersEmails []string
-		for i := 0; i < len(users); i++ {
-			usersEmails = append(usersEmails, users[i].Email)
-		}
-		return usersEmails
-	})
+	// UI.Bind("getEmailsGO", func() []string {
+	// 	users := models.GetUsers()
+	// 	var usersEmails []string
+	// 	for i := 0; i < len(users); i++ {
+	// 		usersEmails = append(usersEmails, users[i].Email)
+	// 	}
+	// 	return usersEmails
+	// })
 
 	//Cerrar la sesion
 	UI.Bind("exitSesion", func() {
@@ -160,35 +155,55 @@ func main() {
 	})
 
 	//Añadir un Proyecto
-	UI.Bind("addProyectGO", func(newProyect models.Proyect) bool {
-		return models.CreateProyect(newProyect)
+	UI.Bind("addProyectGO", func(newProyect models.Proyect) []bool {
+		proyectOk, tokenExpire := models.CreateProyect(newProyect)
+		return []bool{proyectOk, tokenExpire}
 	})
 
 	//Eliminar un proyecto
-	UI.Bind("deleteProyectGO", func(proyectID string) bool {
-		return models.DeleteProyect(proyectID)
+	UI.Bind("deleteProyectGO", func(proyectID string) []bool {
+		deleteOk, tokenExpire := models.DeleteProyect(proyectID)
+		return []bool{deleteOk, tokenExpire}
 	})
 
 	//Borrar un usuario de un Proyecto
-	UI.Bind("deleteUserProyectGO", func(userEmail string, proyectID string) bool {
-		//Borro al usuario del proyecto y la relacion se borra automaticamente en el servidor
-		return models.DeleteUserProyect(proyectID, userEmail)
+	UI.Bind("deleteUserProyectGO", func(userEmail string, proyectID string) []bool {
+		if !utils.CheckExpirationTimeToken(models.UserSesion.Token) {
+			return []bool{false, true}
+		} else {
+			deleteOk, tokenExpire := models.DeleteUserProyect(proyectID, userEmail)
+			return []bool{deleteOk, tokenExpire}
+		}
 	})
 
 	//Añadir un usuario al proyecto
-	UI.Bind("addUserProyectGO", func(userEmail string, proyectID string) bool {
-		return models.AddUserProyect(proyectID, userEmail)
+	UI.Bind("addUserProyectGO", func(userEmail string, proyectID string) []bool {
+		if !utils.CheckExpirationTimeToken(models.UserSesion.Token) {
+			return []bool{false, true}
+		} else {
+			addOk, tokenExpire := models.AddUserProyect(proyectID, userEmail)
+			return []bool{addOk, tokenExpire}
+		}
 	})
 
 	//Actualizar un proyecto
-	UI.Bind("updateProyectGO", func(newProyect models.Proyect) bool {
-		return models.UpdateProyect(newProyect)
+	UI.Bind("updateProyectGO", func(newProyect models.Proyect) []bool {
+		if !utils.CheckExpirationTimeToken(models.UserSesion.Token) {
+			return []bool{false, true}
+		} else {
+			updateOk, tokenExpire := models.UpdateProyect(newProyect)
+			return []bool{updateOk, tokenExpire}
+		}
 	})
 
 	//Añadir una lista
-	UI.Bind("addListGO", func(list models.List, proyectID string) bool {
-		models.CreateList(list, proyectID)
-		return true
+	UI.Bind("addListGO", func(list models.List, proyectID string) []bool {
+		if !utils.CheckExpirationTimeToken(models.UserSesion.Token) {
+			return []bool{false, true}
+		} else {
+			addOk, tokenExpire := models.CreateList(list, proyectID)
+			return []bool{addOk, tokenExpire}
+		}
 	})
 
 	//Eliminar una lista

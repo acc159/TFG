@@ -33,6 +33,7 @@ func GetProyectsListsByUser(userEmail string) []Relation {
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req = AddTokenHeader(req)
 	client := utils.GetClientHTTPS()
 	resp, err := client.Do(req)
 	if err != nil {
@@ -71,6 +72,7 @@ func CreateRelation(userEmail string, proyectStringID string, proyectKey []byte)
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req = AddTokenHeader(req)
 	client := utils.GetClientHTTPS()
 	resp, err := client.Do(req)
 	if err != nil {
@@ -102,6 +104,7 @@ func AddListToRelation(proyectID string, listIDstring string, userEmail string, 
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req = AddTokenHeader(req)
 	client := utils.GetClientHTTPS()
 	resp, err := client.Do(req)
 	if err != nil {
@@ -123,6 +126,7 @@ func DeleteRelationList(proyectStringID string, listStringID string, userEmail s
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req = AddTokenHeader(req)
 	client := utils.GetClientHTTPS()
 
 	resp, err := client.Do(req)
@@ -146,6 +150,7 @@ func DeleteUserRelation(userEmail string) bool {
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req = AddTokenHeader(req)
 	client := utils.GetClientHTTPS()
 	resp, err := client.Do(req)
 	if err != nil {
@@ -168,6 +173,7 @@ func DeleteUserProyectRelation(userEmail string, proyectID string) bool {
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req = AddTokenHeader(req)
 	client := utils.GetClientHTTPS()
 	resp, err := client.Do(req)
 	if err != nil {
@@ -183,13 +189,14 @@ func DeleteUserProyectRelation(userEmail string, proyectID string) bool {
 }
 
 //Devolver una relacion para un usuario y proyecto dado
-func GetRelationUserProyect(userEmail string, proyectID string) Relation {
+func GetRelationUserProyect(userEmail string, proyectID string) (Relation, bool) {
 	url := config.URLbase + "relations/" + userEmail + "/" + proyectID
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req = AddTokenHeader(req)
 	client := utils.GetClientHTTPS()
 	resp, err := client.Do(req)
 	if err != nil {
@@ -197,12 +204,17 @@ func GetRelationUserProyect(userEmail string, proyectID string) Relation {
 	}
 	defer resp.Body.Close()
 	var relation Relation
-	if resp.StatusCode == 400 {
+
+	switch resp.StatusCode {
+	case 400:
 		fmt.Println("Ningun proyecto ni lista para dicho usuario")
-		return relation
-	} else {
+		return relation, false
+	case 401:
+		fmt.Println("Token Expirado")
+		return relation, true
+	default:
 		json.NewDecoder(resp.Body).Decode(&relation)
-		return relation
+		return relation, false
 	}
 }
 
@@ -214,6 +226,7 @@ func GetRelationListByUser(userEmail string, listID string) RelationLists {
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req = AddTokenHeader(req)
 	client := utils.GetClientHTTPS()
 	resp, err := client.Do(req)
 	if err != nil {

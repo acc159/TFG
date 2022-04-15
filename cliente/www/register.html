@@ -4,46 +4,94 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registrarse</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <style>
-        h1{
-            color: blue;
+
+        body{
+            background: rgb(2,0,36);
+            background: linear-gradient(90deg, rgba(2,0,36,1) 0%, rgba(10,9,58,1) 15%, rgba(9,15,125,1) 47%, rgba(0,212,255,1) 100%); 
+        }
+
+        .form-signin {
+            width: 100%;
+            max-width: 330px;
+            padding: 15px;
+            margin: 0 auto;
+            margin-top: 200px;
+        }
+
+        button{
+            margin-bottom: 5px;
+        }
+        #password{
+            margin-bottom: 20px;
         }
     </style>
 </head>
 <body>
-    <div>
-        <h1>Registrarse:</h1>
-        <label for="email">Email</label>
-        <input type="text" id="email" name="email"><br><br>
 
-        <label for="password">Password</label>
-        <input type="password" id="password" name="password"><br><br>
 
-        <button onclick="register()">Registrarse</button>
-        <button onclick="changeToLogin()">Identificarse</button>
-    </div>
+    <form class="text-center form-signin shadow p-3 mb-5 bg-white rounded">
+        <h2 class="display-4">Registrarse</h2>
+        <input class="form-control" placeholder="Email" type="text" id="email" name="email">
+        <input class="form-control" placeholder="Password" type="password" id="password" name="password">
+        <div>
+            <button class="btn btn-lg btn-primary btn-block" onclick="register()">Registrarse</button>
+        </div>
+        <div>
+            <button class="btn btn-lg btn-secondary btn-block" onclick="changeToLogin()">Identificate</button>
+        </div>
+    </form>
+
 </body>
 </html>
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+
 <script>
 
     function register(){
         //Falta Comprobar los valores que se introducen en estos campos
         let email = document.querySelector('#email').value;
         let password = document.querySelector('#password').value;
-
         if (email != "" && password != ""){
             let user_pass = [email, password];
             registerGO(user_pass).then(
                 function(valorDesdeGO){
-                    if (valorDesdeGO == "serverOFF"){
-                        alert('El servidor se encuentra caido')
-                    }else{
-                        alert('El usuario no se a registrado')
+                    switch (valorDesdeGO) {
+                        case "Duplicado":
+                            alert('El usuario ya esta registrado, Identificate')
+                            changeToLogin();
+                            break;
+                        case "Error":
+                            alert('Error al registrarse')
+                            break;
+                        case "serverOFF":
+                            alert('Servidor Offline')
+                            break;
+                        default:
+                            alert('El usuario se registro correctamente haz login para entrar')
+                            break;
                     }
+                    let email = document.querySelector('#email').value = "";
+                    let password = document.querySelector('#password').value = "";
                 }
             )
         }else{
             alert('Introduce todos los campos')
         }
     }
+
+
+    function init () {
+        let forms = document.querySelectorAll('form');
+        for (let i = 0; i < forms.length; i++) {
+            forms[i].addEventListener('submit',(event) => {event.preventDefault();}, false)
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded',init,false);
 </script>

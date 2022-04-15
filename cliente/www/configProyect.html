@@ -94,20 +94,26 @@
 <script>
     function deleteUser(userEmail){
         let proyectID = document.querySelector('#proyectID').textContent;
+        let usuarioActual = document.querySelector('#usuarioActual').textContent;
         deleteUserProyectGO(userEmail, proyectID).then(
-            function(resultado){
-                if (resultado){
-                    let usuarioActual = document.querySelector('#usuarioActual').textContent;
-                    if (userEmail == usuarioActual){
-                        changeHome();
-                    }else{
-                        alert('Usuario borrado')
-                        changeToProyectConfig(proyectID)
-                    }
+            function(resultados){
+                let tokenExpire = resultados[1];
+                let deleteOk = resultados[0];
+                if (tokenExpire){
+                    alert('El Token de la sesión expiro')
+                    exitSesion();
                 }else{
-                    alert('No se pudo borrar al usuario')
+                    if (deleteOk == false){
+                        alert('No se pudo borrar al usuario')
+                    }else{
+                        if (userEmail == usuarioActual){
+                            changeHome();
+                        }else{
+                            alert('Usuario borrado')
+                            changeToProyectConfig(proyectID)
+                        }
+                    }
                 }
-                
             }
         )
     }
@@ -116,12 +122,19 @@
         let proyectID = document.querySelector('#proyectID').textContent;
         let userEmail = document.querySelector('#users').value
         addUserProyectGO(userEmail, proyectID).then(
-            function(response){
-                if (response){
-                    alert('Usuario añadido')
-                    changeToProyectConfig(proyectID)
+            function(resultados){
+                let tokenExpire = resultados[1];
+                let addOk = resultados[0];
+                if (tokenExpire){
+                    alert('El Token de la sesión expiro')
+                    exitSesion();
                 }else{
-                    alert('No se añadio el usuario')
+                    if (addOk == false){
+                        alert('No se añadio el usuario')
+                    }else{
+                        alert('Usuario añadido')
+                        changeToProyectConfig(proyectID)
+                    }
                 }
             }
         )
@@ -132,24 +145,30 @@
         let proyectID = document.querySelector('#proyectID').textContent;
         let proyectName = document.querySelector('#proyectName').value;
         let proyectDescription = document.querySelector('#proyectDescription').textContent;
-        
         let usersHTML = document.querySelector('#usersProyect').querySelectorAll('li');
         let users = []
         for (let index = 0; index < usersHTML.length; index++) {
             users.push(usersHTML[index].textContent)
         }
-
         let proyect = {
             "ID" : proyectID,
             "Name" : proyectName,
             "Description" : proyectDescription,
             "Users" : users,
         }
-
         updateProyectGO(proyect).then(
-            function(response){
-                if (response){
-                    alert('Se actualizo el proyecto')
+            function(resultados){
+                let tokenExpire = resultados[1];
+                let uodateOk = resultados[0];
+                if (tokenExpire){
+                    alert('El Token de la sesión expiro')
+                    exitSesion();
+                }else{
+                    if (uodateOk == false){
+                        alert('No se actualizo el proyecto')
+                    }else{
+                        alert('Se actualizo el proyecto')
+                    }
                 }
             }
         )
@@ -166,14 +185,30 @@
 
     function deleteProyect(proyectID){
         deleteProyectGO(proyectID).then(
-            function(valorDesdeGO){
-                if (valorDesdeGO == false){
-                    alert('El proyecto no se borro')
+            function(resultados){
+                let tokenExpire = resultados[1];
+                let deleteOk = resultados[0];
+                if (tokenExpire){
+                    alert('El Token de la sesión expiro')
+                    exitSesion();
                 }else{
-                    changeHome()
+                    if (deleteOk == false){
+                        alert('El proyecto no se borro')
+                    }else{
+                        changeHome()
+                    }
                 }
             }
         )
     }
 
+
+    function init () {
+        let forms = document.querySelectorAll('form');
+        for (let i = 0; i < forms.length; i++) {
+            forms[i].addEventListener('submit',(event) => {event.preventDefault();}, false)
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded',init,false);
 </script>

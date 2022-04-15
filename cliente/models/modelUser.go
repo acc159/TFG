@@ -50,66 +50,65 @@ func HashUser(user_pass []byte) ([]byte, []byte, []byte) {
 	return Kservidor, IV, Kaes
 }
 
-func CheckUserExist(email string) bool {
-	url := config.URLbase + "users/" + email
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		panic(err)
-	}
-	req.Header.Set("Content-Type", "application/json")
-	client := utils.GetClientHTTPS()
-	resp, err := client.Do(req)
-	if err != nil {
-		fmt.Println(err)
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode == 400 {
-		return false
-	} else {
-		return true
-	}
-}
+// func CheckUserExist(email string) bool {
+// 	url := config.URLbase + "users/" + email
+// 	req, err := http.NewRequest("GET", url, nil)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	req.Header.Set("Content-Type", "application/json")
+// 	client := utils.GetClientHTTPS()
+// 	resp, err := client.Do(req)
+// 	if err != nil {
+// 		fmt.Println(err)
+// 	}
+// 	defer resp.Body.Close()
+// 	if resp.StatusCode == 400 {
+// 		return false
+// 	} else {
+// 		return true
+// 	}
+// }
 
 //Registro del usuario
-func Register(email string, password string) (bool, bool) {
-	//Compruebo que el usuario con ese email no esta ya registrado
-	existe := CheckUserExist(email)
-	if existe {
-		return false, false
-	} else {
-		//Envio los datos del registro
-		user_pass := []byte(email + password)
-		Kservidor, IV, Kaes := HashUser(user_pass)
-		//Asigno los valores del usuario
-		UserSesion.Email = email
-		//La clave del servidor
-		UserSesion.ServerKey = Kservidor
-		//Obtenemos las Claves RSA
-		privateKey, publicKey := utils.GeneratePrivatePublicKeys()
-		//La clave publica la almaceno directamente en formato PEM
-		UserSesion.PublicKey = utils.PublicKeyToPem(&publicKey)
-		//La clave privada primero la paso a PEM
-		privateKeyPem := utils.PrivateKeyToPem(privateKey)
-		//La cifro con AES
-		privateKeyCipher := utils.CifrarAES(Kaes, IV, privateKeyPem)
-		//La almaceno cifrada
-		UserSesion.PrivateKey = privateKeyCipher
-		//Guardo Kaes para la sesion del usuario
-		UserSesion.Kaes = Kaes
-		//Enviamos los datos al servidor
-		userIDstring := RegisterServer(UserSesion)
-		if userIDstring == "serverOFF" {
-			return false, true
-		}
-		if userIDstring == "" {
-			UserSesion = User{}
-			return false, false
-		} else {
-			id, _ := primitive.ObjectIDFromHex(userIDstring)
-			UserSesion.ID = id
-			return true, false
-		}
+func Register(email string, password string) string {
+
+	//Envio los datos del registro
+	user_pass := []byte(email + password)
+	Kservidor, IV, Kaes := HashUser(user_pass)
+	//Obtenemos las Claves RSA
+	privateKey, publicKey := utils.GeneratePrivatePublicKeys()
+	//La clave publica la almaceno directamente en formato PEM
+	publicKeyPEM := utils.PublicKeyToPem(&publicKey)
+	//La clave privada primero la paso a PEM
+	privateKeyPem := utils.PrivateKeyToPem(privateKey)
+	//La cifro con AES
+	privateKeyCipher := utils.CifrarAES(Kaes, IV, privateKeyPem)
+	//La almaceno cifrada
+	UserSesion.PrivateKey = privateKeyCipher
+	//Guardo Kaes para la sesion del usuario
+	UserSesion.Kaes = Kaes
+	user := User{
+		Email:      email,
+		ServerKey:  Kservidor,
+		PublicKey:  publicKeyPEM,
+		PrivateKey: privateKeyCipher,
 	}
+	//Enviamos los datos al servidor
+	resultado := RegisterServer(user)
+	return resultado
+	// switch userIDstring {
+	// case "serverOFF":
+	// 	return userIDstring, true
+	// case "Error":
+	// 	return userIDstring, true
+	// case "Duplicado":
+	// 	return userIDstring, true
+	// default:
+	// 	id, _ := primitive.ObjectIDFromHex(userIDstring)
+	// 	UserSesion.ID = id
+	// 	return userIDstring, false
+	// }
 }
 
 //Registro del usuario en el servidor
@@ -136,8 +135,9 @@ func RegisterServer(user User) string {
 	defer resp.Body.Close()
 	//En caso de fallo del registro del usuario en el servidor
 	if resp.StatusCode == 400 {
-		fmt.Println("El usuario no se ha registrado")
-		return ""
+		return "Error"
+	} else if resp.StatusCode == 409 {
+		return "Duplicado"
 	} else {
 		//Si todo fue correcto en el servidor devuelvo el id del usuario creado
 		var resultado string
@@ -191,6 +191,7 @@ func LogInServer(userLogin User) User {
 
 		//Asigno el token que genero el servidor
 		token := resp.Header.Get("token")
+		fmt.Println(token)
 		UserSesion.Token = token
 		return resultado
 	}
@@ -211,6 +212,7 @@ func GetUsers() []User {
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req = AddTokenHeader(req)
 	client := utils.GetClientHTTPS()
 	resp, err := client.Do(req)
 	if err != nil {
@@ -236,6 +238,7 @@ func GetUserByEmail(userEmail string) User {
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req = AddTokenHeader(req)
 	client := utils.GetClientHTTPS()
 	resp, err := client.Do(req)
 	if err != nil {
@@ -326,6 +329,7 @@ func DeleteUserByEmail(userEmail string) bool {
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req = AddTokenHeader(req)
 	client := utils.GetClientHTTPS()
 	resp, err := client.Do(req)
 	if err != nil {
@@ -355,4 +359,9 @@ func GetPublicKey(userEmail string) *rsa.PublicKey {
 	publicKeyUserPem := GetUserByEmail(userEmail).PublicKey
 	publicKey := utils.PemToPublicKey(publicKeyUserPem)
 	return publicKey
+}
+
+func AddTokenHeader(req *http.Request) *http.Request {
+	req.Header.Add("Authorization", "Bearer "+UserSesion.Token)
+	return req
 }

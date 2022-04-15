@@ -15,14 +15,24 @@ import (
 func Signup(w http.ResponseWriter, r *http.Request) {
 	var user models.User
 	json.NewDecoder(r.Body).Decode(&user)
-	resultado := models.SignUp(user)
-	if resultado == "" {
-		w.WriteHeader(400)
-		respuesta := "No se registro el usuario"
-		json.NewEncoder(w).Encode(respuesta)
+
+	//Compruebo que no exista ya
+	existeUser := models.GetUser(user.Email)
+	if existeUser.Email == "" {
+		resultado := models.SignUp(user)
+		if resultado == "" {
+			w.WriteHeader(400)
+			respuesta := "No se registro el usuario"
+			json.NewEncoder(w).Encode(respuesta)
+		} else {
+			json.NewEncoder(w).Encode(resultado)
+		}
 	} else {
-		json.NewEncoder(w).Encode(resultado)
+		w.WriteHeader(409)
+		respuesta := "Usuario Duplicado"
+		json.NewEncoder(w).Encode(respuesta)
 	}
+
 }
 
 //Login del Usuario

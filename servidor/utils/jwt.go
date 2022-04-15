@@ -15,7 +15,7 @@ func GenerateJWT(email string) string {
 	claims := token.Claims.(jwt.MapClaims)
 	claims["authorized"] = true
 	claims["user"] = email
-	claims["exp"] = time.Now().Add(time.Hour * 1).Unix()
+	claims["exp"] = time.Now().Add(time.Minute * 4).Unix()
 	tokenString, err := token.SignedString(SecretKey)
 	if err != nil {
 		fmt.Println(err)

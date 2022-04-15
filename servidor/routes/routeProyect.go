@@ -2,13 +2,11 @@ package routes
 
 import (
 	"servidor/handlers"
-	"servidor/middlewares"
 
 	"github.com/gorilla/mux"
 )
 
 func Proyect(r *mux.Router) {
-	middlewares.ValidateTokenMiddleware(r.ServeHTTP)
 
 	//Recupero todos los proyectos que tengan los IDs pasados en el body de la peticion
 	r.HandleFunc("/proyects/ids", handlers.GetProyectsByIDs).Methods("GET")

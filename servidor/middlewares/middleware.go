@@ -57,20 +57,25 @@ func MiddlewareAddJsonHeader(next http.Handler) http.Handler {
 // 		})
 // }
 
-func ValidateTokenMiddleware(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		bearerToken := r.Header.Get("Authorization")
-		if bearerToken != "" {
-			if utils.ValidateToken(bearerToken) {
+func ValidateTokenMiddleware(next http.Handler) http.Handler {
+
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.String() == "/login" || r.URL.String() == "/signup" {
 				next.ServeHTTP(w, r)
 			} else {
-				w.WriteHeader(http.StatusUnauthorized)
-				w.Write([]byte("No autorizado"))
+				bearerToken := r.Header.Get("Authorization")
+				if bearerToken != "" {
+					if utils.ValidateToken(bearerToken) {
+						next.ServeHTTP(w, r)
+					} else {
+						w.WriteHeader(http.StatusUnauthorized)
+						w.Write([]byte("No autorizado"))
+					}
+				} else {
+					w.WriteHeader(http.StatusUnauthorized)
+					w.Write([]byte("Falta de Token"))
+				}
 			}
-		} else {
-			w.WriteHeader(http.StatusUnauthorized)
-			w.Write([]byte("Falta de Token"))
-		}
-
-	}
+		})
 }
