@@ -292,7 +292,6 @@ func UpdateList(newList List) (bool, bool) {
 	//Cifro la nueva lista
 	listCipher := CifrarLista(newList, listKey, IV)
 	listCipher.ID, _ = primitive.ObjectIDFromHex(newList.ID)
-
 	//Actualizo la lista en el servidor
 	listJSON, err := json.Marshal(listCipher)
 	if err != nil {
