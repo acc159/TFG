@@ -191,7 +191,6 @@
         for (let index = 0; index < usersTaskDivs.length; index++) {
             usersTask.push(usersTaskDivs[index].id)
         }
-
         let archivosDiv = document.querySelector('#archivosAdjuntos').querySelectorAll('a');
         let archivos = []
         if (archivosDiv.length > 0) {
@@ -205,8 +204,6 @@
                 archivos.push(archivo)
             } 
         }
-
-
         let newTask = {
             "ID" : taskID,
             "Name" : name,
@@ -216,14 +213,32 @@
             "Users" : usersTask,
             "Files" : archivos,
         }
-
         updateTaskGO(newTask, listID).then(
-            function(resultado){
-                if (resultado){
-                    alert('La tarea fue actualizada')
-                    changeToTaskConfigGO(taskID, listID)
+            function(resultados){
+                let tokenExpire = resultados[1];
+                let updateOK = resultados[0];
+                if (tokenExpire){
+                    alert('El Token de la sesión expiro')
+                    exitSesion();
                 }else{
-                    alert('La tarea no pudo ser actualizada')
+                    if (updateOK == false){
+                        alert('La tarea no pudo ser actualizada')
+                    }else{
+                        alert('La tarea fue actualizada')
+                        changeToTaskConfigGO(taskID, listID)
+                    }
+                }
+            }
+        )
+    }
+
+
+    function changeHome(){
+        changeHomeGO().then(
+            function(tokenExpire){
+                if (tokenExpire){
+                    alert('El Token de la sesión expiro')
+                    exitSesion();
                 }
             }
         )

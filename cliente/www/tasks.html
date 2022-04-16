@@ -61,11 +61,30 @@
         taskID = div.id;
         let listID = document.querySelector('#listID').textContent
         deleteTaskGO(taskID).then(
-            function(resultado){
-                if (resultado){
-                    changeToTasksGO(listID)
+            function(resultados){
+                let tokenExpire = resultados[1];
+                let deleteOK = resultados[0];
+                if (tokenExpire){
+                    alert('El Token de la sesión expiro')
+                    exitSesion();
                 }else{
-                    alert('No pudo ser borrada la tarea')
+                    if (deleteOK == false){
+                        alert('No pudo ser borrada la tarea')
+                    }else{
+                        alert('La tarea se borro')
+                        changeToTasks(listID)
+                    }
+                }
+            }
+        )
+    }
+
+    function changeHome(){
+        changeHomeGO().then(
+            function(tokenExpire){
+                if (tokenExpire){
+                    alert('El Token de la sesión expiro')
+                    exitSesion();
                 }
             }
         )

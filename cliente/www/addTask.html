@@ -330,12 +330,19 @@
             "Links" : TaskLinks
         }
         addTaskGO(listID, task, date).then(
-            function(resultado){
-                if (resultado){
-                    alert('La tarea se creo')
-                    changeToTasks(listID)
+            function(resultados){
+                let tokenExpire = resultados[1];
+                let taskOK = resultados[0];
+                if (tokenExpire){
+                    alert('El Token de la sesión expiro')
+                    exitSesion();
                 }else{
-                    alert('La tarea no se creo')
+                    if (taskOK == false){
+                        alert('La tarea no se creo')
+                    }else{
+                        alert('La tarea se creo')
+                        changeToTasks(listID)
+                    }
                 }
             }
         )
@@ -381,6 +388,17 @@
         }else{
             alert('Introduce un enlace para añadirlo');
         }
+    }
+
+    function changeHome(){
+        changeHomeGO().then(
+            function(tokenExpire){
+                if (tokenExpire){
+                    alert('El Token de la sesión expiro')
+                    exitSesion();
+                }
+            }
+        )
     }
 
 

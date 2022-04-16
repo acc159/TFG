@@ -169,7 +169,7 @@ func UpdateTask(listIDstring string, task Task) bool {
 }
 
 //Borrar una tarea
-func DeleteTask(taskID string) bool {
+func DeleteTask(taskID string) (bool, bool) {
 	url := config.URLbase + "tasks/" + taskID
 	req, err := http.NewRequest("DELETE", url, nil)
 	if err != nil {
@@ -183,14 +183,18 @@ func DeleteTask(taskID string) bool {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode == 400 {
+
+	switch resp.StatusCode {
+	case 400:
 		fmt.Println("La tarea no pudo ser borrada")
-		return false
-	} else {
+		return false, false
+	case 401:
+		fmt.Println("Token Expirado")
+		return false, true
+	default:
 		var resultado string
 		json.NewDecoder(resp.Body).Decode(&resultado)
-		fmt.Println(resultado)
-		return true
+		return true, false
 	}
 }
 

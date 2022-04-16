@@ -108,7 +108,7 @@ func GetListsByIDs(stringsIDs []string) []ListCipher {
 }
 
 //Eliminar una lista
-func DeleteList(listsID string) bool {
+func DeleteList(listsID string) (bool, bool) {
 	//Eliminar la lista
 	url := config.URLbase + "lists/" + listsID
 	req, err := http.NewRequest("DELETE", url, nil)
@@ -124,13 +124,16 @@ func DeleteList(listsID string) bool {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
-
-	if resp.StatusCode == 400 {
-		return false
-	} else {
-		return true
+	switch resp.StatusCode {
+	case 400:
+		fmt.Println("La lista no pudo ser borrada")
+		return false, false
+	case 401:
+		fmt.Println("Token Expirado")
+		return false, true
+	default:
+		return true, false
 	}
-
 }
 
 //Recupero los usuarios de una lista
@@ -272,7 +275,7 @@ func GetUserList(listID string, listKeyCipher []byte, privateKey *rsa.PrivateKey
 	return DescifrarLista(listCipher, listKey)
 }
 
-func UpdateList(newList List) bool {
+func UpdateList(newList List) (bool, bool) {
 	relation, _ := GetRelationUserProyect(UserSesion.Email, newList.ProyectID)
 	var listKeyCipher []byte
 	//Busco la Clave cifrada de la lista
@@ -308,11 +311,15 @@ func UpdateList(newList List) bool {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode == 400 {
+	switch resp.StatusCode {
+	case 400:
 		fmt.Println("La lista no pudo ser actualizada")
-		return false
-	} else {
-		return true
+		return false, false
+	case 401:
+		fmt.Println("Token Expirado")
+		return false, true
+	default:
+		return true, false
 	}
 }
 

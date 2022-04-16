@@ -33,10 +33,15 @@ func main() {
 	})
 
 	//Cambiar a la pantalla de Home
-	UI.Bind("changeHome", func() {
-		//Traigo del servidor todos los proyectos y listas del usuario
-		models.GetUserProyectsLists()
-		ChangeViewWithValues(config.PreView+"index.html", nil)
+	UI.Bind("changeHomeGO", func() bool {
+		if !utils.CheckExpirationTimeToken(models.UserSesion.Token) {
+			return true
+		} else {
+			//Traigo del servidor todos los proyectos y listas del usuario
+			models.GetUserProyectsLists()
+			ChangeViewWithValues(config.PreView+"index.html", nil)
+			return false
+		}
 	})
 
 	//Cambiar a la pantalla de registro
@@ -130,7 +135,7 @@ func main() {
 			models.GetUserProyectsLists()
 			ChangeViewWithValues(config.PreView+"index.html", nil)
 		}
-		return false
+		return result
 	})
 
 	//Recuperar los emails de los usuarios registrados
@@ -207,54 +212,79 @@ func main() {
 	})
 
 	//Eliminar una lista
-	UI.Bind("deleteListGO", func(listID string, proyectID string) bool {
-		//Consigo los usuarios de la lista
-		usersList := models.GetUsersList(listID)
-		//Elimino todas la lista de todas las relaciones
-		for i := 0; i < len(usersList); i++ {
-			models.DeleteRelationList(proyectID, listID, usersList[i])
+	UI.Bind("deleteListGO", func(listID string, proyectID string) []bool {
+		if !utils.CheckExpirationTimeToken(models.UserSesion.Token) {
+			return []bool{false, true}
+		} else {
+			//Consigo los usuarios de la lista
+			usersList := models.GetUsersList(listID)
+			//Elimino la lista de todas las relaciones
+			for i := 0; i < len(usersList); i++ {
+				models.DeleteRelationList(proyectID, listID, usersList[i])
+			}
+			//Elimino la lista
+			deleteOk, tokenExpire := models.DeleteList(listID)
+			return []bool{deleteOk, tokenExpire}
 		}
-		//Elimino la lista
-		return models.DeleteList(listID)
 	})
 
 	//Borrar un usuario de una Lista
-	UI.Bind("deleteUserListGO", func(userEmail string, listID string, proyectID string) bool {
-		//Borro al usuario de la lista
-		models.DeleteUserList(listID, userEmail)
-
-		//Borro la lista en la relacion donde aparece
-		return models.DeleteRelationList(proyectID, listID, userEmail)
+	UI.Bind("deleteUserListGO", func(userEmail string, listID string, proyectID string) []bool {
+		if !utils.CheckExpirationTimeToken(models.UserSesion.Token) {
+			return []bool{false, true}
+		} else {
+			//Borro al usuario de la lista
+			models.DeleteUserList(listID, userEmail)
+			//Borro la lista en la relacion donde aparece
+			deleteOk := models.DeleteRelationList(proyectID, listID, userEmail)
+			return []bool{deleteOk, false}
+		}
 	})
 
 	//Actualizar una lista
-	UI.Bind("updateListGO", func(newList models.List) bool {
-		return models.UpdateList(newList)
+	UI.Bind("updateListGO", func(newList models.List) []bool {
+		if !utils.CheckExpirationTimeToken(models.UserSesion.Token) {
+			return []bool{false, true}
+		} else {
+			deleteOk, tokenExpire := models.UpdateList(newList)
+			return []bool{deleteOk, tokenExpire}
+		}
 	})
 
 	//Añadir un usuario a una lista
-	UI.Bind("addUserListGO", func(userEmail string, proyectID string, listID string) bool {
-		return models.AddUserList(userEmail, proyectID, listID)
+	UI.Bind("addUserListGO", func(userEmail string, proyectID string, listID string) []bool {
+		if !utils.CheckExpirationTimeToken(models.UserSesion.Token) {
+			return []bool{false, true}
+		} else {
+			addOK := models.AddUserList(userEmail, proyectID, listID)
+			return []bool{addOK, false}
+		}
 	})
 
 	//Añadir una tarea a una lista
-	UI.Bind("addTaskGO", func(listID string, task models.Task, dateString string) bool {
-		return models.CreateTask(listID, task)
+	UI.Bind("addTaskGO", func(listID string, task models.Task, dateString string) []bool {
+		if !utils.CheckExpirationTimeToken(models.UserSesion.Token) {
+			return []bool{false, true}
+		} else {
+			addOK := models.CreateTask(listID, task)
+			return []bool{addOK, false}
+		}
 	})
 
 	//Eliminar una tarea
-	UI.Bind("deleteTaskGO", func(taskID string) bool {
-		return models.DeleteTask(taskID)
+	UI.Bind("deleteTaskGO", func(taskID string) []bool {
+		addOK, tokenExpire := models.DeleteTask(taskID)
+		return []bool{addOK, tokenExpire}
 	})
 
 	//Actualizar una tarea
-	UI.Bind("updateTaskGO", func(newTask models.Task, listID string) bool {
-		//return models.UpdateList(newList)
-		resultado := models.UpdateTask(listID, newTask)
-		if resultado {
-			return true
+	UI.Bind("updateTaskGO", func(newTask models.Task, listID string) []bool {
+
+		if !utils.CheckExpirationTimeToken(models.UserSesion.Token) {
+			return []bool{false, true}
 		} else {
-			return false
+			updateOK := models.UpdateTask(listID, newTask)
+			return []bool{updateOK, false}
 		}
 	})
 

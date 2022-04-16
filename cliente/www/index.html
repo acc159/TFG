@@ -206,11 +206,18 @@
         listID = div.id;
         proyectID = div.dataset.proyectid;
         deleteListGO(listID, proyectID).then(
-            function(valorDesdeGO){
-                if (valorDesdeGO == false){
-                    alert('La lista no se borro')
+            function(resultados){
+                let tokenExpire = resultados[1];
+                let listOK = resultados[0];
+                if (tokenExpire){
+                    alert('El Token de la sesión expiro')
+                    exitSesion();
                 }else{
-                    changeHome()
+                    if (listOK == false){
+                        alert('La lista no se borro')
+                    }else{
+                        changeHome()
+                    }
                 }
             }
         )
@@ -220,6 +227,18 @@
     function changeToAdmin(){
         changeToAdminGO().then(
             function(){
+            }
+        )
+    }
+
+
+    function changeHome(){
+        changeHomeGO().then(
+            function(tokenExpire){
+                if (tokenExpire){
+                    alert('El Token de la sesión expiro')
+                    exitSesion();
+                }
             }
         )
     }

@@ -137,5 +137,17 @@
         }
     }
 
+
+    function changeHome(){
+        changeHomeGO().then(
+            function(tokenExpire){
+                if (tokenExpire){
+                    alert('El Token de la sesión expiro')
+                    exitSesion();
+                }
+            }
+        )
+    }
+
     document.addEventListener('DOMContentLoaded',init,false);
 </script>

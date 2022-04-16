@@ -65,18 +65,25 @@
     function deleteUser(userEmail){
         let proyectID = document.querySelector('#proyectID').textContent;
         let listID = document.querySelector('#listID').textContent;
+        let usuarioActual = document.querySelector('#usuarioActual').textContent;
         deleteUserListGO(userEmail, listID, proyectID).then(
-            function(resultado){
-                if (resultado){
-                    let usuarioActual = document.querySelector('#usuarioActual').textContent;
-                    if (userEmail == usuarioActual){
-                        changeHome();
-                    }else{
-                        alert('Usuario borrado')
-                        changeToListConfigGO(listID, proyectID)
-                    }
+            function(resultados){
+                let tokenExpire = resultados[1];
+                let deleteOk = resultados[0];
+                if (tokenExpire){
+                    alert('El Token de la sesión expiro')
+                    exitSesion();
                 }else{
-                    alert('No se pudo borrar al usuario')
+                    if (deleteOk == false){
+                        alert('No se pudo borrar al usuario')
+                    }else{
+                        if (userEmail == usuarioActual){
+                            changeHome();
+                        }else{
+                            alert('Usuario borrado')
+                            changeToListConfigGO(listID, proyectID)
+                        }
+                    }
                 }
             }
         )
@@ -94,12 +101,19 @@
         let proyectID = document.querySelector('#proyectID').textContent;
         let userEmail = document.querySelector('#users').value
         addUserListGO(userEmail, proyectID, listID).then(
-            function(response){
-                if (response){
-                    alert('Usuario añadido')
-                    changeToListConfig(listID, proyectID)
+            function(resultados){
+                let tokenExpire = resultados[1];
+                let addOK = resultados[0];
+                if (tokenExpire){
+                    alert('El Token de la sesión expiro')
+                    exitSesion();
                 }else{
-                    alert('No se añadio el usuario')
+                    if (addOK){
+                        alert('Usuario añadido')
+                        changeToListConfig(listID, proyectID)
+                    }else{
+                        alert('No se añadio el usuario')
+                    }
                 }
             }
         )
@@ -123,14 +137,34 @@
             "ProyectID" : proyectID,
         }
         updateListGO(list).then(
-            function(response){
-                if (response){
-                    alert('Se actualizo la lista')
+            function(resultados){
+                let tokenExpire = resultados[1];
+                let updateOK = resultados[0];
+                if (tokenExpire){
+                    alert('El Token de la sesión expiro')
+                    exitSesion();
+                }else{
+                    if (updateOK == false){
+                        alert('No se pudo actualizar la lista')
+                    }else{
+                        alert('Lista actualizada')
+                    }
                 }
             }
         )
     }
 
+
+    function changeHome(){
+        changeHomeGO().then(
+            function(tokenExpire){
+                if (tokenExpire){
+                    alert('El Token de la sesión expiro')
+                    exitSesion();
+                }
+            }
+        )
+    }
 
     function init () {
         let forms = document.querySelectorAll('form');

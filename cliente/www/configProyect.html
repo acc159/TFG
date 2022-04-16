@@ -202,6 +202,16 @@
         )
     }
 
+    function changeHome(){
+        changeHomeGO().then(
+            function(tokenExpire){
+                if (tokenExpire){
+                    alert('El Token de la sesión expiro')
+                    exitSesion();
+                }
+            }
+        )
+    }
 
     function init () {
         let forms = document.querySelectorAll('form');

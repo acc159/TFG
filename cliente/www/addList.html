@@ -72,11 +72,18 @@
         }
         let proyectID = document.querySelector('#proyectID').textContent;
         addListGO(lista, proyectID).then(
-            function(response){
-                if (response == false){
-                    alert('La lista no se a creado')
+            function(resultados){
+                let tokenExpire = resultados[1];
+                let listOK = resultados[0];
+                if (tokenExpire){
+                    alert('El Token de la sesión expiro')
+                    exitSesion();
                 }else{
-                    changeHome()
+                    if (listOK == false){
+                        alert('La lista no se a creado')
+                    }else{
+                        changeHome()
+                    }
                 }
             }
         )
@@ -87,6 +94,18 @@
         for (let i = 0; i < forms.length; i++) {
             forms[i].addEventListener('submit',(event) => {event.preventDefault();}, false)
         }
+    }
+
+
+    function changeHome(){
+        changeHomeGO().then(
+            function(tokenExpire){
+                if (tokenExpire){
+                    alert('El Token de la sesión expiro')
+                    exitSesion();
+                }
+            }
+        )
     }
 
     document.addEventListener('DOMContentLoaded',init,false);
