@@ -177,7 +177,11 @@
 
     function changeToProyectConfig(proyectID){
         changeToProyectConfigGO(proyectID).then(
-            function(){ 
+            function(tokenExpire){
+                if (tokenExpire){
+                    alert('El Token de la sesión expiro')
+                    exitSesion();
+                }
             }
         )
     }

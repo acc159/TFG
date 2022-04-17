@@ -133,7 +133,7 @@ func DeleteProyect(proyectID string) (bool, bool) {
 }
 
 //Recuperar los usuarios de un proyecto
-func GetUsersProyect(proyectID string) []string {
+func GetUsersProyect(proyectID string) ([]string, bool) {
 	url := config.URLbase + "proyect/users/" + proyectID
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -148,11 +148,17 @@ func GetUsersProyect(proyectID string) []string {
 	}
 	defer resp.Body.Close()
 	var responseObject []string
-	if resp.StatusCode == 404 {
-		return responseObject
-	} else {
+
+	switch resp.StatusCode {
+	case 400:
+		fmt.Println("El usuario no pudo ser eliminado del proyecto")
+		return responseObject, false
+	case 401:
+		fmt.Println("Token Expirado")
+		return responseObject, true
+	default:
 		json.NewDecoder(resp.Body).Decode(&responseObject)
-		return responseObject
+		return responseObject, false
 	}
 }
 
@@ -251,7 +257,7 @@ func AddUserProyect(proyectIDstring string, userEmail string) (bool, bool) {
 }
 
 func GetEmailsNotInProyect(proyect Proyect) []string {
-	usersAll := GetUsers()
+	usersAll, _ := GetUsers()
 	var emails []string
 	for i := 0; i < len(usersAll); i++ {
 		emails = append(emails, usersAll[i].Email)

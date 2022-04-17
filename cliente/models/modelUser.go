@@ -204,7 +204,7 @@ func LogOut() {
 }
 
 //Recupero todos los usuarios
-func GetUsers() []User {
+func GetUsers() ([]User, bool) {
 	var usersResponse []User
 	url := config.URLbase + "users"
 	req, err := http.NewRequest("GET", url, nil)
@@ -219,13 +219,16 @@ func GetUsers() []User {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
-	//Compruebo si no hay ningun usuario
-	if resp.StatusCode == 404 {
+	switch resp.StatusCode {
+	case 400:
 		fmt.Println("Ningun usuario encontrado")
-		return usersResponse
-	} else {
+		return usersResponse, false
+	case 401:
+		fmt.Println("Token Expirado")
+		return usersResponse, true
+	default:
 		json.NewDecoder(resp.Body).Decode(&usersResponse)
-		return usersResponse
+		return usersResponse, false
 	}
 }
 
@@ -345,13 +348,16 @@ func DeleteUserByEmail(userEmail string) bool {
 }
 
 //Recupero los emails de todos los usuarios del sistema
-func GetEmails() []string {
-	users := GetUsers()
+func GetEmails() ([]string, bool) {
+	users, tokenExpire := GetUsers()
+	if tokenExpire {
+		return []string{}, tokenExpire
+	}
 	var usersEmails []string
 	for i := 0; i < len(users); i++ {
 		usersEmails = append(usersEmails, users[i].Email)
 	}
-	return usersEmails
+	return usersEmails, tokenExpire
 }
 
 //Recupero la clave publica de un usuario

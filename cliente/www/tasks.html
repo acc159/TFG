@@ -40,7 +40,11 @@
     function changeToAddTask(){
         let listID = document.querySelector('#listID').textContent
         changeToAddTaskGO(listID).then(
-            function(){
+            function(tokenExpire){
+                if (tokenExpire){
+                    alert('El Token de la sesión expiro')
+                    exitSesion();
+                }
             }
         )
     }
@@ -51,7 +55,11 @@
         taskID = div.id;
         let listID = document.querySelector('#listID').textContent
         changeToTaskConfigGO(taskID, listID).then(
-            function(){
+            function(tokenExpire){
+                if (tokenExpire){
+                    alert('El Token de la sesión expiro')
+                    exitSesion();
+                }
             }
         )
     }

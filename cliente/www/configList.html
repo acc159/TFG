@@ -14,7 +14,7 @@
         </form>
     </nav>
 
-    <h2 hidden id="proyectID">{{.Proyect.ID}}</h2>
+    <h2 hidden id="proyectID">{{.List.ProyectID}}</h2>
     <h2 hidden id="listID">{{.List.ID}}</h2>
     <span hidden id="usuarioActual">{{.User}}</span>
 
@@ -27,7 +27,6 @@
             <label for="listDescription">Descripción del proyecto:</label>
             <textarea class="form-control" name="listDescription" id="listDescription" cols="30" rows="10">{{.List.Description}}</textarea>
             <h2 class="display-4 text-center">Gestión Usuarios</h2>
-            <h2>Usuarios del proyecto al que pertenece la lista: {{len .Proyect.Users}}</h2>
             <ul class="users_list">
                 {{range .List.Users}}
                     <li id={{.}}>{{.}}</li>
@@ -81,7 +80,7 @@
                             changeHome();
                         }else{
                             alert('Usuario borrado')
-                            changeToListConfigGO(listID, proyectID)
+                            changeToListConfig(listID, proyectID)
                         }
                     }
                 }
@@ -91,7 +90,11 @@
 
     function changeToListConfig(listID, proyectID){
         changeToListConfigGO(listID, proyectID).then(
-            function(){
+            function(tokenExpire){
+                if (tokenExpire){
+                    alert('El Token de la sesión expiro')
+                    exitSesion();
+                }
             }
         )
     }
@@ -122,7 +125,7 @@
     function updateList(){
         let proyectID = document.querySelector('#proyectID').textContent;
         let listID = document.querySelector('#listID').textContent;
-        let listName = document.querySelector('#listName').textContent;
+        let listName = document.querySelector('#listName').value;
         let listDescription = document.querySelector('#listDescription').textContent;
         let usersHTML = document.querySelectorAll('li')
         let users = []

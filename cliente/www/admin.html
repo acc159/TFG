@@ -24,14 +24,34 @@
     function deleteUser(userEmail){
         let userActual = document.querySelector('#userActual').textContent;
         deleteUserGO(userEmail).then(
-            function(resultado){
-                if (resultado){
-                    alert('Usuario borrado');
-                    if(userEmail == userActual){
-                        changeToLogin();
+            function(resultados){
+                let tokenExpire = resultados[1];
+                let deleteOK = resultados[0];
+                if (tokenExpire){
+                    alert('El Token de la sesión expiro')
+                    exitSesion();
+                }else{
+                    if (deleteOK == false){
+                        alert('El usuario no se borro')
                     }else{
-                        changeToAdminGO();
+                        if(userEmail == userActual){
+                            changeToLogin();
+                        }else{
+                            changeToAdmin();
+                        }
                     }
+                }
+            }
+        )
+    }
+
+
+    function changeToAdmin(){
+        changeToAdminGO().then(
+            function(tokenExpire){
+                if (tokenExpire){
+                    alert('El Token de la sesión expiro')
+                    exitSesion();
                 }
             }
         )

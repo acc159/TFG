@@ -45,78 +45,124 @@ func main() {
 	})
 
 	//Cambiar a la pantalla de registro
-	UI.Bind("changeToAdminGO", func() {
-		ChangeViewAdminPanel(config.PreView + "admin.html")
+	UI.Bind("changeToAdminGO", func() bool {
+		users, tokenExpire := models.GetUsers()
+		if tokenExpire {
+			return tokenExpire
+		}
+		ChangeViewAdminPanel(config.PreView+"admin.html", users)
+		return false
 	})
 
 	//Cambiar a la pantalla de añadir un proyecto
-	UI.Bind("changeToAddProyect", func() {
-		emails := models.GetEmails()
+	UI.Bind("changeToAddProyectGO", func() bool {
+		emails, tokenExpire := models.GetEmails()
+		if tokenExpire {
+			return tokenExpire
+		}
 		emails = utils.FindAndDelete(emails, models.UserSesion.Email)
 		ChangeViewWithValues(config.PreView+"addProyect.html", emails)
+		return false
 	})
 
 	//Cambiar a la pantalla de añadir una lista
-	UI.Bind("changeToAddListGO", func(proyectID string, proyectName string) {
+	UI.Bind("changeToAddListGO", func(proyectID string, proyectName string) bool {
 		//Recupero los usuarios del proyecto
-		usersProyect := models.GetUsersProyect(proyectID)
+		usersProyect, tokenExpire := models.GetUsersProyect(proyectID)
+		if tokenExpire {
+			return tokenExpire
+		}
 		ChangeViewAddList(config.PreView+"addList.html", proyectID, proyectName, usersProyect)
+		return tokenExpire
 	})
 
 	//Cambiar a la pestaña de ver las tareas de una lista dado el ID de la lista
-	UI.Bind("changeToTasksGO", func(listID string, listName string) {
-		tasks := models.GetTasksByList(listID)
-		ChangeViewTasks(config.PreView+"tasks.html", tasks, listID, nil, listName)
+	UI.Bind("changeToTasksGO", func(listID string, listName string) bool {
+		if !utils.CheckExpirationTimeToken(models.UserSesion.Token) {
+			return true
+		} else {
+			tasks := models.GetTasksByList(listID)
+			ChangeViewTasks(config.PreView+"tasks.html", tasks, listID, nil, listName)
+			return false
+		}
 	})
 
 	//REVISAR SI QUIERO TRAERME DEL SERVIDOR O DE LOCAL
 	//Cambiar a la pestaña de ver la configuracion del proyecto dado su ID
-	UI.Bind("changeToProyectConfigGO", func(proyectID string) {
-		var proyect models.Proyect
-		for i := 0; i < len(models.DatosUsuario); i++ {
-			if models.DatosUsuario[i].Proyecto.ID == proyectID {
-				proyect = models.DatosUsuario[i].Proyecto
-			}
+	UI.Bind("changeToProyectConfigGO", func(proyectID string) bool {
+		if !utils.CheckExpirationTimeToken(models.UserSesion.Token) {
+			return true
+		} else {
+			proyectCipher := models.GetProyect(proyectID)
+			proyectKey := models.GetProyectKey(proyectID, models.UserSesion.Email)
+			proyect := models.DescifrarProyecto(proyectCipher, proyectKey)
+
+			// var proyect models.Proyect
+			// for i := 0; i < len(models.DatosUsuario); i++ {
+			// 	if models.DatosUsuario[i].Proyecto.ID == proyectID {
+			// 		proyect = models.DatosUsuario[i].Proyecto
+			// 	}
+			// }
+			emailsNotInProyect := models.GetEmailsNotInProyect(proyect)
+			ChangeViewConfigProyect(config.PreView+"configProyect.html", proyect, emailsNotInProyect, models.UserSesion.Email)
+			return false
 		}
-		emailsNotInProyect := models.GetEmailsNotInProyect(proyect)
-		ChangeViewConfig(config.PreView+"configProyect.html", proyect, models.List{}, emailsNotInProyect, models.UserSesion.Email)
 	})
 
 	//REVISAR SI QUIERO TRAERME DEL SERVIDOR O DE LOCAL
 	//Cambiar a la pestaña de ver la configuracion de la lista dado su ID
-	UI.Bind("changeToListConfigGO", func(listID string, proyectID string) {
-		var list models.List
-		var proyect models.Proyect
-		for i := 0; i < len(models.DatosUsuario); i++ {
-			if models.DatosUsuario[i].Proyecto.ID == proyectID {
-				proyect = models.DatosUsuario[i].Proyecto
-				for j := 0; j < len(models.DatosUsuario[i].Listas); j++ {
-					if models.DatosUsuario[i].Listas[j].ID == listID {
-						list = models.DatosUsuario[i].Listas[j]
-					}
-				}
+	UI.Bind("changeToListConfigGO", func(listID string, proyectID string) bool {
+		if !utils.CheckExpirationTimeToken(models.UserSesion.Token) {
+			return true
+		} else {
+			// var list models.List
+			// var proyect models.Proyect
+			// for i := 0; i < len(models.DatosUsuario); i++ {
+			// 	if models.DatosUsuario[i].Proyecto.ID == proyectID {
+			// 		proyect = models.DatosUsuario[i].Proyecto
+			// 		for j := 0; j < len(models.DatosUsuario[i].Listas); j++ {
+			// 			if models.DatosUsuario[i].Listas[j].ID == listID {
+			// 				list = models.DatosUsuario[i].Listas[j]
+			// 			}
+			// 		}
+			// 	}
+			// }
+			listCipher := models.GetList(listID)
+			listKey := models.GetListKey(listID)
+			list := models.DescifrarLista(listCipher, listKey)
+
+			//Elimino los usuarios que ya pertenecen a la lista
+			emailsProyect := models.GetProyect(proyectID).Users
+			emailsList := list.Users
+			for i := 0; i < len(emailsList); i++ {
+				emailsProyect = utils.FindAndDelete(emailsProyect, emailsList[i])
 			}
+			ChangeViewConfigList(config.PreView+"configList.html", list, emailsProyect, models.UserSesion.Email)
+			return false
 		}
-		//Elimino los usuarios que ya pertenecen a la lista
-		emailsProyect := models.GetProyect(proyectID).Users
-		emailsList := list.Users
-		for i := 0; i < len(emailsList); i++ {
-			emailsProyect = utils.FindAndDelete(emailsProyect, emailsList[i])
-		}
-		ChangeViewConfig(config.PreView+"configList.html", proyect, list, emailsProyect, models.UserSesion.Email)
 	})
 
 	//Cambiar a la pestaña de añadir Tareas
-	UI.Bind("changeToAddTaskGO", func(listID string) {
-		listCipher := models.GetList(listID)
-		list := models.DescifrarLista(listCipher, models.GetListKey(listID))
-		listUsers := list.Users
-		ChangeViewTasks(config.PreView+"addTask.html", nil, listID, listUsers, list.Name)
+	UI.Bind("changeToAddTaskGO", func(listID string) bool {
+		if !utils.CheckExpirationTimeToken(models.UserSesion.Token) {
+			return true
+		} else {
+			listCipher := models.GetList(listID)
+			list := models.DescifrarLista(listCipher, models.GetListKey(listID))
+			listUsers := list.Users
+			ChangeViewTasks(config.PreView+"addTask.html", nil, listID, listUsers, list.Name)
+			return false
+		}
 	})
 
 	//Cambiar a la pestaña de añadir Tareas
-	UI.Bind("changeToTaskConfigGO", func(taskID string, listID string) {
-		LoadTask(taskID, listID)
+	UI.Bind("changeToTaskConfigGO", func(taskID string, listID string) bool {
+		if !utils.CheckExpirationTimeToken(models.UserSesion.Token) {
+			return true
+		} else {
+			LoadTask(taskID, listID)
+			return false
+		}
 	})
 
 	/*------------------------------------------------------------------------- Binds Funcionalidades  ------------------------------------------------------------------*/
@@ -155,8 +201,13 @@ func main() {
 	})
 
 	//Elimino a un usuario de todo el sistema
-	UI.Bind("deleteUserGO", func(userEmail string) bool {
-		return models.DeleteUser(userEmail)
+	UI.Bind("deleteUserGO", func(userEmail string) []bool {
+		if !utils.CheckExpirationTimeToken(models.UserSesion.Token) {
+			return []bool{false, true}
+		} else {
+			deleteOk := models.DeleteUser(userEmail)
+			return []bool{deleteOk, false}
+		}
 	})
 
 	//Añadir un Proyecto

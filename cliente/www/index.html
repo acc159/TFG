@@ -137,25 +137,42 @@
         input.value = "";
     }
 
-    //Funciones de los proyectos
 
     function changeToAddList(event){
         var div = event.target.closest('div');
         proyectID = div.id
         proyectName = div.dataset.proyectname;
         changeToAddListGO(proyectID, proyectName).then(
-            function(){
-                
+            function(tokenExpire){
+                if (tokenExpire){
+                    alert('El Token de la sesión expiro')
+                    exitSesion();
+                }
             }
         )
     }
+
+    function changeToAddProyect(event){
+        changeToAddProyectGO().then(
+            function(tokenExpire){
+                if (tokenExpire){
+                    alert('El Token de la sesión expiro')
+                    exitSesion();
+                }
+            }
+        )
+    }
+
 
     function changeToProyectConfig(event){
         var div = event.target.closest('div');
         proyectID = div.id;
         changeToProyectConfigGO(proyectID).then(
-            function(){
-                
+            function(tokenExpire){
+                if (tokenExpire){
+                    alert('El Token de la sesión expiro')
+                    exitSesion();
+                }
             }
         )
     }
@@ -183,7 +200,11 @@
         proyectID = div.dataset.proyectid;
         listID = div.id;
         changeToListConfigGO(listID, proyectID).then(
-            function(){
+            function(tokenExpire){
+                if (tokenExpire){
+                    alert('El Token de la sesión expiro')
+                    exitSesion();
+                }
             }
         )
     }
@@ -193,7 +214,11 @@
         listID = div.id;
         listName = div.dataset.listname;
         changeToTasksGO(listID,listName).then(
-            function(){
+            function(tokenExpire){
+                if (tokenExpire){
+                    alert('El Token de la sesión expiro')
+                    exitSesion();
+                }
             }
         )
     }
@@ -227,6 +252,8 @@
     function changeToAdmin(){
         changeToAdminGO().then(
             function(){
+                alert('El Token de la sesión expiro')
+                exitSesion();
             }
         )
     }

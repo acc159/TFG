@@ -36,11 +36,16 @@ type DataTask struct {
 	ListUsers []string
 }
 
-type DataConfig struct {
+type DataConfigProyect struct {
 	Proyect models.Proyect
-	List    models.List
 	Emails  []string
 	User    string
+}
+
+type DataConfigList struct {
+	List   models.List
+	Emails []string
+	User   string
 }
 
 type DataConfigTask struct {
@@ -124,16 +129,31 @@ func ChangeViewTasks(nombreVista string, tasks []models.Task, listID string, lis
 	UI.Load(loadableContents)
 }
 
-func ChangeViewConfig(nombreVista string, proyect models.Proyect, list models.List, emails []string, userEmail string) {
+func ChangeViewConfigProyect(nombreVista string, proyect models.Proyect, emails []string, userEmail string) {
 	tmpl, err := template.ParseFiles(nombreVista)
 	if err != nil {
 		log.Fatal(err)
 	}
-	dataStruct := DataConfig{
+	dataStruct := DataConfigProyect{
 		Proyect: proyect,
-		List:    list,
 		Emails:  emails,
 		User:    userEmail,
+	}
+	buff := bytes.Buffer{}
+	tmpl.Execute(&buff, dataStruct)
+	loadableContents := "data:text/html," + url.PathEscape(buff.String())
+	UI.Load(loadableContents)
+}
+
+func ChangeViewConfigList(nombreVista string, list models.List, emails []string, userEmail string) {
+	tmpl, err := template.ParseFiles(nombreVista)
+	if err != nil {
+		log.Fatal(err)
+	}
+	dataStruct := DataConfigList{
+		List:   list,
+		Emails: emails,
+		User:   userEmail,
 	}
 	buff := bytes.Buffer{}
 	tmpl.Execute(&buff, dataStruct)
@@ -169,13 +189,12 @@ func LoadTask(taskID string, listID string) {
 	ChangeViewConfigTask(config.PreView+"configTask.html", task, list)
 }
 
-func ChangeViewAdminPanel(nombreVista string) {
+func ChangeViewAdminPanel(nombreVista string, users []models.User) {
 	tmpl, err := template.ParseFiles(nombreVista)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	users := models.GetUsers()
 	dataStruct := AdminView{
 		Users:      users,
 		UserActual: models.UserSesion.Email,
