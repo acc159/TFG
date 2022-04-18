@@ -9,6 +9,7 @@
     <button onclick="changeHome()">Volver al Home</button>
     <button onclick="changeToAddTask()">Añadir Tareas a la lista</button>
     <h1 hidden id="listID">{{.ListID}}</h1>
+    <h1 hidden id="listName">{{.ListName}}</h1>
     <h1>Tareas de la lista: {{.ListName}}</h1>
     <h2>Numero de tareas: {{len .Tasks}}</h2>
     {{range .Tasks}}
@@ -30,7 +31,7 @@
             </div>
 
             <button onclick="changeToTaskConfig(event)">Ver Tarea</button>
-            <button onclick="DeleteTask(event)">Eliminar Tarea</button>
+            <!-- <button onclick="DeleteTask(event)">Eliminar Tarea</button> -->
         </div>
     {{end}}
 </body>
@@ -54,38 +55,68 @@
         var div = event.target.closest('div');
         taskID = div.id;
         let listID = document.querySelector('#listID').textContent
+        listName = document.querySelector('#listName').textContent
         changeToTaskConfigGO(taskID, listID).then(
-            function(tokenExpire){
-                if (tokenExpire){
-                    alert('El Token de la sesión expiro')
-                    exitSesion();
-                }
-            }
-        )
-    }
 
-    function DeleteTask(event){
-        var div = event.target.closest('div');
-        taskID = div.id;
-        let listID = document.querySelector('#listID').textContent
-        deleteTaskGO(taskID).then(
             function(resultados){
                 let tokenExpire = resultados[1];
-                let deleteOK = resultados[0];
+                let changeOK = resultados[0];
                 if (tokenExpire){
                     alert('El Token de la sesión expiro')
                     exitSesion();
                 }else{
-                    if (deleteOK == false){
-                        alert('No pudo ser borrada la tarea')
-                    }else{
-                        alert('La tarea se borro')
-                        changeToTasks(listID)
+                    if (changeOK == false){
+                        alert('La tarea fue eliminada por otro usuario')
+                        changeToTasks(listID, listName)
                     }
                 }
             }
         )
     }
+
+
+
+    function changeToTasks(listID, listName){
+        changeToTasksGO(listID,listName).then(
+            function(resultados){
+                let tokenExpire = resultados[1];
+                let changeOK = resultados[0];
+                if (tokenExpire){
+                    alert('El Token de la sesión expiro')
+                    exitSesion();
+                }else{
+                    if (changeOK == false){
+                        alert('La lista ya no existe')
+                        changeHome()
+                    }
+                }
+            }
+        )
+    }
+
+    // function DeleteTask(event){
+    //     var div = event.target.closest('div');
+    //     taskID = div.id;
+    //     let listID = document.querySelector('#listID').textContent
+    //     let listName = document.querySelector('#listName').textContent
+    //     deleteTaskGO(taskID).then(
+    //         function(resultados){
+    //             let tokenExpire = resultados[1];
+    //             let deleteOK = resultados[0];
+    //             if (tokenExpire){
+    //                 alert('El Token de la sesión expiro')
+    //                 exitSesion();
+    //             }else{
+    //                 if (deleteOK == false){
+    //                     alert('No pudo ser borrada la tarea')
+    //                 }else{
+    //                     alert('La tarea se borro')
+    //                     changeToTasks(listID, listName)
+    //                 }
+    //             }
+    //         }
+    //     )
+    // }
 
     function changeHome(){
         changeHomeGO().then(

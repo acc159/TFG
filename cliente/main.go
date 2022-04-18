@@ -77,13 +77,16 @@ func main() {
 	})
 
 	//Cambiar a la pestaña de ver las tareas de una lista dado el ID de la lista
-	UI.Bind("changeToTasksGO", func(listID string, listName string) bool {
+	UI.Bind("changeToTasksGO", func(listID string, listName string) []bool {
 		if !utils.CheckExpirationTimeToken(models.UserSesion.Token) {
-			return true
+			return []bool{false, true}
 		} else {
-			tasks := models.GetTasksByList(listID)
-			ChangeViewTasks(config.PreView+"tasks.html", tasks, listID, nil, listName)
-			return false
+			//Compruebo que la lista existe
+			if models.ExistList(listID) {
+				tasks := models.GetTasksByList(listID)
+				ChangeViewTasks(config.PreView+"tasks.html", tasks, listID, nil, listName)
+			}
+			return []bool{false, false}
 		}
 	})
 
@@ -111,9 +114,9 @@ func main() {
 
 	//REVISAR SI QUIERO TRAERME DEL SERVIDOR O DE LOCAL
 	//Cambiar a la pestaña de ver la configuracion de la lista dado su ID
-	UI.Bind("changeToListConfigGO", func(listID string, proyectID string) bool {
+	UI.Bind("changeToListConfigGO", func(listID string, proyectID string) []bool {
 		if !utils.CheckExpirationTimeToken(models.UserSesion.Token) {
-			return true
+			return []bool{false, true}
 		} else {
 			// var list models.List
 			// var proyect models.Proyect
@@ -128,17 +131,21 @@ func main() {
 			// 	}
 			// }
 			listCipher := models.GetList(listID)
-			listKey := models.GetListKey(listID)
-			list := models.DescifrarLista(listCipher, listKey)
+			if !listCipher.ID.IsZero() {
+				listKey := models.GetListKey(listID)
+				list := models.DescifrarLista(listCipher, listKey)
 
-			//Elimino los usuarios que ya pertenecen a la lista
-			emailsProyect := models.GetProyect(proyectID).Users
-			emailsList := list.Users
-			for i := 0; i < len(emailsList); i++ {
-				emailsProyect = utils.FindAndDelete(emailsProyect, emailsList[i])
+				//Elimino los usuarios que ya pertenecen a la lista
+				emailsProyect := models.GetProyect(proyectID).Users
+				emailsList := list.Users
+				for i := 0; i < len(emailsList); i++ {
+					emailsProyect = utils.FindAndDelete(emailsProyect, emailsList[i])
+				}
+				ChangeViewConfigList(config.PreView+"configList.html", list, emailsProyect, models.UserSesion.Email)
+				return []bool{true, false}
 			}
-			ChangeViewConfigList(config.PreView+"configList.html", list, emailsProyect, models.UserSesion.Email)
-			return false
+			return []bool{false, false}
+
 		}
 	})
 
@@ -156,12 +163,11 @@ func main() {
 	})
 
 	//Cambiar a la pestaña de añadir Tareas
-	UI.Bind("changeToTaskConfigGO", func(taskID string, listID string) bool {
+	UI.Bind("changeToTaskConfigGO", func(taskID string, listID string) []bool {
 		if !utils.CheckExpirationTimeToken(models.UserSesion.Token) {
-			return true
+			return []bool{false, true}
 		} else {
-			LoadTask(taskID, listID)
-			return false
+			return []bool{LoadTask(taskID, listID), false}
 		}
 	})
 
@@ -293,12 +299,12 @@ func main() {
 	})
 
 	//Actualizar una lista
-	UI.Bind("updateListGO", func(newList models.List) []bool {
+	UI.Bind("updateListGO", func(newList models.List) []string {
 		if !utils.CheckExpirationTimeToken(models.UserSesion.Token) {
-			return []bool{false, true}
+			return []string{"false", "true"}
 		} else {
-			deleteOk, tokenExpire := models.UpdateList(newList)
-			return []bool{deleteOk, tokenExpire}
+			updateStatus, tokenExpire := models.UpdateList(newList)
+			return []string{updateStatus, tokenExpire}
 		}
 	})
 
@@ -315,27 +321,37 @@ func main() {
 	//Añadir una tarea a una lista
 	UI.Bind("addTaskGO", func(listID string, task models.Task, dateString string) []bool {
 		if !utils.CheckExpirationTimeToken(models.UserSesion.Token) {
-			return []bool{false, true}
+			return []bool{false, false, true}
 		} else {
-			addOK := models.CreateTask(listID, task)
-			return []bool{addOK, false}
+			if models.ExistList(listID) {
+				addOK := models.CreateTask(listID, task)
+				return []bool{true, addOK, false}
+			}
+			return []bool{false, false, false}
 		}
 	})
 
 	//Eliminar una tarea
-	UI.Bind("deleteTaskGO", func(taskID string) []bool {
+	UI.Bind("deleteTaskGO", func(taskID string, listID string) []bool {
+
+		if models.ExistList(listID) {
+			addOK, tokenExpire := models.DeleteTask(taskID)
+			return []bool{true, addOK, tokenExpire}
+		}
 		addOK, tokenExpire := models.DeleteTask(taskID)
-		return []bool{addOK, tokenExpire}
+		return []bool{false, addOK, tokenExpire}
 	})
 
 	//Actualizar una tarea
-	UI.Bind("updateTaskGO", func(newTask models.Task, listID string) []bool {
-
+	UI.Bind("updateTaskGO", func(newTask models.Task, listID string) []string {
 		if !utils.CheckExpirationTimeToken(models.UserSesion.Token) {
-			return []bool{false, true}
+			return []string{"false", "false", "true"}
 		} else {
-			updateOK := models.UpdateTask(listID, newTask)
-			return []bool{updateOK, false}
+			if models.ExistList(listID) {
+				updateStatus := models.UpdateTask(listID, newTask)
+				return []string{"true", updateStatus, "false"}
+			}
+			return []string{"false", "false", "false"}
 		}
 	})
 

@@ -11,11 +11,14 @@
         <form class="form-inline">
             <a class="nav-link btn-outline-secondary" type="button" role="button" onclick="changeHome()">Volver al Home</a>
             <a class="nav-link btn-outline-info" type="button" role="button" onclick="updateList()">Actualizar Lista</a>
+            <a class="nav-link btn-outline-info" type="button" role="button" onclick="deleteList()">Borrar Lista</a>
+            
         </form>
     </nav>
 
     <h2 hidden id="proyectID">{{.List.ProyectID}}</h2>
     <h2 hidden id="listID">{{.List.ID}}</h2>
+    <h1 hidden id="listCheck">{{.List.Check}}</h1>
     <span hidden id="usuarioActual">{{.User}}</span>
 
 
@@ -88,17 +91,6 @@
         )
     }
 
-    function changeToListConfig(listID, proyectID){
-        changeToListConfigGO(listID, proyectID).then(
-            function(tokenExpire){
-                if (tokenExpire){
-                    alert('El Token de la sesión expiro')
-                    exitSesion();
-                }
-            }
-        )
-    }
-
     function addUserList(){
         let listID = document.querySelector('#listID').textContent;
         let proyectID = document.querySelector('#proyectID').textContent;
@@ -127,6 +119,7 @@
         let listID = document.querySelector('#listID').textContent;
         let listName = document.querySelector('#listName').value;
         let listDescription = document.querySelector('#listDescription').textContent;
+        let check = document.querySelector('#listCheck').textContent;
         let usersHTML = document.querySelectorAll('li')
         let users = []
         for (let index = 0; index < usersHTML.length; index++) {
@@ -138,19 +131,63 @@
             "Description" : listDescription,
             "Users" : users,
             "ProyectID" : proyectID,
+            "Check" : check
         }
         updateListGO(list).then(
             function(resultados){
                 let tokenExpire = resultados[1];
-                let updateOK = resultados[0];
+                let updateStatus = resultados[0];
+                if (tokenExpire == "true"){
+                    alert('El Token de la sesión expiro')
+                    exitSesion();
+                }else{
+                    if (updateStatus == "Error"){
+                        alert('La lista no pudo ser actualizada')
+                    }else if (updateStatus == "OK"){
+                        alert('La lista fue actualizada')
+                    } else{
+                        alert('La lista ya fue actualizada previamente por otro usuario')
+                        changeToListConfig(listID, proyectID)
+                    }
+                }
+            }
+        )
+    }
+
+
+    function changeToListConfig(listID, proyectID){
+        changeToListConfigGO(listID, proyectID).then(
+            function(resultados){
+                let tokenExpire = resultados[1];
+                let listOK = resultados[0];
                 if (tokenExpire){
                     alert('El Token de la sesión expiro')
                     exitSesion();
                 }else{
-                    if (updateOK == false){
-                        alert('No se pudo actualizar la lista')
+                    if (listOK == false){
+                        alert('La lista no esta disponible')
+                        changeHome()
+                    }
+                }
+            }
+        )
+    }
+
+    function deleteList(){
+        let proyectID = document.querySelector('#proyectID').textContent;
+        let listID = document.querySelector('#listID').textContent;
+        deleteListGO(listID, proyectID).then(
+            function(resultados){
+                let tokenExpire = resultados[1];
+                let listOK = resultados[0];
+                if (tokenExpire){
+                    alert('El Token de la sesión expiro')
+                    exitSesion();
+                }else{
+                    if (listOK == false){
+                        alert('La lista no se borro')
                     }else{
-                        alert('Lista actualizada')
+                        changeHome()
                     }
                 }
             }

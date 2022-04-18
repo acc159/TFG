@@ -193,17 +193,23 @@
     }
 
 
-    //Funciones de las listas
-
     function changeToListConfig(event){
         var div = event.target.closest('div');
         proyectID = div.dataset.proyectid;
         listID = div.id;
         changeToListConfigGO(listID, proyectID).then(
-            function(tokenExpire){
+            function(resultados){
+                let tokenExpire = resultados[1];
+                let listOK = resultados[0];
                 if (tokenExpire){
                     alert('El Token de la sesión expiro')
                     exitSesion();
+                }else{
+                    if (listOK == false){
+                        alert('La lista no esta disponible')
+                        changeHome()
+                        
+                    }
                 }
             }
         )
@@ -214,10 +220,17 @@
         listID = div.id;
         listName = div.dataset.listname;
         changeToTasksGO(listID,listName).then(
-            function(tokenExpire){
+            function(resultados){
+                let tokenExpire = resultados[1];
+                let changeOK = resultados[0];
                 if (tokenExpire){
                     alert('El Token de la sesión expiro')
                     exitSesion();
+                }else{
+                    if (changeOK == false){
+                        alert('La lista ya no existe')
+                        changeHome()
+                    }
                 }
             }
         )

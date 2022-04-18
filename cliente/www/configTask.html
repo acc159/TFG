@@ -9,10 +9,13 @@
     <button onclick="changeHome()">Volver al Home</button>
     <button onclick="changeToTasks()">Ver Tareas de la lista</button>
     <button onclick="UpdateTask()">Actualizar Tarea</button>
+    <button onclick="DeleteTask()">Borrar Tarea</button>
 
+    
     <h1 hidden id="listName">{{.List.Name}}</h1>
     <h1 id="listID" hidden>{{.List.ID}}</h1>
     <h1 id="taskID" hidden>{{.Task.ID}}</h1>
+    <h1 hidden id="taskCheck">{{.Task.Check}}</h1>
     <h1 contenteditable  id="name">{{.Task.Name}}</h1>
     <h2 contenteditable id="state">{{.Task.State}}</h2>
     <p contenteditable id="description">{{.Task.Description}}</p>
@@ -123,10 +126,17 @@
         let listID = document.querySelector('#listID').textContent
         let listName = document.querySelector('#listName').textContent
         changeToTasksGO(listID , listName).then(
-            function(tokenExpire){
+            function(resultados){
+                let tokenExpire = resultados[1];
+                let changeOK = resultados[0];
                 if (tokenExpire){
                     alert('El Token de la sesión expiro')
                     exitSesion();
+                }else{
+                    if (changeOK == false){
+                        alert('La lista ya no existe')
+                        changeHome()
+                    }
                 }
             }
         )
@@ -190,6 +200,7 @@
         let date = document.querySelector('#date').value;
         let state = document.querySelector('#state').textContent;
         let description = document.querySelector('#description').textContent;
+        let check = document.querySelector('#taskCheck').textContent;
         let usersTaskDivs = document.querySelector('#usersTask').querySelectorAll('div');
         let usersTask = [];
         for (let index = 0; index < usersTaskDivs.length; index++) {
@@ -216,20 +227,63 @@
             "State" : state,
             "Users" : usersTask,
             "Files" : archivos,
+            "Check" : check
         }
         updateTaskGO(newTask, listID).then(
+
             function(resultados){
-                let tokenExpire = resultados[1];
-                let updateOK = resultados[0];
+                let tokenExpire = resultados[2];
+                let deleteOK = resultados[1];
+                let listOK = resultados[0];
+                if (tokenExpire == "true"){
+                    alert('El Token de la sesión expiro')
+                    exitSesion();
+                }else{
+                    if (listOK = "true"){
+                        if (updateStatus == "Error"){
+                            alert('La tarea no pudo ser actualizada')
+                        }else if (updateStatus == "OK"){
+                            alert('La tarea fue actualizada')
+                            changeToTaskConfigGO(taskID, listID)
+                        } else{
+                            alert('La tarea ya fue actualizada previamente por otro usuario')
+                            changeToTasks()
+                        }
+                    }else{
+                        alert('La lista fue borrada')
+                        changeHome()
+                    }
+                }
+            }
+        )
+    }
+
+
+    function DeleteTask(){
+        let taskID = document.querySelector('#taskID').textContent;
+        let listID = document.querySelector('#listID').textContent
+        let listName = document.querySelector('#listName').textContent
+        deleteTaskGO(taskID, listID).then(
+
+            function(resultados){
+                let tokenExpire = resultados[2];
+                let deleteOK = resultados[1];
+                let listOK = resultados[0];
                 if (tokenExpire){
                     alert('El Token de la sesión expiro')
                     exitSesion();
                 }else{
-                    if (updateOK == false){
-                        alert('La tarea no pudo ser actualizada')
+                    if (listOK){
+                        if (deleteOK == false){
+                            alert('No pudo ser borrada la tarea')
+                            changeToTasks(listID, listName)
+                        }else{
+                            alert('La tarea se borro')
+                            changeToTasks(listID, listName)
+                        }
                     }else{
-                        alert('La tarea fue actualizada')
-                        changeToTaskConfigGO(taskID, listID)
+                        alert('La lista fue borrada')
+                        changeHome()
                     }
                 }
             }

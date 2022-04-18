@@ -177,16 +177,23 @@ func ChangeViewConfigTask(nombreVista string, task models.Task, list models.List
 	UI.Load(loadableContents)
 }
 
-func LoadTask(taskID string, listID string) {
-	task := models.GetTask(taskID, listID)
-	listCipher := models.GetList(listID)
-	list := models.DescifrarLista(listCipher, models.GetListKey(listID))
-	//Limpio de los usuarios de la lista aquellos que estan en la tarea
-	for i := 0; i < len(task.Users); i++ {
-		list.Users = utils.FindAndDelete(list.Users, task.Users[i])
+func LoadTask(taskID string, listID string) bool {
+	taskCipher := models.GetTask(taskID, listID)
+	if !taskCipher.ID.IsZero() {
+		listCipher := models.GetList(listID)
+		listKey := models.GetListKey(listID)
+		list := models.DescifrarLista(listCipher, listKey)
+		task := models.DescifrarTarea(taskCipher, listKey)
+		//Limpio de los usuarios de la lista aquellos que estan en la tarea
+		for i := 0; i < len(task.Users); i++ {
+			list.Users = utils.FindAndDelete(list.Users, task.Users[i])
+		}
+		//Recuperamos la tarea la desciframos
+		ChangeViewConfigTask(config.PreView+"configTask.html", task, list)
+		return true
+	} else {
+		return false
 	}
-	//Recuperamos la tarea la desciframos
-	ChangeViewConfigTask(config.PreView+"configTask.html", task, list)
 }
 
 func ChangeViewAdminPanel(nombreVista string, users []models.User) {

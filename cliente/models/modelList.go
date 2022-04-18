@@ -5,6 +5,8 @@ import (
 	"cliente/config"
 	"cliente/utils"
 	"crypto/rsa"
+	"crypto/sha1"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -18,13 +20,16 @@ type List struct {
 	Description string   `bson:"description,omitempty"`
 	Users       []string `bson:"users,omitempty"`
 	ProyectID   string   `bson:"proyectID,omitempty"`
+	Check       string   `bson:"check"`
 }
 
 type ListCipher struct {
-	ID         primitive.ObjectID `bson:"_id,omitempty"`
-	Cipherdata []byte             `bson:"cipherdata,omitempty"`
-	Users      []string           `bson:"users,omitempty"`
-	ProyectID  primitive.ObjectID `bson:"proyectID,omitempty"`
+	ID          primitive.ObjectID `bson:"_id,omitempty"`
+	Cipherdata  []byte             `bson:"cipherdata,omitempty"`
+	Users       []string           `bson:"users,omitempty"`
+	ProyectID   primitive.ObjectID `bson:"proyectID,omitempty"`
+	Check       string             `bson:"check"`
+	UpdateCheck string             `bson:"updateCheck"`
 }
 
 //Creo una lista con el proyectID correspondiente
@@ -36,6 +41,11 @@ func CreateList(list List, proyectIDstring string) (bool, bool) {
 	listCipher := CifrarLista(list, Krandom, IVrandom)
 	proyectID, _ := primitive.ObjectIDFromHex(proyectIDstring)
 	listCipher.ProyectID = proyectID
+
+	h := sha1.New()
+	h.Write(listCipher.Cipherdata)
+	listCipher.Check = hex.EncodeToString(h.Sum(nil))
+
 	//Enviamos la lista cifrada
 	listJSON, err := json.Marshal(listCipher)
 	if err != nil {
@@ -163,6 +173,11 @@ func GetUsersList(listID string) []string {
 	}
 }
 
+func ExistList(listID string) bool {
+	list := GetList(listID)
+	return !list.ID.IsZero()
+}
+
 //Recupero una lista dado su ID
 func GetList(listID string) ListCipher {
 
@@ -275,7 +290,7 @@ func GetUserList(listID string, listKeyCipher []byte, privateKey *rsa.PrivateKey
 	return DescifrarLista(listCipher, listKey)
 }
 
-func UpdateList(newList List) (bool, bool) {
+func UpdateList(newList List) (string, string) {
 	relation, _ := GetRelationUserProyect(UserSesion.Email, newList.ProyectID)
 	var listKeyCipher []byte
 	//Busco la Clave cifrada de la lista
@@ -292,6 +307,13 @@ func UpdateList(newList List) (bool, bool) {
 	//Cifro la nueva lista
 	listCipher := CifrarLista(newList, listKey, IV)
 	listCipher.ID, _ = primitive.ObjectIDFromHex(newList.ID)
+
+	//En updateCheck pongo el hash de los datos anteriores
+	listCipher.UpdateCheck = newList.Check
+	h := sha1.New()
+	h.Write(listCipher.Cipherdata)
+	listCipher.Check = hex.EncodeToString(h.Sum(nil))
+
 	//Actualizo la lista en el servidor
 	listJSON, err := json.Marshal(listCipher)
 	if err != nil {
@@ -310,15 +332,29 @@ func UpdateList(newList List) (bool, bool) {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
+
+	// switch resp.StatusCode {
+	// case 400:
+	// 	fmt.Println("La tarea no pudo ser borrada")
+	// 	return "Error"
+	// case 470:
+	// 	fmt.Println("Token Expirado")
+	// 	return "Ya actualizada"
+	// default:
+	// 	return "OK"
+	// }
+
 	switch resp.StatusCode {
 	case 400:
 		fmt.Println("La lista no pudo ser actualizada")
-		return false, false
+		return "Error", "false"
 	case 401:
 		fmt.Println("Token Expirado")
-		return false, true
+		return "", "true"
+	case 470:
+		return "Ya actualizada", "false"
 	default:
-		return true, false
+		return "OK", "false"
 	}
 }
 
@@ -329,6 +365,7 @@ func DescifrarLista(listCipher ListCipher, key []byte) List {
 	list.ID = listCipher.ID.Hex()
 	list.Users = listCipher.Users
 	list.ProyectID = listCipher.ProyectID.Hex()
+	list.Check = listCipher.Check
 	return list
 }
 
