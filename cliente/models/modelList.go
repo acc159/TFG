@@ -174,8 +174,8 @@ func GetUsersList(listID string) []string {
 }
 
 func ExistList(listID string) bool {
-	list := GetList(listID)
-	return !list.ID.IsZero()
+	listRelation := GetRelationListByUser(UserSesion.Email, listID)
+	return listRelation.ListID != ""
 }
 
 //Recupero una lista dado su ID
@@ -209,7 +209,7 @@ func GetList(listID string) ListCipher {
 //Elimino al usuario del array Users de la lista
 func DeleteUserList(listID string, userEmail string) bool {
 	//Elimino al usuario como usuario asignado de todas las tareas de la lista
-	tasks := GetTasksByList(listID)
+	tasks, _ := GetTasksByList(listID)
 	for i := 0; i < len(tasks); i++ {
 		tasks[i].Users = utils.FindAndDelete(tasks[i].Users, userEmail)
 		UpdateTask(listID, tasks[i])
@@ -290,7 +290,7 @@ func GetUserList(listID string, listKeyCipher []byte, privateKey *rsa.PrivateKey
 	return DescifrarLista(listCipher, listKey)
 }
 
-func UpdateList(newList List) (string, string) {
+func UpdateList(newList List) (string, string, string) {
 	relation, _ := GetRelationUserProyect(UserSesion.Email, newList.ProyectID)
 	var listKeyCipher []byte
 	//Busco la Clave cifrada de la lista
@@ -298,6 +298,9 @@ func UpdateList(newList List) (string, string) {
 		if relation.Lists[i].ListID == newList.ID {
 			listKeyCipher = relation.Lists[i].ListKey
 		}
+	}
+	if string(listKeyCipher) == "" {
+		return "False", "", ""
 	}
 	//Descifro la clave con la clave del usuario actual
 	privateKey := GetPrivateKeyUser()
@@ -332,29 +335,17 @@ func UpdateList(newList List) (string, string) {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
-
-	// switch resp.StatusCode {
-	// case 400:
-	// 	fmt.Println("La tarea no pudo ser borrada")
-	// 	return "Error"
-	// case 470:
-	// 	fmt.Println("Token Expirado")
-	// 	return "Ya actualizada"
-	// default:
-	// 	return "OK"
-	// }
-
 	switch resp.StatusCode {
 	case 400:
 		fmt.Println("La lista no pudo ser actualizada")
-		return "Error", "false"
+		return "True", "Error", "false"
 	case 401:
 		fmt.Println("Token Expirado")
-		return "", "true"
+		return "True", "", "true"
 	case 470:
-		return "Ya actualizada", "false"
+		return "True", "Ya actualizada", "false"
 	default:
-		return "OK", "false"
+		return "True", "OK", "false"
 	}
 }
 
@@ -396,9 +387,15 @@ func BytesToList(datos []byte) List {
 }
 
 func GetListKey(stringListID string) []byte {
-	listKeyCipher := GetRelationListByUser(UserSesion.Email, stringListID).ListKey
-	//Descifro la clave
-	privateKey := GetPrivateKeyUser()
-	listKey := utils.DescifrarRSA(privateKey, listKeyCipher)
-	return listKey
+	listRelation := GetRelationListByUser(UserSesion.Email, stringListID)
+
+	if listRelation.ListID != "" {
+		listKeyCipher := listRelation.ListKey
+		//Descifro la clave
+		privateKey := GetPrivateKeyUser()
+		listKey := utils.DescifrarRSA(privateKey, listKeyCipher)
+		return listKey
+	}
+	return []byte{}
+
 }

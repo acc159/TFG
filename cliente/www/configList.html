@@ -69,22 +69,25 @@
         let listID = document.querySelector('#listID').textContent;
         let usuarioActual = document.querySelector('#usuarioActual').textContent;
         deleteUserListGO(userEmail, listID, proyectID).then(
+
             function(resultados){
-                let tokenExpire = resultados[1];
-                let deleteOk = resultados[0];
-                if (tokenExpire){
+                let tokenExpire = resultados[2];
+                let deleteOk = resultados[1];
+                let listOK = resultados[0];
+                if (tokenExpire == "true"){
                     alert('El Token de la sesión expiro')
                     exitSesion();
                 }else{
-                    if (deleteOk == false){
-                        alert('No se pudo borrar al usuario')
-                    }else{
-                        if (userEmail == usuarioActual){
-                            changeHome();
-                        }else{
+                    if (listOK){
+                        if (deleteOk){
                             alert('Usuario borrado')
                             changeToListConfig(listID, proyectID)
+                        }else{
+                            alert('No se pudo borrar al usuario')
                         }
+                    }else{
+                        alert('La lista fue borrada')
+                        changeHome()
                     }
                 }
             }
@@ -97,17 +100,23 @@
         let userEmail = document.querySelector('#users').value
         addUserListGO(userEmail, proyectID, listID).then(
             function(resultados){
-                let tokenExpire = resultados[1];
-                let addOK = resultados[0];
-                if (tokenExpire){
+                let tokenExpire = resultados[2];
+                let addOK = resultados[1];
+                let listOK = resultados[0];
+                if (tokenExpire == "true"){
                     alert('El Token de la sesión expiro')
                     exitSesion();
                 }else{
-                    if (addOK){
-                        alert('Usuario añadido')
-                        changeToListConfig(listID, proyectID)
+                    if (listOK){
+                        if (addOK){
+                            alert('Usuario añadido')
+                            changeToListConfig(listID, proyectID)
+                        }else{
+                            alert('No se añadio el usuario')
+                        }
                     }else{
-                        alert('No se añadio el usuario')
+                        alert('La lista fue borrada')
+                        changeHome()
                     }
                 }
             }
@@ -135,19 +144,25 @@
         }
         updateListGO(list).then(
             function(resultados){
-                let tokenExpire = resultados[1];
-                let updateStatus = resultados[0];
+                let tokenExpire = resultados[2];
+                let updateStatus = resultados[1];
+                let listOK = resultados[0];
                 if (tokenExpire == "true"){
                     alert('El Token de la sesión expiro')
                     exitSesion();
                 }else{
-                    if (updateStatus == "Error"){
-                        alert('La lista no pudo ser actualizada')
-                    }else if (updateStatus == "OK"){
-                        alert('La lista fue actualizada')
-                    } else{
-                        alert('La lista ya fue actualizada previamente por otro usuario')
-                        changeToListConfig(listID, proyectID)
+                    if (listOK == "True"){
+                        if (updateStatus == "Error"){
+                            alert('La lista no pudo ser actualizada')
+                        }else if (updateStatus == "OK"){
+                            alert('La lista fue actualizada')
+                        } else{
+                            alert('La lista ya fue actualizada previamente por otro usuario')
+                            changeToListConfig(listID, proyectID)
+                        }
+                    }else{
+                        alert('La lista fue borrada')
+                        changeHome()
                     }
                 }
             }
@@ -185,8 +200,10 @@
                     exitSesion();
                 }else{
                     if (listOK == false){
-                        alert('La lista no se borro')
+                        alert('La lista ya fue borrada')
+                        changeHome()
                     }else{
+                        alert('La lista fue borrada')
                         changeHome()
                     }
                 }

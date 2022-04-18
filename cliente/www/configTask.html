@@ -233,13 +233,13 @@
 
             function(resultados){
                 let tokenExpire = resultados[2];
-                let deleteOK = resultados[1];
+                let updateStatus = resultados[1];
                 let listOK = resultados[0];
                 if (tokenExpire == "true"){
                     alert('El Token de la sesión expiro')
                     exitSesion();
                 }else{
-                    if (listOK = "true"){
+                    if (listOK == "true"){
                         if (updateStatus == "Error"){
                             alert('La tarea no pudo ser actualizada')
                         }else if (updateStatus == "OK"){

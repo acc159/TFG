@@ -24,6 +24,8 @@ type RelationLists struct {
 	ListKey []byte `bson:"listKey,omitempty"`
 }
 
+var RelationsLocal []Relation
+
 //Recupero las relaciones para un usuario dado su email
 func GetProyectsListsByUser(userEmail string) []Relation {
 
@@ -241,4 +243,18 @@ func GetRelationListByUser(userEmail string, listID string) RelationLists {
 		json.NewDecoder(resp.Body).Decode(&relationList)
 		return relationList
 	}
+}
+
+func CheckChanges() bool {
+	relations := GetProyectsListsByUser(UserSesion.Email)
+	if len(relations) != len(RelationsLocal) {
+		return true
+	} else {
+		for i := 0; i < len(relations); i++ {
+			if len(relations[i].Lists) != len(RelationsLocal[i].Lists) {
+				return true
+			}
+		}
+	}
+	return false
 }

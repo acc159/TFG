@@ -347,3 +347,8 @@ func UpdateProyect(newProyect Proyect) (bool, bool) {
 		return true, false
 	}
 }
+
+func ExistProyect(proyectID string) bool {
+	relation, _ := GetRelationUserProyect(UserSesion.Email, proyectID)
+	return !relation.ProyectID.IsZero()
+}

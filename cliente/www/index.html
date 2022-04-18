@@ -110,6 +110,26 @@
             {{end}}
         {{end}}        
                
+
+        <div class="modal" id="myModal" style="display: none;" aria-hidden="true">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h4 class="modal-title">Actualizacion Pendiente</h4>
+                  <button type="button" class="close" data-dismiss="modal">×</button>
+                </div>
+                <div class="modal-body">
+                  Hay cambios en tus proyectos y listas
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="changeHome()" class="btn btn-info">Actualizar</button>
+                    <button type="button" class="btn btn-danger" data-dismiss="modal">Cerrar</button>
+                </div>
+                
+              </div>
+            </div>
+          </div>
+
 </body>
 
 
@@ -143,10 +163,17 @@
         proyectID = div.id
         proyectName = div.dataset.proyectname;
         changeToAddListGO(proyectID, proyectName).then(
-            function(tokenExpire){
+            function(resultados){
+                let tokenExpire = resultados[1];
+                let changeOK = resultados[0];
                 if (tokenExpire){
                     alert('El Token de la sesión expiro')
                     exitSesion();
+                }else{
+                    if (changeOK == false){
+                        alert('Ya no esta disponible el proyecto')
+                        changeHome()
+                    }
                 }
             }
         )
@@ -168,10 +195,17 @@
         var div = event.target.closest('div');
         proyectID = div.id;
         changeToProyectConfigGO(proyectID).then(
-            function(tokenExpire){
+            function(resultados){
+                let tokenExpire = resultados[1];
+                let changeOK = resultados[0];
                 if (tokenExpire){
                     alert('El Token de la sesión expiro')
                     exitSesion();
+                }else{
+                    if (changeOK == false){
+                        alert('Ya no esta disponible el proyecto')
+                        changeHome()
+                    }
                 }
             }
         )
@@ -284,11 +318,25 @@
     }
 
 
+
+    function checkChanges(){
+        checkChangesGO().then(
+            function(result){
+                if (result){
+                    $('#myModal').modal('show')
+                }
+            }
+        )
+    }
+
+
     function init () {
         let forms = document.querySelectorAll('form');
         for (let i = 0; i < forms.length; i++) {
             forms[i].addEventListener('submit',(event) => {event.preventDefault();}, false)
         }
+
+        setInterval('checkChanges()',300000);
     }
 
     document.addEventListener('DOMContentLoaded',init,false);

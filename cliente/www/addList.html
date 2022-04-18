@@ -73,15 +73,22 @@
         let proyectID = document.querySelector('#proyectID').textContent;
         addListGO(lista, proyectID).then(
             function(resultados){
-                let tokenExpire = resultados[1];
+                let tokenExpire = resultados[2];
+                let addOK = resultados[1];
                 let listOK = resultados[0];
                 if (tokenExpire){
                     alert('El Token de la sesión expiro')
                     exitSesion();
                 }else{
-                    if (listOK == false){
-                        alert('La lista no se a creado')
+                    if (listOK){
+                        if (addOK == false){
+                            alert('La lista no se a creado')
+                        }else{
+                            alert('La lista se creo')
+                            changeHome()
+                        }
                     }else{
+                        alert('El proyecto ya no esta disponible')
                         changeHome()
                     }
                 }

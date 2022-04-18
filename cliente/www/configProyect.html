@@ -97,21 +97,27 @@
         let usuarioActual = document.querySelector('#usuarioActual').textContent;
         deleteUserProyectGO(userEmail, proyectID).then(
             function(resultados){
-                let tokenExpire = resultados[1];
-                let deleteOk = resultados[0];
+                let tokenExpire = resultados[2];
+                let deleteOK = resultados[1];
+                let listOK = resultados[0];
                 if (tokenExpire){
                     alert('El Token de la sesión expiro')
                     exitSesion();
                 }else{
-                    if (deleteOk == false){
-                        alert('No se pudo borrar al usuario')
-                    }else{
-                        if (userEmail == usuarioActual){
-                            changeHome();
+                    if (listOK){
+                        if (deleteOK == false){
+                            alert('El usuario no se borro')
                         }else{
-                            alert('Usuario borrado')
-                            changeToProyectConfig(proyectID)
+                            if (userEmail == usuarioActual){
+                                changeHome();
+                            }else{
+                                alert('Usuario borrado')
+                                changeToProyectConfig(proyectID)
+                            }
                         }
+                    }else{
+                        alert('El proyecto ya no esta disponible')
+                        changeHome()
                     }
                 }
             }
@@ -123,17 +129,23 @@
         let userEmail = document.querySelector('#users').value
         addUserProyectGO(userEmail, proyectID).then(
             function(resultados){
-                let tokenExpire = resultados[1];
-                let addOk = resultados[0];
+                let tokenExpire = resultados[2];
+                let deleteOK = resultados[1];
+                let listOK = resultados[0];
                 if (tokenExpire){
                     alert('El Token de la sesión expiro')
                     exitSesion();
                 }else{
-                    if (addOk == false){
-                        alert('No se añadio el usuario')
+                    if (listOK){
+                        if (deleteOK == false){
+                            alert('No se añadio el usuario')
+                        }else{
+                            alert('Usuario añadido')
+                            changeToProyectConfig(proyectID)
+                        }
                     }else{
-                        alert('Usuario añadido')
-                        changeToProyectConfig(proyectID)
+                        alert('El proyecto ya no esta disponible')
+                        changeHome()
                     }
                 }
             }
@@ -158,16 +170,22 @@
         }
         updateProyectGO(proyect).then(
             function(resultados){
-                let tokenExpire = resultados[1];
-                let uodateOk = resultados[0];
+                let tokenExpire = resultados[2];
+                let updateOK = resultados[1];
+                let listOK = resultados[0];
                 if (tokenExpire){
                     alert('El Token de la sesión expiro')
                     exitSesion();
                 }else{
-                    if (uodateOk == false){
-                        alert('No se actualizo el proyecto')
+                    if (listOK){
+                        if (updateOK == false){
+                            alert('No se actualizo el proyecto')
+                        }else{
+                            alert('Se actualizo el proyecto')
+                        }
                     }else{
-                        alert('Se actualizo el proyecto')
+                        alert('El proyecto ya no esta disponible')
+                        changeHome()
                     }
                 }
             }
@@ -177,10 +195,17 @@
 
     function changeToProyectConfig(proyectID){
         changeToProyectConfigGO(proyectID).then(
-            function(tokenExpire){
+            function(resultados){
+                let tokenExpire = resultados[1];
+                let changeOK = resultados[0];
                 if (tokenExpire){
                     alert('El Token de la sesión expiro')
                     exitSesion();
+                }else{
+                    if (changeOK == false){
+                        alert('Ya no esta disponible el proyecto')
+                        changeHome()
+                    }
                 }
             }
         )
@@ -190,15 +215,22 @@
     function deleteProyect(proyectID){
         deleteProyectGO(proyectID).then(
             function(resultados){
-                let tokenExpire = resultados[1];
-                let deleteOk = resultados[0];
+                let tokenExpire = resultados[2];
+                let deleteOK = resultados[1];
+                let listOK = resultados[0];
                 if (tokenExpire){
                     alert('El Token de la sesión expiro')
                     exitSesion();
                 }else{
-                    if (deleteOk == false){
-                        alert('El proyecto no se borro')
+                    if (listOK){
+                        if (deleteOK == false){
+                            alert('El proyecto no se borro')
+                        }else{
+                            alert('El proyecto se borro')
+                            changeHome()
+                        }
                     }else{
+                        alert('El proyecto ya no esta disponible')
                         changeHome()
                     }
                 }

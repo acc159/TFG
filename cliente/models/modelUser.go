@@ -266,6 +266,7 @@ func GetUserProyectsLists() {
 	privateKey := GetPrivateKeyUser()
 	//Recupero las relaciones
 	relations := GetProyectsListsByUser(UserSesion.Email)
+	RelationsLocal = relations
 	if len(relations) > 0 {
 		//Proyectos
 		for i := 0; i < len(relations); i++ {

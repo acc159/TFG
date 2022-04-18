@@ -44,6 +44,8 @@ type TaskLinks struct {
 	LinkUrl  string
 }
 
+var TasksLocal []TaskCipher
+
 //Recupero una tarea por su ID
 func GetTask(taskID string, listID string) TaskCipher {
 	url := config.URLbase + "tasks/" + taskID
@@ -71,7 +73,7 @@ func GetTask(taskID string, listID string) TaskCipher {
 }
 
 //Recupero las tareas por su ListID
-func GetTasksByList(listID string) []Task {
+func GetTasksByList(listID string) ([]Task, []TaskCipher) {
 	url := config.URLbase + "tasks/list/" + listID
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -86,18 +88,19 @@ func GetTasksByList(listID string) []Task {
 	}
 	defer resp.Body.Close()
 	var tasks []Task
+	var tasksCipher []TaskCipher
 	if resp.StatusCode == 400 {
 		fmt.Println("Ninguna tarea para dicha lista")
-		return tasks
+		return tasks, tasksCipher
 	} else {
-		var tasksCipher []TaskCipher
+
 		json.NewDecoder(resp.Body).Decode(&tasksCipher)
 		var tasks []Task
 		listKey := GetListKey(listID)
 		for i := 0; i < len(tasksCipher); i++ {
 			tasks = append(tasks, DescifrarTarea(tasksCipher[i], listKey))
 		}
-		return tasks
+		return tasks, tasksCipher
 	}
 }
 
@@ -259,4 +262,19 @@ func BytesToTask(datos []byte) Task {
 		fmt.Println("error:", err)
 	}
 	return task
+}
+
+func CheckTaskChanges(listID string) bool {
+	_, tasksCipher := GetTasksByList(listID)
+
+	if len(tasksCipher) != len(TasksLocal) {
+		return true
+	} else {
+		for i := 0; i < len(tasksCipher); i++ {
+			if !bytes.Equal(tasksCipher[i].Cipherdata, TasksLocal[i].Cipherdata) {
+				return true
+			}
+		}
+	}
+	return false
 }
