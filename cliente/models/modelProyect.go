@@ -98,7 +98,7 @@ func CreateProyect(newProyect Proyect) (bool, bool) {
 //Le paso el ID del proyecto junto a su clave de cifrado y creo relaciones Usuario-Proyecto para cada usuario pasado
 func CreateProyectRelations(proyectID string, Krandom []byte, users []string) {
 	for i := 0; i < len(users); i++ {
-		publicKeyUser := GetPublicKey(users[i])
+		publicKeyUser, _ := GetPublicKey(users[i])
 		KrandomCipher := utils.EncryptKeyWithPublicKey(publicKeyUser, Krandom)
 		CreateRelation(users[i], proyectID, KrandomCipher)
 	}
@@ -218,7 +218,7 @@ func GetProyectKey(proyectIDstring string, userEmail string) []byte {
 //Añadir un usuario a un proyecto
 func AddUserProyect(proyectIDstring string, userEmail string) (bool, bool) {
 	//Recupero la clave publica que usare para cifrar la clave del proyecto
-	publicKey := GetPublicKey(userEmail)
+	publicKey, _ := GetPublicKey(userEmail)
 	//Recupero la clave del proyecto descifrada
 	proyectKey := GetProyectKey(proyectIDstring, UserSesion.Email)
 	//Cifro la clave del proyecto con la clave publica del usuario nuevo añadido

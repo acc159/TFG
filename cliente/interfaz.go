@@ -34,6 +34,7 @@ type DataTask struct {
 	ListID    string
 	ListName  string
 	ListUsers []string
+	User      string
 }
 
 type DataConfigProyect struct {
@@ -51,6 +52,7 @@ type DataConfigList struct {
 type DataConfigTask struct {
 	Task models.Task
 	List models.List
+	User string
 }
 
 type AdminView struct {
@@ -60,7 +62,7 @@ type AdminView struct {
 
 func InitUI() {
 	//Inicializo
-	UI, _ = lorca.New("", "", 800, 700, "--allow-insecure-localhost")
+	UI, _ = lorca.New("", "", 1250, 800, "--allow-insecure-localhost")
 	//Cargo la primera vista
 	ChangeView(config.PreView + "login.html")
 }
@@ -122,6 +124,7 @@ func ChangeViewTasks(nombreVista string, tasks []models.Task, listID string, lis
 		ListID:    listID,
 		ListName:  listName,
 		ListUsers: listUsers,
+		User:      models.UserSesion.Email,
 	}
 	buff := bytes.Buffer{}
 	tmpl.Execute(&buff, dataStruct)
@@ -169,6 +172,7 @@ func ChangeViewConfigTask(nombreVista string, task models.Task, list models.List
 	dataStruct := DataConfigTask{
 		Task: task,
 		List: list,
+		User: models.UserSesion.Email,
 	}
 
 	buff := bytes.Buffer{}

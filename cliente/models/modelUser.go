@@ -233,7 +233,7 @@ func GetUsers() ([]User, bool) {
 }
 
 //Recupero un usuario por su email
-func GetUserByEmail(userEmail string) User {
+func GetUserByEmail(userEmail string) (User, bool) {
 	var usersResponse User
 	url := config.URLbase + "users/" + userEmail
 	req, err := http.NewRequest("GET", url, nil)
@@ -248,13 +248,16 @@ func GetUserByEmail(userEmail string) User {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
-	//Compruebo si no hay ningun usuario
-	if resp.StatusCode == 404 {
+	switch resp.StatusCode {
+	case 400:
 		fmt.Println("Ningun usuario encontrado")
-		return usersResponse
-	} else {
+		return usersResponse, false
+	case 401:
+		fmt.Println("Token Expirado")
+		return usersResponse, true
+	default:
 		json.NewDecoder(resp.Body).Decode(&usersResponse)
-		return usersResponse
+		return usersResponse, false
 	}
 }
 
@@ -362,10 +365,14 @@ func GetEmails() ([]string, bool) {
 }
 
 //Recupero la clave publica de un usuario
-func GetPublicKey(userEmail string) *rsa.PublicKey {
-	publicKeyUserPem := GetUserByEmail(userEmail).PublicKey
+func GetPublicKey(userEmail string) (*rsa.PublicKey, bool) {
+	user, tokenExpire := GetUserByEmail(userEmail)
+	if tokenExpire {
+		return nil, tokenExpire
+	}
+	publicKeyUserPem := user.PublicKey
 	publicKey := utils.PemToPublicKey(publicKeyUserPem)
-	return publicKey
+	return publicKey, false
 }
 
 func AddTokenHeader(req *http.Request) *http.Request {

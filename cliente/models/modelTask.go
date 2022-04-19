@@ -37,11 +37,20 @@ type TaskCipher struct {
 type TaskFiles struct {
 	FileName string
 	FileData template.URL
+	UserFile string
+	SignData SignStruct
+}
+
+type SignStruct struct {
+	Sign     string
+	UserSign string
 }
 
 type TaskLinks struct {
 	LinkName string
 	LinkUrl  string
+	SignData SignStruct
+	UserLink string
 }
 
 var TasksLocal []TaskCipher
@@ -104,8 +113,24 @@ func GetTasksByList(listID string) ([]Task, []TaskCipher) {
 	}
 }
 
+//Para añadir el usuario que a firmado los documentos de la tarea
+func AddUserSign(task Task) Task {
+	for i := 0; i < len(task.Files); i++ {
+		if len(task.Files[i].SignData.Sign) > 0 {
+			task.Files[i].SignData.UserSign = UserSesion.Email
+		}
+	}
+	for i := 0; i < len(task.Links); i++ {
+		if len(task.Links[i].SignData.Sign) > 0 {
+			task.Links[i].SignData.UserSign = UserSesion.Email
+		}
+	}
+	return task
+}
+
 //Creo una nueva tarea en el servidor para la lista dada
 func CreateTask(stringListID string, task Task) bool {
+	task = AddUserSign(task)
 	listID, _ := primitive.ObjectIDFromHex(stringListID)
 	//Recupero la clave de cifrado de la lista correspondiente
 	listKey := GetListKey(stringListID)
@@ -220,6 +245,36 @@ func DeleteTask(taskID string) (bool, bool) {
 	}
 }
 
+//Borrar todas las tareas de una lista
+func DeleteTaskByListID(listID string) (bool, bool) {
+	url := config.URLbase + "tasks/list/" + listID
+	req, err := http.NewRequest("DELETE", url, nil)
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req = AddTokenHeader(req)
+	client := utils.GetClientHTTPS()
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case 400:
+		fmt.Println("Las tareas no pueden ser borradas")
+		return false, false
+	case 401:
+		fmt.Println("Token Expirado")
+		return false, true
+	default:
+		var resultado string
+		json.NewDecoder(resp.Body).Decode(&resultado)
+		return true, false
+	}
+}
+
 //Descifro la tarea con la clave de la lista de la tarea
 func DescifrarTarea(taskCipher TaskCipher, key []byte) Task {
 	descifradoBytes := utils.DescifrarAES(key, taskCipher.Cipherdata)
@@ -277,4 +332,31 @@ func CheckTaskChanges(listID string) bool {
 		}
 	}
 	return false
+}
+
+func GetSignFile(taskID string, listID string, filename string) string {
+	taskCipher := GetTask(taskID, listID)
+	task := DescifrarTarea(taskCipher, GetListKey(listID))
+	for i := 0; i < len(task.Files); i++ {
+		if task.Files[i].FileName == filename {
+			return task.Files[i].SignData.Sign
+		}
+	}
+	return ""
+}
+
+func GetLinkFile(taskID string, listID string, linkName string) string {
+	taskCipher := GetTask(taskID, listID)
+	task := DescifrarTarea(taskCipher, GetListKey(listID))
+	for i := 0; i < len(task.Links); i++ {
+		if task.Links[i].LinkName == linkName {
+			return task.Links[i].SignData.Sign
+		}
+	}
+	return ""
+}
+
+func SignFile(fileData string) []byte {
+	signature := utils.Sign([]byte(fileData), GetPrivateKeyUser())
+	return signature
 }

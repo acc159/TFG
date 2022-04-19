@@ -133,7 +133,7 @@ body{
         <input type="text" id="email" name="email" placeholder="Email">
         <input type="password" id="password" name="password" placeholder="Password">
         <div class="row">
-            <input type="submit" id="login" onclick="login()" value="Login">
+            <input type="submit" id="login" onclick="iniciarSesion()" value="Login">
             <input type="submit" id="register" onclick="changeToRegister()" value="Register">
         </div>
 
@@ -168,7 +168,7 @@ body{
         let loader = document.querySelector('.loader').classList.toggle('oculto')
     }
 
-    function login(){
+    function iniciarSesion(){
       let email = document.querySelector('#email').value;
       let password = document.querySelector('#password').value;
 

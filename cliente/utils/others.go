@@ -2,6 +2,7 @@ package utils
 
 import (
 	"crypto/tls"
+	"encoding/base64"
 	"fmt"
 	"log"
 	"net/http"
@@ -45,4 +46,13 @@ func CheckExpirationTimeToken(tokenString string) bool {
 	now := time.Now().Add(time.Minute * 2)
 	result := now.Before(tm)
 	return result
+}
+
+func ToBase64FromByte(data []byte) string {
+	return base64.StdEncoding.EncodeToString(data)
+}
+
+func ToByteFromBase64(dataString string) []byte {
+	data, _ := base64.StdEncoding.DecodeString(dataString)
+	return data
 }

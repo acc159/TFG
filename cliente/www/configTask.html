@@ -4,25 +4,256 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tarea</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    
 </head>
 <body>
-    <button onclick="changeHome()">Volver al Home</button>
-    <button onclick="changeToTasks()">Ver Tareas de la lista</button>
-    <button onclick="UpdateTask()">Actualizar Tarea</button>
-    <button onclick="DeleteTask()">Borrar Tarea</button>
-
-    
     <h1 hidden id="listName">{{.List.Name}}</h1>
     <h1 id="listID" hidden>{{.List.ID}}</h1>
     <h1 id="taskID" hidden>{{.Task.ID}}</h1>
-    <h1 hidden id="taskCheck">{{.Task.Check}}</h1>
-    <h1 contenteditable  id="name">{{.Task.Name}}</h1>
+    <h1 id="taskCheck" hidden>{{.Task.Check}}</h1>
+    <h1 id="user" hidden>{{.User}}</h1>
+
+    <nav class="navbar navbar-light bg-light">
+        <form class="form-inline">
+            <a class="nav-link btn-outline-secondary" type="button" role="button" onclick="changeHome()">Volver al Home</a>
+            <a class="nav-link btn-outline-info" type="button" role="button" onclick="changeToTasks()">Ver Tareas de la lista</a>
+            <a class="nav-link btn-outline-info" type="button" role="button" onclick="UpdateTask()">Actualizar Tarea</a>
+            <a class="nav-link btn-outline-info" type="button" role="button" onclick="DeleteTask()">Borrar Tarea</a>
+        </form>
+    </nav>
+
+
+    
+    {{$user:=.User}}
+    <div class="container">
+        <div class="text-center">
+            <h1 class="display-4">Editar</h1>
+        </div>
+        <div>
+
+            <div id="accordion">
+
+                <!-- Datos -->
+
+                <div class="card">
+                  <div class="card-header" id="headingOne">
+                    <h5 class="mb-0">
+                      <button class="btn btn-link" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                        <h2 class="display-4">Datos</h2>
+                      </button>
+                    </h5>
+                  </div>
+              
+                  <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
+                    <div class="card-body">
+                        <form>
+                            <div class="form-group">
+                                <label for="taskName">Nombre de la tarea</label>
+                                <input placeholder="Nombre" class="form-control" type="text" id="taskName" name="taskName" value="{{.Task.Name}}">
+                                <label for="description">Descripcion de la tarea</label>
+                                <textarea placeholder="Descripción" class="form-control" name="description" id="description" cols="10" rows="3">{{.Task.Description}}</textarea>
+                                <label for="date">Fecha de la tarea</label>
+                                <input class="form-control" placeholder="Fecha" type="date" id="date" name="date" value="{{.Task.Date}}">
+                                
+                                <label for="state">Estado:</label>
+                                <select class="form-control" name="state" id="state">
+                                {{if eq .Task.State "Por hacer"}}
+                                    <option selected value="Por hacer">Por hacer</option>
+                                    <option value="En progreso">En progreso</option>
+                                    <option value="Hecho">Hecho</option>
+                                {{end}}
+                                {{if eq .Task.State "En progreso"}}
+                                    <option value="Por hacer">Por hacer</option>
+                                    <option selected value="En progreso">En progreso</option>
+                                    <option value="Hecho">Hecho</option>
+                                {{end}}
+                                {{if eq .Task.State "Hecho"}}
+                                    <option value="Por hacer">Por hacer</option>
+                                    <option value="En progreso">En progreso</option>
+                                    <option selected value="Hecho">Hecho</option>
+                                {{end}}                    
+                                </select>
+                            </div>
+                        </form>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- USUARIOS -->
+
+                <div class="card">
+                    <div class="card-header" id="headingTwo">
+                      <h5 class="mb-0">
+                        <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                            <h2 class="display-4">Usuarios</h2>
+                        </button>
+                      </h5>
+                    </div>
+
+                    <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
+                      <div class="card-body">
+                        
+                        <label for="usersTask">Usuarios asignados a la tarea:</label>
+                        <div id="usersTask">    
+                            {{range .Task.Users}}
+                                <div id="{{.}}">
+                                    <span>{{.}}</span>
+                                    <button onclick="deleteUserTask(event)">Eliminar usuario</button>
+                                </div>
+                            {{end}}
+                        </div>
+                    
+                        <label for="usersList">Usuarios de la lista por añadir a la tarea:</label>
+                            <select class="form-control" name="usersList" id="usersList" multiple>
+                                {{range .List.Users}}
+                                    <option value={{.}}>{{.}}</option>
+                                {{end}}
+                            </select>
+                        <button onclick="addUserTask()">Asignar usuarios a la tarea</button>
+
+                      </div>
+                    </div>
+                </div>
+
+
+                <!-- Adjuntos -->
+
+                <div class="card">
+                    <div class="card-header" id="headingThree">
+                      <h5 class="mb-0">
+                        <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                            <h2 class="display-4">Adjuntos</h2>
+                        </button>
+                      </h5>
+                    </div>
+                    <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordion">
+                      <div class="card-body">
+                        
+                        <div class="row">
+                            <div class="col-md-12 order-md-1">
+                                <div class="d-flex mb-3 justify-content-between">
+                                    <h4 class="">
+                                        <span class="text-muted">Archivos Adjuntos</span>
+                                        <span id="numArchivos" class="badge badge-secondary badge-pill">{{len .Task.Files}}</span>
+                                    </h4>
+                                    <div>
+                                        <button class="btn btn-primary" onclick="leerArchivo()">Adjuntar</button>
+                                    </div>
+                                </div>
+                
+                                <ul id="archivosAdjuntos" class="list-group mb-3">
+                                    
+                                    {{range .Task.Files}}
+                                        <li class="list-group-item d-flex justify-content-between lh-condensed">
+                                            <div class="container row">
+                                                <div class="col-md-6 order-md-1">
+                                                    <a href="{{.FileData}}" target="_blank" class="file" download="{{.FileName}}" data-Sign="{{.SignData.Sign}}" data-userSign="{{.SignData.UserSign}}">{{.FileName}}</a>
+                                                </div>
+                                                <div class="col-md-3 order-md-2">
+                                                    <a class="text-muted" type="button" role="button" onclick="deleteFile(event)">Eliminar</a>
+                                                </div>
+                                                <div class="col-md-3 order-md-3">
+
+                                                    {{if .SignData.Sign}}
+                                                        <a data-type="file" class="text-muted" type="button" role="button" onclick="verifySignDataTask(event)">Verificar Firma</a>
+                                                    {{else}}
+                                                        {{if eq $user .UserFile}}
+                                                            <a class="text-muted" type="button" role="button" onclick="signFile(event)">Firmar</a>
+                                                        {{else}}
+                                                            <a class="text-muted">Sin firmar</a>
+                                                        {{end}}
+                                                    {{end}}
+
+                                                    
+                                                </div>
+                                            </div>
+                                        </li>
+                                    {{end}}
+
+                                </ul>
+                                <form class="card p-2">
+                                    <div class="input-group row">
+                                        <input type="file" id="subir_archivo" class="col-md-12 order-md-1">                       
+                                    </div>
+                                </form>
+                
+                            </div>
+                            <div class="col-md-12 order-md-2 mb-4">
+                
+                                <div class="d-flex mb-3 justify-content-between">
+                                    <h4 class="">
+                                        <span class="text-muted">Enlaces Adjuntos</span>
+                                        <span id="numUrls" class="badge badge-secondary badge-pill">{{len .Task.Links}}</span>
+                                    </h4>
+                                    <div>
+                                        <button class="btn btn-primary" onclick="AddLink()">Adjuntar</button>
+                                    </div>
+                                </div>
+                
+                                <ul id="enlacesAdjuntos" class="list-group mb-3">
+                                    {{range .Task.Links}}
+                                        <li class="list-group-item d-flex justify-content-between lh-condensed">
+                                            <div class="container row">
+                                                <div class="col-md-6 order-md-1">
+                                                    <a class="url" target="_blank" href="{{.LinkUrl}}" data-Sign="{{.SignData.Sign}}" data-userSign="{{.SignData.UserSign}}">{{.LinkName}}</a>
+                                                </div>
+                                                <div class="col-md-3 order-md-2">
+                                                    <a class="text-muted" type="button" role="button" onclick="deleteUrl(event)">Eliminar</a>
+                                                </div>
+                                                <div class="col-md-3 order-md-3">
+
+                                                    {{if .SignData.Sign}}
+                                                        <a data-type="link" class="text-muted" type="button" role="button" onclick="verifySignDataTask(event)">Verificar Firma</a>
+                                                    {{else}}
+                                                        {{if eq $user .UserLink}}
+                                                            <a class="text-muted" type="button" role="button" onclick="signFile(event)">Firmar</a>
+                                                        {{else}}
+                                                            <a class="text-muted">Sin firmar</a>
+                                                        {{end}}
+                                                    {{end}}
+                                                </div>
+                                            </div>
+                                        </li>
+                                    {{end}}
+                                </ul>
+                                <form class="card p-2">
+                                    <div class="input-group">
+                                        <input class="col-md-6 order-md-1 form-control" type="url" name="link" id="link" placeholder="Url">
+                                        <input class="col-md-6 order-md-2 form-control" type="text" name="linkName" id="linkName" placeholder="Nombre Url">
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                      </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <!-- <h1 contenteditable  id="name">{{.Task.Name}}</h1>
     <h2 contenteditable id="state">{{.Task.State}}</h2>
     <p contenteditable id="description">{{.Task.Description}}</p>
     <input type="date" id="date" name="date" value="{{.Task.Date}}" contenteditable>
     
-    <h2>Usuarios asignados a la tarea:</h2>
-    <div id="usersTask">    
+    <h2>Usuarios asignados a la tarea:</h2> -->
+    <!-- <div id="usersTask">    
         {{range .Task.Users}}
             <div id="{{.}}">
                 <span>{{.}}</span>
@@ -40,10 +271,10 @@
             {{end}}
         </select>
         <button onclick="addUserTask()">Asignar usuarios a la tarea</button>
-    </div>
+    </div> -->
 
 
-    <div id="archivosAdjuntos">
+    <!-- <div id="archivosAdjuntos">
         <h3>Archivos adjuntos:</h3>
         {{range .Task.Files}}
             <div>
@@ -66,61 +297,224 @@
         </div>
 
     <input type="file" id="subir_archivo"/>
-    <button onclick="leerArchivo()">Adjuntar archivo</button>
+    <button onclick="leerArchivo()">Adjuntar archivo</button> -->
 
 
 </body>
 </html>
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
 <script>
 
 
-    let extensionAllow = ['jpg', 'jpeg', 'png', 'pdf', 'txt'];
-    function leerArchivo(){
-        let elemento = document.querySelector('#subir_archivo');
-        if (elemento.files.length > 0){
-            let nombreArchivo = elemento.files[0].name
-            let extension = elemento.files[0].name.split('.').pop().toLowerCase()
-            if (extensionAllow.indexOf(extension) > -1){
+let extensionAllow = ['jpg', 'jpeg', 'png', 'pdf', 'txt'];
+
+function leerArchivo(){
+    let elemento = document.querySelector('#subir_archivo');
+    if (elemento.files.length > 0){
+        let nombreArchivo = elemento.files[0].name
+        let extension = elemento.files[0].name.split('.').pop().toLowerCase()
+        if (extensionAllow.indexOf(extension) > -1){
+            if (CheckFileName(nombreArchivo)){
                 if(elemento.files.length != 0){
                     var file = elemento.files[0];
                     var reader = new FileReader();
                     reader.onloadend = function() {
-                        let divPadre = document.querySelector('#archivosAdjuntos');
                         datosArchivo = reader.result
-                        let a = document.createElement('a')
-                        a.textContent = nombreArchivo
-                        a.href = datosArchivo
-                        a.download = nombreArchivo
-                        let button = document.createElement('button');
-                        button.innerHTML = "Eliminar archivo";
-                        button.onclick = function () {deleteFileTask(event)};
-                        let div = document.createElement('div');
-                        div.appendChild(a)
-                        div.appendChild(button)
-                        divPadre.appendChild(div)
-
+                        AddFile(datosArchivo, nombreArchivo)
                         elemento.value = ""
+                        let numeroFiles = document.querySelector('#numArchivos').textContent 
+                        numeroFiles = parseInt(numeroFiles)
+                        numeroFiles++
+                        document.querySelector('#numArchivos').textContent = numeroFiles
                     }
-                reader.readAsDataURL(file);
+                    reader.readAsDataURL(file);
                 }
             }else{
-                alert('Extension no permitida')
-                elemento.value = ""
+                alert('El fichero ' + nombreArchivo + ' ya a sido adjuntado')
             }
         }else{
-            alert('Añade un archivo para adjuntarlo')
+            alert('Extension no permitida')
+            elemento.value = ""
+        }
+    }else{
+        alert('Añade un archivo para adjuntarlo')
+    }
+}
+
+
+    function AddLink(){
+        let link = document.querySelector('#link').value;
+        let linkName = document.querySelector('#linkName').value;
+        if (link != "" && linkName != "")
+        {
+            // let links = document.querySelector('#links');
+            // let li = document.createElement('li');
+            // let a = document.createElement('a');
+            // a.setAttribute('target', '_blank');
+            // a.href = link;
+            // a.textContent = linkName;
+            // let button = document.createElement('button');
+            // button.innerHTML = "Eliminar enlace";
+            // button.onclick = function () {deleteLinkTask(event)};
+            // li.appendChild(a);
+            // li.appendChild(button);
+            // links.appendChild(li);
+            AddUrl(link, linkName)
+            let numUrls = document.querySelector('#numUrls').textContent 
+            numUrls = parseInt(numUrls)
+            numUrls++
+            document.querySelector('#numUrls').textContent = numUrls;
+            document.querySelector('#link').value = "";
+            document.querySelector('#linkName').value = "";
+        }else{
+            alert('Introduce un enlace para añadirlo');
         }
     }
 
-    function deleteFileTask(){
-        var div = event.target.closest('div');
-        div.remove()
+
+    function deleteFile(event){
+        li = event.target.closest('li')
+        li.remove()
+        let numeroFiles = document.querySelector('#numArchivos').textContent 
+        numeroFiles = parseInt(numeroFiles)
+        numeroFiles--
+        document.querySelector('#numArchivos').textContent = numeroFiles
     }
 
-    function deleteLinkTask(){
-        var li = event.target.closest('li');
-        li.remove()
+    function CheckFileName(nombreArchivo){
+        let archivosDiv = document.querySelector('#archivosAdjuntos').querySelectorAll('.file');
+        if (archivosDiv.length > 0) {
+            for (let index = 0; index < archivosDiv.length; index++) {
+                nombre = archivosDiv[index].textContent;
+                if (nombre == nombreArchivo){
+                    return false
+                }
+            } 
+        }
+        return true
     }
+
+
+    function AddFile(datosArchivo, nombreArchivo){
+        let ulPadre = document.querySelector('#archivosAdjuntos');
+        let li = document.createElement('li')
+        li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'lh-condensed')
+        let divPadre = document.createElement('div')   
+        divPadre.classList.add('container', 'row')   
+        //Creamos los tres divs
+        let divFile = document.createElement('div')  
+        divFile.classList.add('col-md-6', 'order-md-1')        
+        let divDelete = document.createElement('div')
+        divDelete.classList.add('col-md-3', 'order-md-2')           
+        let divSign = document.createElement('div')  
+        divSign.classList.add('col-md-3', 'order-md-3') 
+        let aFile = document.createElement('a')
+        aFile.setAttribute('target', '_blank');
+        aFile.classList.add('file')
+        aFile.textContent = nombreArchivo
+        aFile.href = datosArchivo
+        aFile.download = nombreArchivo
+        divFile.appendChild(aFile)
+        let aDelete = document.createElement('a')
+        aDelete.onclick = function () {deleteFile(event)};
+        aDelete.textContent = "Eliminar"
+        aDelete.classList.add('text-muted')
+        aDelete.setAttribute("type", "button")
+        aDelete.setAttribute("role", "button")
+        divDelete.appendChild(aDelete)
+        let aSign = document.createElement('a')
+        aSign.onclick = function () {signFile(event)};
+        aSign.textContent = "Firmar"
+        aSign.classList.add('text-muted')
+        aSign.setAttribute("type", "button")
+        aSign.setAttribute("role", "button")
+        divSign.appendChild(aSign)
+        divPadre.appendChild(divFile)
+        divPadre.appendChild(divDelete)
+        divPadre.appendChild(divSign)
+        li.appendChild(divPadre)
+        ulPadre.appendChild(li)
+    }
+
+
+
+    function signFile(event){
+        li = event.target.closest('li')
+        let fileData = li.querySelector('div').querySelector('div').querySelector('a').href 
+        signGO(fileData).then(
+            function(signHash){
+                let file = li.querySelector('.file').dataset.sign = signHash 
+                let span = document.createElement('span')
+                span.textContent = " Firmado"
+                span.classList.add('badge', 'badge-secondary' , 'firmado')
+                li.querySelector('div').querySelector('div').appendChild(span)
+            }
+        )
+    }
+
+
+
+
+
+    function deleteUrl(event){
+        li = event.target.closest('li')
+        li.remove()
+        let numUrls = document.querySelector('#numUrls').textContent 
+        numUrls = parseInt(numUrls)
+        numUrls--
+        document.querySelector('#numUrls').textContent = numUrls
+    }
+
+
+
+    function AddUrl(datosArchivo, nombreArchivo){
+        let ulPadre = document.querySelector('#enlacesAdjuntos');
+        let li = document.createElement('li')
+        li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'lh-condensed')
+        let divPadre = document.createElement('div')   
+        divPadre.classList.add('container', 'row')   
+        //Creamos los tres divs
+        let divFile = document.createElement('div')  
+        divFile.classList.add('col-md-6', 'order-md-1')        
+        let divDelete = document.createElement('div')
+        divDelete.classList.add('col-md-3', 'order-md-2')           
+        let divSign = document.createElement('div')  
+        divSign.classList.add('col-md-3', 'order-md-3') 
+        let aFile = document.createElement('a')
+        aFile.setAttribute('target', '_blank');
+        aFile.classList.add('url')
+        aFile.textContent = nombreArchivo
+        aFile.href = datosArchivo
+        aFile.download = nombreArchivo
+        divFile.appendChild(aFile)
+        let aDelete = document.createElement('a')
+        aDelete.onclick = function () {deleteUrl(event)};
+        aDelete.textContent = "Eliminar"
+        aDelete.classList.add('text-muted')
+        aDelete.setAttribute("type", "button")
+        aDelete.setAttribute("role", "button")
+        divDelete.appendChild(aDelete)
+        let aSign = document.createElement('a')
+        aSign.onclick = function () {signUrl(event)};
+        aSign.textContent = "Firmar"
+        aSign.classList.add('text-muted')
+        aSign.setAttribute("type", "button")
+        aSign.setAttribute("role", "button")
+        divSign.appendChild(aSign)
+        divPadre.appendChild(divFile)
+        divPadre.appendChild(divDelete)
+        divPadre.appendChild(divSign)
+        li.appendChild(divPadre)
+        ulPadre.appendChild(li)
+    }
+
+
+
+
 
     function changeToTasks(){
         let listID = document.querySelector('#listID').textContent
@@ -147,13 +541,13 @@
         let option = document.createElement('option');
         option.value = div.id;
         option.textContent= div.id;
-        document.querySelector('select').appendChild(option);
+        document.querySelector('#usersList').appendChild(option);
         div.remove();
     }
 
 
     function addUserTask(){
-       let selectedUsers = document.querySelector('select').selectedOptions;
+       let selectedUsers = document.querySelector('#usersList').selectedOptions;
        if (selectedUsers.length > 0){
             let usersNames = []
             for (let index = selectedUsers.length; index > 0; index--) {
@@ -192,11 +586,55 @@
         }
     }
 
+
+    function GetFiles(){
+        let user = document.querySelector('#user').textContent
+        let archivos = []
+        let archivosDiv = document.querySelector('#archivosAdjuntos').querySelectorAll('.file');
+            if (archivosDiv.length > 0) {
+                for (let index = 0; index < archivosDiv.length; index++) {
+                    nombre = archivosDiv[index].textContent;
+                    datos = archivosDiv[index].href;
+                    sign = archivosDiv[index].dataset.sign;
+                    let archivo = {
+                        "FileName" : nombre,
+                        "FileData" : datos,
+                        "UserFile" : user,
+                        "SignData" : {
+                            "Sign": sign
+                        },
+                    }
+                    archivos.push(archivo)
+                } 
+            }
+        return archivos
+    }
+
+
+    function GetLinks(){
+        let user = document.querySelector('#user').textContent
+        let TaskLinks = []
+        let links = document.querySelector('#enlacesAdjuntos').querySelectorAll('.url');
+        for (let i = 0; i < links.length; i++) {
+            let LinkStruct = {
+                "LinkName" : links[i].textContent,
+                "LinkUrl" : links[i].getAttribute('href'),
+                "UserLink" : user,
+                "SignData" : {
+                        "Sign": links[i].dataset.sign
+                    },
+            }
+            TaskLinks.push(LinkStruct)
+        }
+        return TaskLinks
+    }
+
+
     function UpdateTask(){
         //Recupero los campos de la tarea
         let taskID = document.querySelector('#taskID').textContent;
         let listID = document.querySelector('#listID').textContent;
-        let name = document.querySelector('#name').textContent;
+        let name = document.querySelector('#taskName').textContent;
         let date = document.querySelector('#date').value;
         let state = document.querySelector('#state').textContent;
         let description = document.querySelector('#description').textContent;
@@ -206,19 +644,8 @@
         for (let index = 0; index < usersTaskDivs.length; index++) {
             usersTask.push(usersTaskDivs[index].id)
         }
-        let archivosDiv = document.querySelector('#archivosAdjuntos').querySelectorAll('a');
-        let archivos = []
-        if (archivosDiv.length > 0) {
-            for (let index = 0; index < archivosDiv.length; index++) {
-                nombre = archivosDiv[index].textContent;
-                datos = archivosDiv[index].href;
-                let archivo = {
-                    "FileName" : nombre,
-                    "FileData" : datos,
-                }
-                archivos.push(archivo)
-            } 
-        }
+        let archivos = GetFiles();
+        let TaskLinks = GetLinks();
         let newTask = {
             "ID" : taskID,
             "Name" : name,
@@ -227,6 +654,7 @@
             "State" : state,
             "Users" : usersTask,
             "Files" : archivos,
+            "Links" : TaskLinks,
             "Check" : check
         }
         updateTaskGO(newTask, listID).then(
@@ -289,6 +717,41 @@
             }
         )
     }
+
+
+
+    function verifySignDataTask(event){
+        let taskID = document.querySelector('#taskID').textContent;
+        let listID = document.querySelector('#listID').textContent;
+        let a = event.target.closest('li').querySelector('a')
+        fileData = a.href
+        linkName = a.textContent
+        signUser = a.dataset.usersign
+        dataType = event.target.dataset.type
+        verifySignDataTaskGO(fileData, linkName, taskID, listID, signUser, dataType).then(
+            function(resultados){
+                if (resultados){
+                    let tokenExpire = resultados[1];
+                    let signOK = resultados[0];
+                    if (tokenExpire){
+                        alert('El Token de la sesión expiro')
+                        exitSesion();
+                    }else{
+                        if (signOK){
+                            alert('Firma verificada')
+                        }else{
+                            alert('La firma no coincide')
+                        }
+                    }
+                }
+            }
+        )
+    }
+
+
+
+
+
 
 
     function changeToTaskConfig(taskID, listID){

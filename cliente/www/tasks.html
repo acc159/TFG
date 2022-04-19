@@ -8,11 +8,79 @@
     
 </head>
 <body>
-    <button onclick="changeHome()">Volver al Home</button>
+
+    <nav class="navbar navbar-light bg-light">
+        <form class="form-inline">
+            <a class="nav-link btn-outline-secondary" type="button" role="button" onclick="changeHome()">Volver al Home</a>
+            <a class="nav-link btn-outline-info" type="button" role="button" onclick="changeToAddTask()">Añadir Tareas a la lista</a>
+            {{if .Tasks}}
+                <a class="nav-link btn-outline-info" type="button" role="button" onclick="deleteAllTasks()">Borrar todas las Tareas</a>
+            {{end}}
+            
+        </form>
+    </nav>
+
+    <!-- <button onclick="changeHome()">Volver al Home</button>
     <button onclick="changeToAddTask()">Añadir Tareas a la lista</button>
+    {{if .Tasks}}
+        <button onclick="deleteAllTasks()">Borrar todas las Tareas</button>
+    {{end}} -->
+
     <h1 hidden id="listID">{{.ListID}}</h1>
     <h1 hidden id="listName">{{.ListName}}</h1>
-    <h1>Tareas de la lista: {{.ListName}}</h1>
+        <div class="container">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="display-3">Tareas de la lista: {{.ListName}}</h1>
+                        <h3 class="display-4">Numero de tareas: <span class="badge bg-info">{{len .Tasks}}</span> </h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <th>Fecha</th>
+                                        <th>Estado</th>
+                                        <th>Opciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {{range .Tasks}}
+                                    <tr>
+                                        <td>{{.Name}}</td>
+                                        <td>
+                                            {{if .Date}}
+                                                {{.Date}}
+                                            {{else}}
+                                                Sin fecha
+                                            {{end}}
+                                        </td>
+                                        <td>{{.State}}</td>
+                                        <td id="{{.ID}}">
+                                            <button type="button" class="btn btn-secondary" onclick="changeToTaskConfig(event)">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pen-fill" viewBox="0 0 16 16">
+                                                    <path d="m13.498.795.149-.149a1.207 1.207 0 1 1 1.707 1.708l-.149.148a1.5 1.5 0 0 1-.059 2.059L4.854 14.854a.5.5 0 0 1-.233.131l-4 1a.5.5 0 0 1-.606-.606l1-4a.5.5 0 0 1 .131-.232l9.642-9.642a.5.5 0 0 0-.642.056L6.854 4.854a.5.5 0 1 1-.708-.708L9.44.854A1.5 1.5 0 0 1 11.5.796a1.5 1.5 0 0 1 1.998-.001z"></path>
+                                                </svg>
+                                            </button>
+                                            <button type="button" class="btn btn-secondary" onclick="DeleteTask(event)">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-square-fill" viewBox="0 0 16 16">
+                                                    <path d="M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2zm3.354 4.646L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 1 1 .708-.708z"></path>
+                                                </svg>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {{end}}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    <!-- <h1>Tareas de la lista: {{.ListName}}</h1>
     <h2>Numero de tareas: {{len .Tasks}}</h2>
     {{range .Tasks}}
         <div id="{{.ID}}">
@@ -33,9 +101,8 @@
             </div>
 
             <button onclick="changeToTaskConfig(event)">Ver Tarea</button>
-            <!-- <button onclick="DeleteTask(event)">Eliminar Tarea</button> -->
         </div>
-    {{end}}
+    {{end}} -->
 
 
     <div class="modal" id="taskModal" style="display: none;" aria-hidden="true">
@@ -87,8 +154,8 @@
 
 
     function changeToTaskConfig(event){
-        var div = event.target.closest('div');
-        taskID = div.id;
+        var td = event.target.closest('td');
+        taskID = td.id;
         let listID = document.querySelector('#listID').textContent
         listName = document.querySelector('#listName').textContent
         changeToTaskConfigGO(taskID, listID).then(
@@ -134,29 +201,60 @@
         )
     }
 
-    // function DeleteTask(event){
-    //     var div = event.target.closest('div');
-    //     taskID = div.id;
-    //     let listID = document.querySelector('#listID').textContent
-    //     let listName = document.querySelector('#listName').textContent
-    //     deleteTaskGO(taskID).then(
-    //         function(resultados){
-    //             let tokenExpire = resultados[1];
-    //             let deleteOK = resultados[0];
-    //             if (tokenExpire){
-    //                 alert('El Token de la sesión expiro')
-    //                 exitSesion();
-    //             }else{
-    //                 if (deleteOK == false){
-    //                     alert('No pudo ser borrada la tarea')
-    //                 }else{
-    //                     alert('La tarea se borro')
-    //                     changeToTasks(listID, listName)
-    //                 }
-    //             }
-    //         }
-    //     )
-    // }
+
+    function DeleteTask(){
+        var td = event.target.closest('td');
+        taskID = td.id;
+        let listID = document.querySelector('#listID').textContent
+        let listName = document.querySelector('#listName').textContent
+        deleteTaskGO(taskID, listID).then(
+
+            function(resultados){
+                let tokenExpire = resultados[2];
+                let deleteOK = resultados[1];
+                let listOK = resultados[0];
+                if (tokenExpire){
+                    alert('El Token de la sesión expiro')
+                    exitSesion();
+                }else{
+                    if (listOK){
+                        if (deleteOK == false){
+                            alert('No pudo ser borrada la tarea')
+                            changeToTasks(listID, listName)
+                        }else{
+                            alert('La tarea se borro')
+                            changeToTasks(listID, listName)
+                        }
+                    }else{
+                        alert('La lista fue borrada')
+                        changeHome()
+                    }
+                }
+            }
+        )
+    }
+
+    function deleteAllTasks(){
+        let listID = document.querySelector('#listID').textContent
+        let listName = document.querySelector('#listName').textContent
+        deleteTaskByListGO(listID).then(
+            function(resultados){
+                let tokenExpire = resultados[1];
+                let deleteOK = resultados[0];
+                if (tokenExpire){
+                    alert('El Token de la sesión expiro')
+                    exitSesion();
+                }else{
+                    if (deleteOK == false){
+                        alert('No se pudieron borrar las tareas')
+                    }else{
+                        alert('Las tarea se borraron')
+                        changeToTasks(listID, listName)
+                    }
+                }
+            }
+        )
+    }
 
     function changeHome(){
         changeHomeGO().then(

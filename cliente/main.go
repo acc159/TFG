@@ -135,9 +135,7 @@ func main() {
 			listKey := models.GetListKey(listID)
 			if len(listKey) > 0 {
 				listCipher := models.GetList(listID)
-
 				list := models.DescifrarLista(listCipher, listKey)
-
 				//Elimino los usuarios que ya pertenecen a la lista
 				emailsProyect := models.GetProyect(proyectID).Users
 				emailsList := list.Users
@@ -148,7 +146,6 @@ func main() {
 				return []bool{true, false}
 			}
 			return []bool{false, false}
-
 		}
 	})
 
@@ -366,6 +363,12 @@ func main() {
 		return []bool{false, false, false}
 	})
 
+	//Eliminar una tarea
+	UI.Bind("deleteTaskByListGO", func(listID string) []bool {
+		deleteOk, tokenExpire := models.DeleteTaskByListID(listID)
+		return []bool{deleteOk, tokenExpire}
+	})
+
 	//Actualizar una tarea
 	UI.Bind("updateTaskGO", func(newTask models.Task, listID string) []string {
 		if !utils.CheckExpirationTimeToken(models.UserSesion.Token) {
@@ -385,6 +388,54 @@ func main() {
 
 	UI.Bind("checkTaskChangesGO", func(listID string) bool {
 		return models.CheckTaskChanges(listID)
+	})
+
+	UI.Bind("signGO", func(fileData string) string {
+		sign := models.SignFile(fileData)
+		signBase64 := utils.ToBase64FromByte(sign)
+		return signBase64
+	})
+
+	// UI.Bind("verifyFileSignGO", func(data string, fileName string, taskID string, listID string, signUser string) []bool {
+	// 	if !utils.CheckExpirationTimeToken(models.UserSesion.Token) {
+	// 		return []bool{false, true}
+	// 	} else {
+	// 		signBase64 := models.GetSignFile(taskID, listID, fileName)
+	// 		if signBase64 != "" {
+	// 			sign := utils.ToByteFromBase64(signBase64)
+	// 			publicKey, tokenExpire := models.GetPublicKey(signUser)
+	// 			if tokenExpire {
+	// 				return []bool{false, tokenExpire}
+	// 			}
+	// 			return []bool{utils.CheckSign(sign, []byte(data), publicKey), tokenExpire}
+	// 		} else {
+	// 			return []bool{false, false}
+	// 		}
+	// 	}
+	// })
+
+	UI.Bind("verifySignDataTaskGO", func(data string, linkName string, taskID string, listID string, signUser string, dataType string) []bool {
+		if !utils.CheckExpirationTimeToken(models.UserSesion.Token) {
+			return []bool{false, true}
+		} else {
+			var signBase64 string
+			switch dataType {
+			case "link":
+				signBase64 = models.GetLinkFile(taskID, listID, linkName)
+			case "file":
+				signBase64 = models.GetSignFile(taskID, listID, linkName)
+			}
+			if signBase64 != "" {
+				sign := utils.ToByteFromBase64(signBase64)
+				publicKey, tokenExpire := models.GetPublicKey(signUser)
+				if tokenExpire {
+					return []bool{false, tokenExpire}
+				}
+				return []bool{utils.CheckSign(sign, []byte(data), publicKey), tokenExpire}
+			} else {
+				return []bool{false, false}
+			}
+		}
 	})
 
 	sigc := make(chan os.Signal)

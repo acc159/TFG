@@ -82,7 +82,7 @@ func CreateList(list List, proyectIDstring string) (bool, bool) {
 
 func CreateListRelations(listID string, proyectID string, Krandom []byte, users []string) {
 	for i := 0; i < len(users); i++ {
-		publicKeyUser := GetPublicKey(users[i])
+		publicKeyUser, _ := GetPublicKey(users[i])
 		KrandomCipher := utils.EncryptKeyWithPublicKey(publicKeyUser, Krandom)
 		AddListToRelation(proyectID, listID, users[i], KrandomCipher)
 	}
@@ -246,7 +246,7 @@ func DeleteUserList(listID string, userEmail string) bool {
 //Añadir usuario a una lista
 func AddUserList(userEmail string, proyectID string, listID string) bool {
 	//Recupero la clave publica que usare para cifrar la clave del proyecto
-	publicKey := GetPublicKey(userEmail)
+	publicKey, _ := GetPublicKey(userEmail)
 	//Recupero la clave de la lista descifrada
 	listKey := GetListKey(listID)
 	//Cifro la clave de la lista con la clave publica del usuario nuevo añadido

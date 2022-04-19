@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Añadir Tarea</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <style>
+        .firmado{
+            margin-left: 5px;
+        }
+    </style>
 </head>
 <body>
 
@@ -15,6 +20,7 @@
             <a class="nav-link btn-outline-info" type="button" role="button" onclick="addTask()">Añadir Tarea</a>
         </form>
     </nav>
+    <h1 hidden id="user">{{.User}}</h1>
     <h1 hidden id="listID">{{.ListID}}</h1>
     <div class="container">
         <div class="text-center">
@@ -158,12 +164,30 @@
 
     function signFile(event){
         li = event.target.closest('li')
-        console.log(li)
+        let fileData = li.querySelector('div').querySelector('div').querySelector('a').href 
+        signGO(fileData).then(
+            function(signHash){
+                let file = li.querySelector('.file').dataset.sign = signHash 
+                let span = document.createElement('span')
+                span.textContent = " Firmado"
+                span.classList.add('badge', 'badge-secondary' , 'firmado')
+                li.querySelector('div').querySelector('div').appendChild(span)
+            }
+        )
     }
 
     function signUrl(event){
         li = event.target.closest('li')
-        console.log(li)
+        let fileData = li.querySelector('div').querySelector('div').querySelector('a').href 
+        signGO(fileData).then(
+            function(signHash){
+                let file = li.querySelector('.url').dataset.sign = signHash 
+                let span = document.createElement('span')
+                span.textContent = " Firmado"
+                span.classList.add('badge', 'badge-secondary' , 'firmado')
+                li.querySelector('div').querySelector('div').appendChild(span)
+            }
+        )
     }
 
     function AddUrl(datosArchivo, nombreArchivo){
@@ -208,6 +232,19 @@
     }
 
 
+
+    function CheckFileName(nombreArchivo){
+        let archivosDiv = document.querySelector('#archivosAdjuntos').querySelectorAll('.file');
+        if (archivosDiv.length > 0) {
+            for (let index = 0; index < archivosDiv.length; index++) {
+                nombre = archivosDiv[index].textContent;
+                if (nombre == nombreArchivo){
+                    return false
+                }
+            } 
+        }
+        return true
+    }
 
 
     function AddFile(datosArchivo, nombreArchivo){
@@ -261,19 +298,23 @@
             let nombreArchivo = elemento.files[0].name
             let extension = elemento.files[0].name.split('.').pop().toLowerCase()
             if (extensionAllow.indexOf(extension) > -1){
-                if(elemento.files.length != 0){
-                    var file = elemento.files[0];
-                    var reader = new FileReader();
-                    reader.onloadend = function() {
-                        datosArchivo = reader.result
-                        AddFile(datosArchivo, nombreArchivo)
-                        elemento.value = ""
-                        let numeroFiles = document.querySelector('#numArchivos').textContent 
-                        numeroFiles = parseInt(numeroFiles)
-                        numeroFiles++
-                        document.querySelector('#numArchivos').textContent = numeroFiles
+                if (CheckFileName(nombreArchivo)){
+                    if(elemento.files.length != 0){
+                        var file = elemento.files[0];
+                        var reader = new FileReader();
+                        reader.onloadend = function() {
+                            datosArchivo = reader.result
+                            AddFile(datosArchivo, nombreArchivo)
+                            elemento.value = ""
+                            let numeroFiles = document.querySelector('#numArchivos').textContent 
+                            numeroFiles = parseInt(numeroFiles)
+                            numeroFiles++
+                            document.querySelector('#numArchivos').textContent = numeroFiles
+                        }
+                        reader.readAsDataURL(file);
                     }
-                reader.readAsDataURL(file);
+                }else{
+                    alert('El fichero ' + nombreArchivo + ' ya a sido adjuntado')
                 }
             }else{
                 alert('Extension no permitida')
@@ -305,75 +346,95 @@
 
     function addTask(){
 
-        //Archivos
-        let archivosDiv = document.querySelector('#archivosAdjuntos').querySelectorAll('.file');
-        let archivos = []
-        if (archivosDiv.length > 0) {
-            for (let index = 0; index < archivosDiv.length; index++) {
-                nombre = archivosDiv[index].textContent;
-                datos = archivosDiv[index].href;
-                let archivo = {
-                    "FileName" : nombre,
-                    "FileData" : datos,
-                }
-                archivos.push(archivo)
-            } 
-        }
-       
-        let listID = document.querySelector('#listID').textContent
-        let date = document.querySelector('#date').value
         let taskName = document.querySelector('#taskName').value
-        let description = document.querySelector('#description').value
-        let state = document.querySelector('#state').value
-        let users = document.querySelector('#usuarios').selectedOptions
-        let usersNames = []
-        for (let index = 0; index < users.length; index++) {
-            usersNames.push(users[index].value)
-        }
-        let TaskLinks = GetLinks();
-        let task = {
-            "Name" : taskName,
-            "Description" : description,
-            "Date" : date,
-            "State" : state,
-            "Users" : usersNames,
-            "Files" : archivos,
-            "Links" : TaskLinks
-        }
-        addTaskGO(listID, task, date).then(
-            function(resultados){
-                let tokenExpire = resultados[2];
-                let taskOK = resultados[1];
-                let listOK = resultados[0];
-                if (tokenExpire){
-                    alert('El Token de la sesión expiro')
-                    exitSesion();
-                }else{
-                    if (listOK){
-                        if (taskOK == false){
-                            alert('La tarea no se creo')
-                        }else{
-                            alert('La tarea se creo')
-                            changeToTasks(listID)
-                        }
+
+        if (taskName != ""){
+            //Campos
+            let listID = document.querySelector('#listID').textContent
+            let date = document.querySelector('#date').value
+            let description = document.querySelector('#description').value
+            let state = document.querySelector('#state').value
+            let users = document.querySelector('#usuarios').selectedOptions
+            let archivos = GetFiles();
+            let TaskLinks = GetLinks();
+            let usersNames = []
+            for (let index = 0; index < users.length; index++) {
+                usersNames.push(users[index].value)
+            }
+            let task = {
+                "Name" : taskName,
+                "Description" : description,
+                "Date" : date,
+                "State" : state,
+                "Users" : usersNames,
+                "Files" : archivos,
+                "Links" : TaskLinks
+            }
+            addTaskGO(listID, task, date).then(
+                function(resultados){
+                    let tokenExpire = resultados[2];
+                    let taskOK = resultados[1];
+                    let listOK = resultados[0];
+                    if (tokenExpire){
+                        alert('El Token de la sesión expiro')
+                        exitSesion();
                     }else{
-                        alert('La lista fue borrada')
-                        changeHome()
+                        if (listOK){
+                            if (taskOK == false){
+                                alert('La tarea no se creo')
+                            }else{
+                                alert('La tarea se creo')
+                                changeToTasks(listID)
+                            }
+                        }else{
+                            alert('La lista fue borrada')
+                            changeHome()
+                        }
                     }
                 }
-            }
-        )
+            )
+        }else{
+            alert('Introduce al menos el nombre de la tarea')
+        }
     }
 
 
+    function GetFiles(){
+        let user = document.querySelector('#user').textContent
+        let archivos = []
+        let archivosDiv = document.querySelector('#archivosAdjuntos').querySelectorAll('.file');
+            if (archivosDiv.length > 0) {
+                for (let index = 0; index < archivosDiv.length; index++) {
+                    nombre = archivosDiv[index].textContent;
+                    datos = archivosDiv[index].href;
+                    sign = archivosDiv[index].dataset.sign;
+                    let archivo = {
+                        "FileName" : nombre,
+                        "FileData" : datos,
+                        "UserFile" : user,
+                        "SignData" : {
+                            "Sign": sign
+                        },
+                    }
+                    archivos.push(archivo)
+                } 
+            }
+        return archivos
+    }
+
 
     function GetLinks(){
+        let user = document.querySelector('#user').textContent
         let TaskLinks = []
         let links = document.querySelector('#enlacesAdjuntos').querySelectorAll('.url');
         for (let i = 0; i < links.length; i++) {
             let LinkStruct = {
                 "LinkName" : links[i].textContent,
                 "LinkUrl" : links[i].getAttribute('href'),
+                "UserLink" : user,
+                "SignData" : {
+                        "Sign": links[i].dataset.sign
+                    },
             }
             TaskLinks.push(LinkStruct)
         }
@@ -401,7 +462,10 @@
             let numUrls = document.querySelector('#numUrls').textContent 
             numUrls = parseInt(numUrls)
             numUrls++
-            document.querySelector('#numUrls').textContent = numUrls
+            document.querySelector('#numUrls').textContent = numUrls;
+            document.querySelector('#link').value = "";
+            document.querySelector('#linkName').value = "";
+
         }else{
             alert('Introduce un enlace para añadirlo');
         }
