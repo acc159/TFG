@@ -442,6 +442,22 @@ function leerArchivo(){
 
 
 
+    function signUrl(event){
+        li = event.target.closest('li')
+        let fileData = li.querySelector('div').querySelector('div').querySelector('a').href 
+        signGO(fileData).then(
+            function(signHash){
+                let file = li.querySelector('.url').dataset.sign = signHash 
+                let span = document.createElement('span')
+                span.textContent = " Firmado"
+                span.classList.add('badge', 'badge-secondary' , 'firmado')
+                li.querySelector('div').querySelector('div').appendChild(span)
+                li.querySelector('div').querySelectorAll('div')[2].querySelector('a').remove()
+            }
+        )
+    }
+
+
     function signFile(event){
         li = event.target.closest('li')
         let fileData = li.querySelector('div').querySelector('div').querySelector('a').href 
@@ -452,6 +468,7 @@ function leerArchivo(){
                 span.textContent = " Firmado"
                 span.classList.add('badge', 'badge-secondary' , 'firmado')
                 li.querySelector('div').querySelector('div').appendChild(span)
+                li.querySelector('div').querySelectorAll('div')[2].querySelector('a').remove()
             }
         )
     }
@@ -596,12 +613,14 @@ function leerArchivo(){
                     nombre = archivosDiv[index].textContent;
                     datos = archivosDiv[index].href;
                     sign = archivosDiv[index].dataset.sign;
+                    signUser = archivosDiv[index].dataset.usersign;
                     let archivo = {
                         "FileName" : nombre,
                         "FileData" : datos,
                         "UserFile" : user,
                         "SignData" : {
-                            "Sign": sign
+                            "Sign": sign,
+                            "UserSign": signUser
                         },
                     }
                     archivos.push(archivo)
@@ -621,7 +640,8 @@ function leerArchivo(){
                 "LinkUrl" : links[i].getAttribute('href'),
                 "UserLink" : user,
                 "SignData" : {
-                        "Sign": links[i].dataset.sign
+                        "Sign": links[i].dataset.sign,
+                        "UserSign": links[i].dataset.usersign
                     },
             }
             TaskLinks.push(LinkStruct)
