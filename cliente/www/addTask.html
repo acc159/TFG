@@ -352,6 +352,7 @@
 
         if (taskName != ""){
             //Campos
+            let creator =  document.querySelector('#user').textContent
             let listID = document.querySelector('#listID').textContent
             let date = document.querySelector('#date').value
             let description = document.querySelector('#description').value
@@ -370,7 +371,8 @@
                 "State" : state,
                 "Users" : usersNames,
                 "Files" : archivos,
-                "Links" : TaskLinks
+                "Links" : TaskLinks,
+                "Creator" : creator
             }
             addTaskGO(listID, task, date).then(
                 function(resultados){

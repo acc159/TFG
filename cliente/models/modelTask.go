@@ -15,15 +15,19 @@ import (
 )
 
 type Task struct {
-	ID          string      `bson:"_id,omitempty"`
-	Name        string      `bson:"name"`
-	Description string      `bson:"description"`
-	Date        string      `bson:"date"`
-	State       string      `bson:"state"`
-	Files       []TaskFiles `bson:"files"`
-	Links       []TaskLinks `bson:"links"`
-	Users       []string    `bson:"users"`
-	Check       string      `bson:"check"`
+	ID            string      `bson:"_id,omitempty"`
+	Name          string      `bson:"name"`
+	Description   string      `bson:"description"`
+	Date          string      `bson:"date"`
+	State         string      `bson:"state"`
+	Files         []TaskFiles `bson:"files"`
+	Links         []TaskLinks `bson:"links"`
+	Users         []string    `bson:"users"`
+	Check         string      `bson:"check"`
+	Creator       string      `bson:"creator"`
+	SignCreator   SignStructEvents
+	SignsReceived []SignStructEvents
+	SignsClose    []SignStructEvents
 }
 
 type TaskCipher struct {
@@ -46,6 +50,12 @@ type SignStruct struct {
 	UserSign string
 }
 
+type SignStructEvents struct {
+	Sign     string
+	UserSign string
+	Message  string
+}
+
 type TaskLinks struct {
 	LinkName string
 	LinkUrl  string
@@ -54,6 +64,8 @@ type TaskLinks struct {
 }
 
 var TasksLocal []TaskCipher
+
+var CurrentTask Task
 
 //Recupero una tarea por su ID
 func GetTask(taskID string, listID string) TaskCipher {
@@ -359,4 +371,28 @@ func GetLinkFile(taskID string, listID string, linkName string) string {
 func SignFile(fileData string) []byte {
 	signature := utils.Sign([]byte(fileData), GetPrivateKeyUser())
 	return signature
+}
+
+func GetEventCreation() string {
+	return CurrentTask.SignCreator.Sign
+}
+
+func GetEventReceived(userSign string) string {
+	var sign string
+	for i := 0; i < len(CurrentTask.SignsReceived); i++ {
+		if CurrentTask.SignsReceived[i].UserSign == userSign {
+			sign = CurrentTask.SignsReceived[i].Sign
+		}
+	}
+	return sign
+}
+
+func GetEventClosed(userSign string) string {
+	var sign string
+	for i := 0; i < len(CurrentTask.SignsClose); i++ {
+		if CurrentTask.SignsClose[i].UserSign == userSign {
+			sign = CurrentTask.SignsClose[i].Sign
+		}
+	}
+	return sign
 }

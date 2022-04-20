@@ -6,6 +6,12 @@
     <title>Tarea</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     
+    <style>
+        .recepciones{
+            margin-top: 10px;
+        }
+    </style>
+
 </head>
 <body>
     <h1 hidden id="listName">{{.List.Name}}</h1>
@@ -19,11 +25,10 @@
             <a class="nav-link btn-outline-secondary" type="button" role="button" onclick="changeHome()">Volver al Home</a>
             <a class="nav-link btn-outline-info" type="button" role="button" onclick="changeToTasks()">Ver Tareas de la lista</a>
             <a class="nav-link btn-outline-info" type="button" role="button" onclick="UpdateTask()">Actualizar Tarea</a>
+            <a class="nav-link btn-outline-info" type="button" role="button" onclick="changeToTaskConfig('{{.Task.ID}}', '{{.List.ID}}')">Refrescar Tarea</a>
             <a class="nav-link btn-outline-info" type="button" role="button" onclick="DeleteTask()">Borrar Tarea</a>
         </form>
     </nav>
-
-
     
     {{$user:=.User}}
     <div class="container">
@@ -69,11 +74,12 @@
                                     <option value="Hecho">Hecho</option>
                                 {{end}}
                                 {{if eq .Task.State "Hecho"}}
-                                    <option value="Por hacer">Por hacer</option>
-                                    <option value="En progreso">En progreso</option>
-                                    <option selected value="Hecho">Hecho</option>
+                                    <option disabled read-only selected value="Hecho">Hecho</option>
                                 {{end}}                    
                                 </select>
+
+                                <label for="creator">Creada por:</label>
+                                <input class="form-control" id="creator" type="text" value="{{.Task.Creator}}" disabled readonly>
                             </div>
                         </form>
                     </div>
@@ -93,25 +99,43 @@
 
                     <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
                       <div class="card-body">
-                        
-                        <label for="usersTask">Usuarios asignados a la tarea:</label>
-                        <div id="usersTask">    
-                            {{range .Task.Users}}
-                                <div id="{{.}}">
-                                    <span>{{.}}</span>
-                                    <button onclick="deleteUserTask(event)">Eliminar usuario</button>
+                        <div class="row"> 
+                            <div class="col border-right">
+                                <div class="d-flex mb-3 justify-content-between">
+                                    <h4 class="">
+                                        <span class="text-muted">Usuarios Asignados</span>
+                                        <span id="numUsersTask" class="badge badge-secondary badge-pill">{{len .Task.Users}}</span>
+                                    </h4>
                                 </div>
-                            {{end}}
+                                <div id="usersTask">    
+                                    <ul class="list-group">
+                                        {{range .Task.Users}}
+                                        <li id="{{.}}" class="list-group-item d-flex justify-content-between align-items-center">
+                                            {{.}}
+                                            <span onclick="deleteUserTask(event)" role="button" class="badge badge-danger badge-pill" type="button">X</span>
+                                        </li>
+                                        {{end}}
+                                    </ul>
+                                </div>
+                                
+                              </div>
+                              <div class="col">
+                                
+                                <div class="d-flex mb-3 justify-content-between">
+                                    <h4 class="">
+                                        <span class="text-muted">Usuarios de la Lista</span>
+                                    </h4>
+                                    <div>
+                                        <button class="btn btn-primary" onclick="addUserTask()">Adjuntar</button>
+                                    </div>
+                                </div>
+                                <select class="form-control" name="usersList" id="usersList" multiple>
+                                    {{range .List.Users}}
+                                        <option value={{.}}>{{.}}</option>
+                                    {{end}}
+                                </select>
+                              </div>
                         </div>
-                    
-                        <label for="usersList">Usuarios de la lista por añadir a la tarea:</label>
-                            <select class="form-control" name="usersList" id="usersList" multiple>
-                                {{range .List.Users}}
-                                    <option value={{.}}>{{.}}</option>
-                                {{end}}
-                            </select>
-                        <button onclick="addUserTask()">Asignar usuarios a la tarea</button>
-
                       </div>
                     </div>
                 </div>
@@ -148,13 +172,12 @@
                                         <li class="list-group-item d-flex justify-content-between lh-condensed">
                                             <div class="container row">
                                                 <div class="col-md-6 order-md-1">
-                                                    <a href="{{.FileData}}" target="_blank" class="file" download="{{.FileName}}" data-Sign="{{.SignData.Sign}}" data-userSign="{{.SignData.UserSign}}">{{.FileName}}</a>
+                                                    <a href="{{.FileData}}" target="_blank" class="file" download="{{.FileName}}" data-user="{{.UserFile}}" data-Sign="{{.SignData.Sign}}" data-userSign="{{.SignData.UserSign}}">{{.FileName}}</a>
                                                 </div>
                                                 <div class="col-md-3 order-md-2">
                                                     <a class="text-muted" type="button" role="button" onclick="deleteFile(event)">Eliminar</a>
                                                 </div>
                                                 <div class="col-md-3 order-md-3">
-
                                                     {{if .SignData.Sign}}
                                                         <a data-type="file" class="text-muted" type="button" role="button" onclick="verifySignDataTask(event)">Verificar Firma</a>
                                                     {{else}}
@@ -164,8 +187,6 @@
                                                             <a class="text-muted">Sin firmar</a>
                                                         {{end}}
                                                     {{end}}
-
-                                                    
                                                 </div>
                                             </div>
                                         </li>
@@ -196,7 +217,7 @@
                                         <li class="list-group-item d-flex justify-content-between lh-condensed">
                                             <div class="container row">
                                                 <div class="col-md-6 order-md-1">
-                                                    <a class="url" target="_blank" href="{{.LinkUrl}}" data-Sign="{{.SignData.Sign}}" data-userSign="{{.SignData.UserSign}}">{{.LinkName}}</a>
+                                                    <a class="url" target="_blank" href="{{.LinkUrl}}" data-user="{{.UserLink}}" data-Sign="{{.SignData.Sign}}" data-userSign="{{.SignData.UserSign}}">{{.LinkName}}</a>
                                                 </div>
                                                 <div class="col-md-3 order-md-2">
                                                     <a class="text-muted" type="button" role="button" onclick="deleteUrl(event)">Eliminar</a>
@@ -207,7 +228,7 @@
                                                         <a data-type="link" class="text-muted" type="button" role="button" onclick="verifySignDataTask(event)">Verificar Firma</a>
                                                     {{else}}
                                                         {{if eq $user .UserLink}}
-                                                            <a class="text-muted" type="button" role="button" onclick="signFile(event)">Firmar</a>
+                                                            <a class="text-muted" type="button" role="button" onclick="signUrl(event)">Firmar</a>
                                                         {{else}}
                                                             <a class="text-muted">Sin firmar</a>
                                                         {{end}}
@@ -228,77 +249,126 @@
                       </div>
                     </div>
                 </div>
+
+                <!-- EVENTOS  -->
+                <div class="card">
+                    <div class="card-header" id="headingTwo">
+                      <h5 class="mb-0">
+                        <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                            <h2 class="display-4">Registro de Eventos</h2>
+                        </button>
+                      </h5>
+                    </div>
+
+                    <div id="collapseFour" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
+                      <div class="card-body">
+
+                        <!-- Creacion -->
+                        <div class="row">
+                        <div class="col-md-12 order-md-1 border-bottom">
+                            <div class="d-flex mb-3 justify-content-between">
+                                <h4 class="">
+                                    <span class="text-muted">Confirmacion de creación</span>
+                                </h4>
+                                <div>
+                                    {{if eq .Task.SignCreator.Sign ""}}
+                                        {{if (call .CheckCreator .Task)}}
+                                            <button class="btn btn-primary" onclick="signEventTask(event, 'Creacion')">Firmar creación de la tarea</button>
+                                        {{end}}
+                                    {{end}}
+                                </div>
+                            </div>
+                            <ul id="creacion" class="list-group mb-3">
+                                {{if ne .Task.SignCreator.Sign ""}}
+                                    <li class="list-group-item d-flex justify-content-between lh-condensed">
+                                        <div class="container row">
+                                            <div class="col-md-11 order-md-1">
+                                                <a data-sign="{{.Task.SignCreator.Sign}}" data-usersign="{{.Task.SignCreator.UserSign}}">{{.Task.SignCreator.Message}}</a>
+                                            </div>
+                                            <div class="col-md-1 order-md-2">
+                                                <button class="btn btn-outline-info" onclick="verifySignEvent(event, 'Creacion')">Verificar</button>
+                                            </div>
+                                        </div>
+                                    </li>
+                                {{end}}
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Recepciones -->
+                    <div class="row">
+                        <div class="col-md-12 order-md-1 border-bottom recepciones">
+                            <div class="d-flex mb-3 justify-content-between">
+                                <h4 class="">
+                                    <span class="text-muted">Confirmaciones de Recepción</span>
+                                </h4>
+                                <div>
+                                    {{if (call .IsUserAssigned .Task)}}
+                                        {{if not (call .HasSignReceivedByUser .Task)}}
+                                            <button class="btn btn-primary" onclick="signEventTask(event, 'Recepcion')">Firmar Recepción de la tarea</button>
+                                        {{end}}
+                                    {{end}}
+                                </div>
+                            </div>
+                            <ul id="recepciones" class="list-group mb-3">
+                                {{range .Task.SignsReceived}}
+                                <li class="list-group-item d-flex justify-content-between lh-condensed">
+                                    <div class="container row">
+                                        <div class="col-md-11 order-md-1">
+                                            <a data-sign="{{.Sign}}" data-usersign="{{.UserSign}}">{{.Message}}</a>
+                                        </div>
+                                        <div class="col-md-1 order-md-2">
+                                            <button class="btn btn-outline-info" onclick="verifySignEvent(event, 'Recepcion')">Verificar</button>
+                                        </div>
+                                    </div>
+                                </li>
+                                {{end}}
+                            </ul>
+                        </div>
+                    </div>
+
+
+
+                    <!-- Finalizacion -->
+                        <div class="row">
+                            <div class="col-md-12 order-md-1 border-bottom recepciones">
+                                <div class="d-flex mb-3 justify-content-between">
+                                    <h4 class="">
+                                        <span class="text-muted">Confirmaciones de Finalización</span>
+                                    </h4>
+                                    <div>
+                                        {{if eq .Task.State "Hecho"}}
+                                            {{if (call .IsUserAssigned .Task)}}
+                                                {{if not (call .HasSignCloseByUser .Task)}}
+                                                    <button class="btn btn-primary" onclick="signEventTask(event, 'Finalizacion')">Firmar Finalización de la tarea</button>
+                                                {{end}}
+                                            {{end}}    
+                                        {{end}}
+                                    </div>
+                                </div>
+                                <ul id="finalizaciones" class="list-group mb-3">
+                                    {{range .Task.SignsClose}}
+                                    <li class="list-group-item d-flex justify-content-between lh-condensed">
+                                        <div class="container row">
+                                            <div class="col-md-11 order-md-1">
+                                                <a data-sign="{{.Sign}}" data-usersign="{{.UserSign}}">{{.Message}}</a>
+                                            </div>
+                                            <div class="col-md-1 order-md-2">
+                                                <button class="btn btn-outline-info" onclick="verifySignEvent(event, 'Finalizacion')">Verificar</button>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    {{end}}
+                                </ul>
+                            </div>
+                        </div>
+
+                      </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    <!-- <h1 contenteditable  id="name">{{.Task.Name}}</h1>
-    <h2 contenteditable id="state">{{.Task.State}}</h2>
-    <p contenteditable id="description">{{.Task.Description}}</p>
-    <input type="date" id="date" name="date" value="{{.Task.Date}}" contenteditable>
-    
-    <h2>Usuarios asignados a la tarea:</h2> -->
-    <!-- <div id="usersTask">    
-        {{range .Task.Users}}
-            <div id="{{.}}">
-                <span>{{.}}</span>
-                <button onclick="deleteUserTask(event)">Eliminar usuario</button>
-            </div>
-        {{end}}
-    </div>
-
-
-    <h2>Usuarios de la lista por añadir a la tarea:</h2>
-    <div id="usersListDiv">
-        <select name="usersList" id="usersList" multiple>
-            {{range .List.Users}}
-                <option value={{.}}>{{.}}</option>
-            {{end}}
-        </select>
-        <button onclick="addUserTask()">Asignar usuarios a la tarea</button>
-    </div> -->
-
-
-    <!-- <div id="archivosAdjuntos">
-        <h3>Archivos adjuntos:</h3>
-        {{range .Task.Files}}
-            <div>
-                <a href="{{.FileData}}" download="{{.FileName}}">{{.FileName}}</a>
-                <button onclick="deleteFileTask(event)">Eliminar archivo</button>
-            </div>
-        {{end}}
-    </div>
-
-    <div id="links">
-        <h3>Enlaces adjuntos:</h3>
-        <ul>
-            {{range .Task.Links}}
-            <li>
-                <a target="_blank" href="{{.LinkUrl}}">{{.LinkName}}</a>
-                <button onclick="deleteLinkTask(event)">Eliminar enlace</button>
-            </li>
-        {{end}}
-        </ul>
-        </div>
-
-    <input type="file" id="subir_archivo"/>
-    <button onclick="leerArchivo()">Adjuntar archivo</button> -->
-
 
 </body>
 </html>
@@ -351,18 +421,6 @@ function leerArchivo(){
         let linkName = document.querySelector('#linkName').value;
         if (link != "" && linkName != "")
         {
-            // let links = document.querySelector('#links');
-            // let li = document.createElement('li');
-            // let a = document.createElement('a');
-            // a.setAttribute('target', '_blank');
-            // a.href = link;
-            // a.textContent = linkName;
-            // let button = document.createElement('button');
-            // button.innerHTML = "Eliminar enlace";
-            // button.onclick = function () {deleteLinkTask(event)};
-            // li.appendChild(a);
-            // li.appendChild(button);
-            // links.appendChild(li);
             AddUrl(link, linkName)
             let numUrls = document.querySelector('#numUrls').textContent 
             numUrls = parseInt(numUrls)
@@ -415,6 +473,9 @@ function leerArchivo(){
         let aFile = document.createElement('a')
         aFile.setAttribute('target', '_blank');
         aFile.classList.add('file')
+        aFile.dataset.sign = ""
+        aFile.dataset.usersign = ""
+        aFile.dataset.user = document.querySelector('#user').textContent
         aFile.textContent = nombreArchivo
         aFile.href = datosArchivo
         aFile.download = nombreArchivo
@@ -447,7 +508,8 @@ function leerArchivo(){
         let fileData = li.querySelector('div').querySelector('div').querySelector('a').href 
         signGO(fileData).then(
             function(signHash){
-                let file = li.querySelector('.url').dataset.sign = signHash 
+                li.querySelector('.url').dataset.sign = signHash 
+                li.querySelector('.url').dataset.usersign = document.querySelector('#user').textContent 
                 let span = document.createElement('span')
                 span.textContent = " Firmado"
                 span.classList.add('badge', 'badge-secondary' , 'firmado')
@@ -463,7 +525,8 @@ function leerArchivo(){
         let fileData = li.querySelector('div').querySelector('div').querySelector('a').href 
         signGO(fileData).then(
             function(signHash){
-                let file = li.querySelector('.file').dataset.sign = signHash 
+                li.querySelector('.file').dataset.sign = signHash 
+                li.querySelector('.file').dataset.usersign = document.querySelector('#user').textContent 
                 let span = document.createElement('span')
                 span.textContent = " Firmado"
                 span.classList.add('badge', 'badge-secondary' , 'firmado')
@@ -502,6 +565,9 @@ function leerArchivo(){
         let divSign = document.createElement('div')  
         divSign.classList.add('col-md-3', 'order-md-3') 
         let aFile = document.createElement('a')
+        aFile.dataset.user = document.querySelector('#user').textContent
+        aFile.dataset.sign = ""
+        aFile.dataset.usersign = ""
         aFile.setAttribute('target', '_blank');
         aFile.classList.add('url')
         aFile.textContent = nombreArchivo
@@ -554,17 +620,23 @@ function leerArchivo(){
     }
 
     function deleteUserTask(){
-        var div = event.target.closest('div');
+        var li = event.target.closest('li');
         let option = document.createElement('option');
-        option.value = div.id;
-        option.textContent= div.id;
+        option.value = li.id;
+        option.textContent= li.id;
         document.querySelector('#usersList').appendChild(option);
-        div.remove();
-    }
+        li.remove();
 
+        let numUsers  = document.querySelector('#numUsersTask').textContent;
+        let numero = parseInt(numUsers);
+        numero--;
+        document.querySelector('#numUsersTask').textContent = numero;
+
+    }
 
     function addUserTask(){
        let selectedUsers = document.querySelector('#usersList').selectedOptions;
+       let selectedUsersNum = selectedUsers.length;
        if (selectedUsers.length > 0){
             let usersNames = []
             for (let index = selectedUsers.length; index > 0; index--) {
@@ -572,24 +644,34 @@ function leerArchivo(){
                     selectedUsers[index - 1].remove();
             }
             //Ahora los meto en la lista de usuarios de la tarea
-            let usersTask = document.querySelector('#usersTask');
+            let usersTask = document.querySelector('#usersTask').querySelector('ul');
             for (let i = 0; i < usersNames.length; i++) {
-                let newDiv = document.createElement('div');
-                newDiv.id = usersNames[i];
+                let li = document.createElement('li');
+                li.id = usersNames[i];
+                li.textContent = usersNames[i];
+                li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-center')
                 span = document.createElement('span');
-                span.textContent = usersNames[i];
-                let button = document.createElement('button');
-                button.innerHTML = "Eliminar usuario";
-                button.onclick = function () {deleteUserTask(event)};
-                newDiv.appendChild(span)
-                newDiv.innerHTML += " "
-                newDiv.appendChild(button)
-                usersTask.appendChild(newDiv)
+                span.textContent = "X"
+                span.classList.add('badge', 'badge-danger', 'badge-pill')
+                span.setAttribute('type',"button")
+                span.onclick = function () {deleteUserTask(event)};
+                li.appendChild(span)
+                usersTask.appendChild(li)
             }
+            let numUsers  = document.querySelector('#numUsersTask').textContent;
+            let numero = parseInt(numUsers);
+            numero += selectedUsersNum;
+            document.querySelector('#numUsersTask').textContent = numero;
        }else{
            alert('Marca algun usuario para añadirlo asignarlo a la tarea')
        }
     }
+
+
+
+
+
+
 
 
     //Sin usar actualmente
@@ -605,7 +687,6 @@ function leerArchivo(){
 
 
     function GetFiles(){
-        let user = document.querySelector('#user').textContent
         let archivos = []
         let archivosDiv = document.querySelector('#archivosAdjuntos').querySelectorAll('.file');
             if (archivosDiv.length > 0) {
@@ -614,10 +695,11 @@ function leerArchivo(){
                     datos = archivosDiv[index].href;
                     sign = archivosDiv[index].dataset.sign;
                     signUser = archivosDiv[index].dataset.usersign;
+                    userFile = archivosDiv[index].dataset.user;
                     let archivo = {
                         "FileName" : nombre,
                         "FileData" : datos,
-                        "UserFile" : user,
+                        "UserFile" : userFile,
                         "SignData" : {
                             "Sign": sign,
                             "UserSign": signUser
@@ -638,7 +720,7 @@ function leerArchivo(){
             let LinkStruct = {
                 "LinkName" : links[i].textContent,
                 "LinkUrl" : links[i].getAttribute('href'),
-                "UserLink" : user,
+                "UserLink" : links[i].dataset.user,
                 "SignData" : {
                         "Sign": links[i].dataset.sign,
                         "UserSign": links[i].dataset.usersign
@@ -650,22 +732,71 @@ function leerArchivo(){
     }
 
 
+    function GetSignReceived(){
+        let user = document.querySelector('#user').textContent
+        let ReceivedList = []
+        let confirms = document.querySelector('#recepciones').querySelectorAll('a')
+        for (let i = 0; i < confirms.length; i++) {
+            let ReceivedStruct = {
+                "Sign" : confirms[i].dataset.sign,
+                "UserSign" : confirms[i].dataset.usersign,
+                "Message": confirms[i].textContent,
+            }
+            ReceivedList.push(ReceivedStruct)
+        }
+        return ReceivedList
+    }
+
+    function GetSignClose(){
+        let user = document.querySelector('#user').textContent
+        let ReceivedList = []
+        let confirms = document.querySelector('#finalizaciones').querySelectorAll('a')
+        for (let i = 0; i < confirms.length; i++) {
+            let ReceivedStruct = {
+                "Sign" : confirms[i].dataset.sign,
+                "UserSign" : confirms[i].dataset.usersign,
+                "Message": confirms[i].textContent,
+            }
+            ReceivedList.push(ReceivedStruct)
+        }
+        return ReceivedList
+    }
+
+    function GetSignCreator(){
+        let creatorSign = document.querySelector('#creacion').querySelector('a');
+        let creator = {
+            "Sign" : creatorSign.dataset.sign,
+            "UserSign" : creatorSign.dataset.usersign,
+            "Message": creatorSign.textContent,
+        }
+        return creator
+    }
+
+
+
+
+
+
     function UpdateTask(){
         //Recupero los campos de la tarea
+        let creator = document.querySelector('#creator').value;
         let taskID = document.querySelector('#taskID').textContent;
         let listID = document.querySelector('#listID').textContent;
-        let name = document.querySelector('#taskName').textContent;
+        let name = document.querySelector('#taskName').value;
         let date = document.querySelector('#date').value;
-        let state = document.querySelector('#state').textContent;
-        let description = document.querySelector('#description').textContent;
+        let state = document.querySelector('#state').selectedOptions[0].value
+        let description = document.querySelector('#description').value;
         let check = document.querySelector('#taskCheck').textContent;
-        let usersTaskDivs = document.querySelector('#usersTask').querySelectorAll('div');
+        let usersTaskLI = document.querySelector('#usersTask').querySelectorAll('li');
         let usersTask = [];
-        for (let index = 0; index < usersTaskDivs.length; index++) {
-            usersTask.push(usersTaskDivs[index].id)
+        for (let index = 0; index < usersTaskLI.length; index++) {
+            usersTask.push(usersTaskLI[index].id)
         }
         let archivos = GetFiles();
         let TaskLinks = GetLinks();
+        let signsReceived = GetSignReceived();
+        let signsClosed = GetSignClose();
+        let signCreator = GetSignCreator();
         let newTask = {
             "ID" : taskID,
             "Name" : name,
@@ -675,10 +806,13 @@ function leerArchivo(){
             "Users" : usersTask,
             "Files" : archivos,
             "Links" : TaskLinks,
-            "Check" : check
+            "Check" : check,
+            "Creator" : creator,
+            "SignsReceived": signsReceived,
+            "SignCreator" : signCreator,
+            "SignsClose" : signsClosed,
         }
         updateTaskGO(newTask, listID).then(
-
             function(resultados){
                 let tokenExpire = resultados[2];
                 let updateStatus = resultados[1];
@@ -768,9 +902,96 @@ function leerArchivo(){
         )
     }
 
+    function verifySignEvent(event, type){
+        let taskID = document.querySelector('#taskID').textContent;
+        let a = event.target.closest('li').querySelector('a')
+        data = a.textContent
+        signUser = a.dataset.usersign
+        verifySignEventGO(type, data, signUser).then(
+            function(resultados){
+                if (resultados){
+                    let tokenExpire = resultados[1];
+                    let signOK = resultados[0];
+                    if (tokenExpire){
+                        alert('El Token de la sesión expiro')
+                        exitSesion();
+                    }else{
+                        if (signOK){
+                            alert('Firma verificada')
+                        }else{
+                            alert('La firma no coincide')
+                        }
+                    }
+                }
+            }
+        )
+    }
 
 
 
+    function addEvent(contenedor, sign, usersign, message, type){
+        let ulPadre = document.querySelector(contenedor);
+        let li = document.createElement('li')
+        li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'lh-condensed')
+        let divPadre = document.createElement('div')   
+        divPadre.classList.add('container', 'row')   
+        let divEvent = document.createElement('div')  
+        divEvent.classList.add('col-md-11', 'order-md-1')        
+        let divButton = document.createElement('div')  
+        divButton.classList.add('col-md-1', 'order-md-2')  
+ 
+        let event = document.createElement('a')
+        event.dataset.sign = sign
+        event.dataset.usersign = usersign
+        event.textContent = message;
+        divEvent.appendChild(event)
+
+        divPadre.appendChild(divEvent)
+        li.appendChild(divPadre)
+        ulPadre.appendChild(li)
+    }
+
+
+
+
+    
+    function signEventTask(event, type){
+        var date = new Date();
+        var fecha = date.getDate() + '-' + ( date.getMonth() + 1 ) + '-' + date.getFullYear();
+        var hora = date.getHours() + ':' + ((date.getMinutes()<10?'0':'') + date.getMinutes()) + ':' + date.getSeconds();
+        var fechaFull = fecha + ' ' + hora;
+        let user = document.querySelector('#user').textContent
+        let taskID = document.querySelector('#taskID').textContent;
+        let mensaje;
+        let contenedor;
+        switch (type) {
+            case "Creacion":
+                mensaje = user + " firmo la creación de la tarea " + taskID + " el dia " + fecha + " a las " + hora;
+                contenedor = "#creacion" 
+                break;
+
+            case "Recepcion":
+                mensaje = user + " firmo la recepción de la tarea " + taskID + " el dia " + fecha + " a las " + hora;
+                contenedor = "#recepciones"
+                break;
+
+            case "Finalizacion":
+                mensaje = user + " firmo la finalización de la tarea " + taskID + " el dia " + fecha + " a las " + hora;
+                contenedor = "#finalizaciones" 
+                break;                        
+        
+            default:
+                break;
+        }
+
+        signGO(mensaje).then(
+            function(signHash){
+                addEvent(contenedor, signHash, user, mensaje, type);
+            }
+        )
+
+        event.target.remove()
+    }
 
 
 

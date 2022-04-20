@@ -62,7 +62,7 @@
             <label for="description">Descripción del proyecto:</label>
             <textarea class="form-control" name="description" id="proyectDescription" cols="30" rows="10">{{.Proyect.Description}}</textarea>
             <h2 class="display-4 text-center">Gestión Usuarios</h2>
-            <label for="">Usuarios del Proyecto:</label>
+            <!-- <label for="">Usuarios del Proyecto:</label>
             <div id="usersProyect">
                 {{range .Proyect.Users}}
                     <ul class="list-group list-group-horizontal">
@@ -70,7 +70,71 @@
                         <button class="list-group-item" onclick="deleteUser('{{.}}')">Eliminar usuario</button>
                     </ul>
                 {{end}}
+            </div> -->
+
+
+
+            <div class="row"> 
+                <div class="col border-right">
+                    <div class="d-flex mb-3 justify-content-between">
+                        <h4 class="">
+                            <span class="text-muted">Usuarios Asignados</span>
+                            <span id="usersProyect" class="badge badge-secondary badge-pill">{{len .Proyect.Users}}</span>
+                        </h4>
+                    </div>
+                    <div id="usersProyect">    
+                        <ul class="list-group">
+                            {{range .Proyect.Users}}
+                            <li id="{{.}}" class="list-group-item d-flex justify-content-between align-items-center">
+                                {{.}}
+                                <span onclick="deleteUser('{{.}}')" role="button" class="badge badge-danger badge-pill" type="button">X</span>
+                            </li>
+                            {{end}}
+                        </ul>
+                    </div>
+                    
+                  </div>
+                  <div class="col">
+                    
+                    <div class="d-flex mb-3 justify-content-between">
+                        <h4 class="">
+                            <span class="text-muted">Usuarios del sistema</span>
+                        </h4>
+                        <div>
+                            <button class="btn btn-primary" onclick="addUserProyect()">Añadir usuario</button>
+                        </div>
+                    </div>
+                    <select class="form-control" name="users" id="users" multiple>
+                        {{range .Emails}}
+                            <option value={{.}}>{{.}}</option>
+                        {{end}}
+                    </select>
+                  </div>
             </div>
+
+
+
+
+
+
+
+
+            <!-- <ul class="list-group">
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  Cras justo odio
+                  <span role="button" class="badge badge-danger badge-pill" type="button">X</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  Dapibus ac facilisis in
+                  <span role="button" class="badge badge-danger badge-pill" type="button">X</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  Morbi leo risus
+                  <span role="button" class="badge badge-danger badge-pill" type="button">X</span>
+                </li>
+              </ul>
+
+
             {{if not .Emails}}
                 <h3>Ningun usuario mas en el sistema por añadir al proyecto</h3>
             {{else}}
@@ -81,7 +145,7 @@
                 {{end}}
                 </select>
                 <button class="btn btn-outline-primary" onclick="addUserProyect()">Añadir usuario</button>
-            {{end}}
+            {{end}} -->
         </div>
     </form>
 </body>

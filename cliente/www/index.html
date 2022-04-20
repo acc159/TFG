@@ -62,7 +62,7 @@
             {{$proyectName:=.Proyecto.Name}}
                 <section class="jumbotron text-center">
                     <div class="container" >
-                        <h1 class="display-3">{{.Proyecto.Name}}</h1>
+                        <h1 name="{{.Proyecto.Name}}" class="display-3">{{.Proyecto.Name}}</h1>
                         <p>{{.Proyecto.Description}}</p>
                         <h2>Listas en el proyecto: {{len .Listas}}</h2>
                         <div class="btn-group btn-group" role="group" id="{{.Proyecto.ID}}" data-proyectName="{{.Proyecto.Name}}">
@@ -82,7 +82,7 @@
                             <div class="row">   
                                 {{range .Listas}}
                                     <div class="col-md-4">
-                                        <div class="border shadow-lg card mb-4 box-shadow text-center">
+                                        <div name="{{.Name}}" class="border shadow-lg card mb-4 box-shadow text-center">
                                             <div class="card-header">
                                                 <h5 class="card-title" >{{.Name}}</h5>
                                             </div>

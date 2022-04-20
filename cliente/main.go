@@ -168,9 +168,15 @@ func main() {
 	//Cambiar a la pestaña de añadir Tareas
 	UI.Bind("changeToTaskConfigGO", func(taskID string, listID string) []bool {
 		if !utils.CheckExpirationTimeToken(models.UserSesion.Token) {
-			return []bool{false, true}
+			return []bool{false, false, true}
 		} else if models.ExistList(listID) {
-			return []bool{LoadTask(taskID, listID), false}
+			task, list := LoadTask(taskID, listID)
+			if task.ID != "" && list.ID != "" {
+				models.CurrentTask = task
+				ChangeViewConfigTask(config.PreView+"configTask.html", task, list)
+				return []bool{true, true, false}
+			}
+			return []bool{true, false, false}
 		}
 		return []bool{false, false, false}
 	})
@@ -428,6 +434,32 @@ func main() {
 			if signBase64 != "" {
 				sign := utils.ToByteFromBase64(signBase64)
 				publicKey, tokenExpire := models.GetPublicKey(signUser)
+				if tokenExpire {
+					return []bool{false, tokenExpire}
+				}
+				return []bool{utils.CheckSign(sign, []byte(data), publicKey), tokenExpire}
+			} else {
+				return []bool{false, false}
+			}
+		}
+	})
+
+	UI.Bind("verifySignEventGO", func(evenType string, data string, userSign string) []bool {
+		if !utils.CheckExpirationTimeToken(models.UserSesion.Token) {
+			return []bool{false, true}
+		} else {
+			var signBase64 string
+			switch evenType {
+			case "Creacion":
+				signBase64 = models.GetEventCreation()
+			case "Recepcion":
+				signBase64 = models.GetEventReceived(userSign)
+			default:
+				signBase64 = models.GetEventClosed(userSign)
+			}
+			if signBase64 != "" {
+				sign := utils.ToByteFromBase64(signBase64)
+				publicKey, tokenExpire := models.GetPublicKey(userSign)
 				if tokenExpire {
 					return []bool{false, tokenExpire}
 				}

@@ -50,9 +50,13 @@ type DataConfigList struct {
 }
 
 type DataConfigTask struct {
-	Task models.Task
-	List models.List
-	User string
+	Task                  models.Task
+	List                  models.List
+	User                  string
+	HasSignReceivedByUser func(models.Task) bool
+	HasSignCloseByUser    func(models.Task) bool
+	CheckCreator          func(models.Task) bool
+	IsUserAssigned        func(models.Task) bool
 }
 
 type AdminView struct {
@@ -164,7 +168,16 @@ func ChangeViewConfigList(nombreVista string, list models.List, emails []string,
 	UI.Load(loadableContents)
 }
 
+// func (d DataConfigTask) HasPermission() bool {
+// 	if d.Task.ID != "" {
+// 		return true
+// 	} else {
+// 		return false
+// 	}
+// }
+
 func ChangeViewConfigTask(nombreVista string, task models.Task, list models.List) {
+
 	tmpl, err := template.ParseFiles(nombreVista)
 	if err != nil {
 		log.Fatal(err)
@@ -173,6 +186,33 @@ func ChangeViewConfigTask(nombreVista string, task models.Task, list models.List
 		Task: task,
 		List: list,
 		User: models.UserSesion.Email,
+		HasSignReceivedByUser: func(task models.Task) bool {
+			for i := 0; i < len(task.SignsReceived); i++ {
+				if task.SignsReceived[i].UserSign == models.UserSesion.Email {
+					return true
+				}
+			}
+			return false
+		},
+		HasSignCloseByUser: func(task models.Task) bool {
+			for i := 0; i < len(task.SignsClose); i++ {
+				if task.SignsClose[i].UserSign == models.UserSesion.Email {
+					return true
+				}
+			}
+			return false
+		},
+		CheckCreator: func(task models.Task) bool {
+			return task.Creator == models.UserSesion.Email
+		},
+		IsUserAssigned: func(task models.Task) bool {
+			for i := 0; i < len(task.Users); i++ {
+				if models.UserSesion.Email == task.Users[i] {
+					return true
+				}
+			}
+			return false
+		},
 	}
 
 	buff := bytes.Buffer{}
@@ -181,7 +221,7 @@ func ChangeViewConfigTask(nombreVista string, task models.Task, list models.List
 	UI.Load(loadableContents)
 }
 
-func LoadTask(taskID string, listID string) bool {
+func LoadTask(taskID string, listID string) (models.Task, models.List) {
 	taskCipher := models.GetTask(taskID, listID)
 	if !taskCipher.ID.IsZero() {
 		listCipher := models.GetList(listID)
@@ -192,11 +232,9 @@ func LoadTask(taskID string, listID string) bool {
 		for i := 0; i < len(task.Users); i++ {
 			list.Users = utils.FindAndDelete(list.Users, task.Users[i])
 		}
-		//Recuperamos la tarea la desciframos
-		ChangeViewConfigTask(config.PreView+"configTask.html", task, list)
-		return true
+		return task, list
 	} else {
-		return false
+		return models.Task{}, models.List{}
 	}
 }
 
