@@ -58,11 +58,17 @@ func UpdateProyect(w http.ResponseWriter, r *http.Request) {
 	var proyecto models.Proyect
 	json.NewDecoder(r.Body).Decode(&proyecto)
 	resultado := models.UpdateProyect(proyecto, id)
-	if !resultado {
+	switch resultado {
+	case "Error":
 		w.WriteHeader(400)
-		w.Write([]byte("No se pudo actualizar el proyecto"))
-	} else {
-		w.Write([]byte("Proyecto actualizado"))
+		w.Write([]byte("No se pudo modificar la lista"))
+	case "Ya modificada":
+		w.WriteHeader(470)
+		respuesta := "Lista ya actualizada"
+		json.NewEncoder(w).Encode(respuesta)
+	default:
+		w.Write([]byte("Lista actualizada"))
+		return
 	}
 }
 

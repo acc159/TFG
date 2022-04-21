@@ -24,19 +24,17 @@ func CreateList(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteList(w http.ResponseWriter, r *http.Request) {
-
 	params := mux.Vars(r)
 	id := params["id"]
 
 	borrada := models.DeleteList(id)
 	if borrada {
-		w.Write([]byte("Tarea borrada"))
+		w.Write([]byte("Lista borrada"))
 		return
 	} else {
 		w.WriteHeader(400)
-		w.Write([]byte("No pudo ser borrada la tarea"))
+		w.Write([]byte("No pudo ser borrada la lista"))
 	}
-
 }
 
 func UpdateList(w http.ResponseWriter, r *http.Request) {
@@ -46,12 +44,18 @@ func UpdateList(w http.ResponseWriter, r *http.Request) {
 	var list models.List
 	json.NewDecoder(r.Body).Decode(&list)
 	modificado := models.UpdateList(list, id)
-	if modificado {
-		w.Write([]byte("Tarea actualizada"))
-		return
-	} else {
+
+	switch modificado {
+	case "Error":
 		w.WriteHeader(400)
-		w.Write([]byte("No se pudo modificar la tarea"))
+		w.Write([]byte("No se pudo modificar la lista"))
+	case "Ya modificada":
+		w.WriteHeader(470)
+		respuesta := "Lista ya actualizada"
+		json.NewEncoder(w).Encode(respuesta)
+	default:
+		w.Write([]byte("Lista actualizada"))
+		return
 	}
 }
 

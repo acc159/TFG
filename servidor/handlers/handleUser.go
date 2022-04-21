@@ -9,13 +9,18 @@ import (
 	"github.com/gorilla/mux"
 )
 
+type UserCertificate struct {
+	Certificate   []byte `json:"certificate"`
+	PublicKeyAC   []byte `json:"publicKeyAC"`
+	PublicKeyUser []byte `json:"publicKeyUser"`
+}
+
 //Aqui tengo los controladores que responden a las peticiones a las diferentes rutas
 
 //Registro del usuario
 func Signup(w http.ResponseWriter, r *http.Request) {
 	var user models.User
 	json.NewDecoder(r.Body).Decode(&user)
-
 	//Compruebo que no exista ya
 	existeUser := models.GetUser(user.Email)
 	if existeUser.Email == "" {
@@ -25,6 +30,7 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 			respuesta := "No se registro el usuario"
 			json.NewEncoder(w).Encode(respuesta)
 		} else {
+			utils.CreateUserCertificate(user.Email, user.PublicKey)
 			json.NewEncoder(w).Encode(resultado)
 		}
 	} else {
@@ -97,15 +103,14 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 func GetUser(w http.ResponseWriter, r *http.Request) {
 	//Obtengo el id de los parametros de la petición
 	params := mux.Vars(r)
-	id := params["email"]
-	usuario := models.GetUser(id)
+	email := params["email"]
+	usuario := models.GetUser(email)
 	if usuario.Empty() {
 		w.WriteHeader(400)
 		w.Write([]byte("No existe el usuario"))
 	} else {
 		json.NewEncoder(w).Encode(usuario)
 	}
-
 }
 
 func CreateUser(w http.ResponseWriter, r *http.Request) {
@@ -121,4 +126,25 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(usuarioID)
+}
+
+func GetUserCertificate(w http.ResponseWriter, r *http.Request) {
+	//Obtengo el id de los parametros de la petición
+	params := mux.Vars(r)
+	user := params["userEmail"]
+
+	certificate := utils.GetUserCertificate(user)
+	publicKeyAC := utils.GetACpublicKey()
+	userPublicKey := models.GetUser(user).PublicKey
+	userCertificate := UserCertificate{
+		Certificate:   certificate,
+		PublicKeyAC:   publicKeyAC,
+		PublicKeyUser: userPublicKey,
+	}
+	if len(certificate) == 0 {
+		w.WriteHeader(400)
+		w.Write([]byte("No existe el certificado"))
+	} else {
+		json.NewEncoder(w).Encode(userCertificate)
+	}
 }

@@ -1,21 +1,34 @@
 package utils
 
 import (
+	"crypto/sha256"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
 	jwt "github.com/golang-jwt/jwt"
 )
 
-var SecretKey = []byte("mysuperSecret")
+var SecretKey = []byte{}
+
+func PrepareJWT() {
+	var secret string = os.Getenv("SECRET_JWT")
+	dataHash := sha256.New()
+	_, err := dataHash.Write([]byte(secret))
+	if err != nil {
+		panic(err)
+	}
+	dataHashsum := dataHash.Sum(nil)
+	SecretKey = dataHashsum
+}
 
 func GenerateJWT(email string) string {
 	token := jwt.New(jwt.SigningMethodHS256)
 	claims := token.Claims.(jwt.MapClaims)
 	claims["authorized"] = true
 	claims["user"] = email
-	claims["exp"] = time.Now().Add(time.Minute * 4).Unix()
+	claims["exp"] = time.Now().Add(time.Minute * 30).Unix()
 	tokenString, err := token.SignedString(SecretKey)
 	if err != nil {
 		fmt.Println(err)
@@ -34,5 +47,12 @@ func ValidateToken(bearerToken string) bool {
 	if err != nil {
 		fmt.Println(err)
 	}
+
+	// if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+	// 	fmt.Println(claims["user"], claims["authorized"])
+	// } else {
+	// 	fmt.Println(err)
+	// }
+
 	return token.Valid
 }

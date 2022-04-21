@@ -13,9 +13,11 @@ import (
 )
 
 type Proyect struct {
-	ID         primitive.ObjectID `bson:"_id,omitempty"`
-	Cipherdata []byte             `bson:"cipherdata,omitempty"`
-	Users      []string           `bson:"users,omitempty"`
+	ID          primitive.ObjectID `bson:"_id,omitempty"`
+	Cipherdata  []byte             `bson:"cipherdata,omitempty"`
+	Users       []string           `bson:"users,omitempty"`
+	Check       string             `bson:"check"`
+	UpdateCheck string             `bson:"updateCheck"`
 }
 
 //Creo un proyecto
@@ -139,7 +141,7 @@ func DeleteUserProyect(proyectStringID string, user string) bool {
 //Sin Usar
 
 //Actualizo el proyecto
-func UpdateProyect(proyecto Proyect, stringID string) bool {
+func UpdateProyect(proyecto Proyect, stringID string) string {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	coleccion := config.InstanceDB.DB.Collection("proyects")
@@ -148,15 +150,20 @@ func UpdateProyect(proyecto Proyect, stringID string) bool {
 	filter := bson.D{{Key: "_id", Value: id}}
 	update := bson.D{{Key: "$set", Value: proyecto}}
 
+	if CheckModificationProyect(stringID, proyecto.UpdateCheck) {
+		return "Ya modificada"
+	}
+	proyecto.UpdateCheck = ""
+
 	var updatedDoc bson.D
 	err := coleccion.FindOneAndUpdate(ctx, filter, update).Decode(&updatedDoc)
 	if err != nil {
 		log.Println(err)
 	}
 	if len(updatedDoc) == 0 {
-		return false
+		return "Error"
 	}
-	return true
+	return "OK"
 }
 
 //Recupero todos los proyectos
@@ -192,4 +199,12 @@ func GetProyect(idString string) Proyect {
 		log.Println(err)
 	}
 	return proyecto
+}
+
+func CheckModificationProyect(proyectID string, Updatecheck string) bool {
+	proyect := GetProyect(proyectID)
+	if proyect.ID.IsZero() || proyect.Check != Updatecheck {
+		return true
+	}
+	return false
 }

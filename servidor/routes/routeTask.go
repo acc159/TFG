@@ -13,6 +13,8 @@ func Task(r *mux.Router) {
 	r.HandleFunc("/tasks/{taskID}", handlers.GetTaskByID).Methods("GET")
 	//Recupero las tareas pertenecientes a una lista dado el ID de la lista
 	r.HandleFunc("/tasks/list/{listID}", handlers.GetTasksByList).Methods("GET")
+	//Recupero las tareas pertenecientes a una lista dado el ID de la lista
+	r.HandleFunc("/tasks/list/{listID}", handlers.DeleteTasksByList).Methods("DELETE")
 	//Actualizo una tarea
 	r.HandleFunc("/tasks/{id}", handlers.UpdateTask).Methods("PUT")
 	//Borro una tarea

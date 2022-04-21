@@ -12,9 +12,11 @@ import (
 )
 
 type Task struct {
-	ID         primitive.ObjectID `bson:"_id,omitempty"`
-	Cipherdata []byte             `bson:"cipherdata,omitempty"`
-	ListID     primitive.ObjectID `bson:"listID,omitempty"`
+	ID          primitive.ObjectID `bson:"_id,omitempty"`
+	Cipherdata  []byte             `bson:"cipherdata,omitempty"`
+	ListID      primitive.ObjectID `bson:"listID,omitempty"`
+	Check       string             `bson:"check,omitempty"`
+	UpdateCheck string             `bson:"updateCheck,omitempty"`
 }
 
 //Recupero las tareas que pertenecen a una lista
@@ -88,12 +90,25 @@ func DeleteTask(idString string) bool {
 	return true
 }
 
+func CheckModificationTask(taskID string, Updatecheck string) bool {
+	task := GetTaskByID(taskID)
+	if task.ID.IsZero() || task.Check != Updatecheck {
+		return true
+	}
+	return false
+}
+
 //Para actualizar una tarea
-func UpdateTask(newTask Task, idString string) bool {
+func UpdateTask(newTask Task, idString string) string {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	//Obtengo la coleccion
 	coleccion := config.InstanceDB.DB.Collection("tasks")
+	//Primero compruebo si se realizo alguna actualizacion o borrado antes
+	if CheckModificationTask(idString, newTask.UpdateCheck) {
+		return "Ya modificada"
+	}
+	newTask.UpdateCheck = ""
 	id, _ := primitive.ObjectIDFromHex(idString)
 	filter := bson.D{{Key: "_id", Value: id}}
 	update := bson.M{"$set": newTask}
@@ -103,9 +118,9 @@ func UpdateTask(newTask Task, idString string) bool {
 		log.Println(err)
 	}
 	if len(updatedDoc) == 0 {
-		return false
+		return "Error"
 	}
-	return true
+	return "OK"
 }
 
 //Para eliminar todas las tareas que pertenezcan a la misma Lista

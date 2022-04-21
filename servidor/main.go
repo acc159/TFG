@@ -6,6 +6,7 @@ import (
 	"servidor/config"
 	"servidor/middlewares"
 	"servidor/routes"
+	"servidor/utils"
 
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
@@ -19,9 +20,15 @@ func LoadEnv() {
 }
 
 func main() {
-	//Cargar variables de entorno
 
+	//Cargar variables de entorno
 	LoadEnv()
+
+	//Cargo la Autoridad Certificadora
+	utils.LoadAC()
+
+	utils.PrepareJWT()
+
 	/*
 
 		secret := os.Getenv("SECRET")

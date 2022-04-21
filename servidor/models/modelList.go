@@ -13,10 +13,12 @@ import (
 )
 
 type List struct {
-	ID         primitive.ObjectID `bson:"_id,omitempty"`
-	Cipherdata []byte             `bson:"cipherdata,omitempty"`
-	Users      []string           `bson:"users,omitempty"`
-	ProyectID  primitive.ObjectID `bson:"proyectID,omitempty"`
+	ID          primitive.ObjectID `bson:"_id,omitempty"`
+	Cipherdata  []byte             `bson:"cipherdata,omitempty"`
+	Users       []string           `bson:"users,omitempty"`
+	ProyectID   primitive.ObjectID `bson:"proyectID,omitempty"`
+	Check       string             `bson:"check,omitempty"`
+	UpdateCheck string             `bson:"updateCheck,omitempty"`
 }
 
 //Crear una lista
@@ -111,19 +113,24 @@ func GetListsByProyect(proyectID string) []string {
 	return listaStrings
 }
 
-//Sin Usar
-
-//Posibles
-func AddUserToList() {
-
+func CheckModificationList(listID string, Updatecheck string) bool {
+	list := GetList(listID)
+	if list.ID.IsZero() || list.Check != Updatecheck {
+		return true
+	}
+	return false
 }
 
 //Actualizar una lista
-func UpdateList(list List, idString string) bool {
+func UpdateList(list List, idString string) string {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	coleccion := config.InstanceDB.DB.Collection("lists")
 
+	if CheckModificationList(idString, list.UpdateCheck) {
+		return "Ya modificada"
+	}
+	list.UpdateCheck = ""
 	id, _ := primitive.ObjectIDFromHex(idString)
 	filter := bson.D{{Key: "_id", Value: id}}
 	update := bson.M{"$set": list}
@@ -134,9 +141,9 @@ func UpdateList(list List, idString string) bool {
 		log.Println(err)
 	}
 	if len(updatedDoc) == 0 {
-		return false
+		return "Error"
 	}
-	return true
+	return "OK"
 }
 
 //Añado un usuario al array Users de la lista
