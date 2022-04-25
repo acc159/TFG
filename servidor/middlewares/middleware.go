@@ -10,6 +10,9 @@ func MiddlewareLog(next http.Handler) http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
 			log.Printf("Petición -> IP: %s Método: %s Ruta: %s\n", r.RemoteAddr, r.Method, r.URL)
+			//Guardo el log en la base de datos
+			entrada := "Petición -> IP: " + r.RemoteAddr + " Método: " + r.Method + " Ruta: " + r.URL.String()
+			go utils.SaveLogs(entrada)
 			next.ServeHTTP(w, r)
 		})
 }

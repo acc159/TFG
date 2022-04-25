@@ -16,6 +16,7 @@ type Relation struct {
 	ProyectID  primitive.ObjectID `bson:"proyectID,omitempty"`
 	ProyectKey []byte             `bson:"proyectKey,omitempty"`
 	Lists      []RelationLists    `bson:"lists,omitempty"`
+	Rol        string             `bson:"rol"`
 }
 
 type RelationLists struct {

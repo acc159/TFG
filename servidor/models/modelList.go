@@ -182,6 +182,7 @@ func DeleteUserList(listStringID string, user string) bool {
 	}
 	//Si ya no quedan mas usuarios en la lista la borro
 	if len(listUpdated.Users) == 0 {
+		DeleteListRelation("admin", listUpdated.ProyectID.Hex(), listUpdated.ID.Hex())
 		DeleteList(listStringID)
 	}
 	return true

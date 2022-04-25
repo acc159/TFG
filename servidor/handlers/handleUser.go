@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
+	"os"
 	"servidor/models"
 	"servidor/utils"
 
@@ -83,6 +85,11 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(400)
 		w.Write([]byte("No se borro el usuario"))
 	} else {
+		userCertFilename := "certs/users/" + email + "_cert.pem"
+		e := os.Remove(userCertFilename)
+		if e != nil {
+			log.Fatal(e)
+		}
 		w.Write([]byte("Usuario borrado"))
 	}
 }

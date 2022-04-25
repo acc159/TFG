@@ -22,20 +22,6 @@ type MongoConection struct {
 
 var InstanceDB MongoConection
 
-func Hola() {
-	fmt.Println("hOLA")
-}
-
-/*
-func InitMongoDB() {
-	cmd := exec.Command("mongod")
-	err := cmd.Run()
-	if err != nil {
-		fmt.Println("Base de datos no iniciada")
-	}
-}
-*/
-
 func ConnectDB() {
 	cadena := os.Getenv("CADENA_CONEXION")
 	//cadena_conexion := "mongodb://127.0.0.1:27017"

@@ -9,7 +9,6 @@ import (
 )
 
 func GetRelations(w http.ResponseWriter, r *http.Request) {
-
 	params := mux.Vars(r)
 	email := params["email"]
 	relations := models.GetRelationsbyUserEmail(email)

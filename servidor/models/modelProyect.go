@@ -38,16 +38,13 @@ func CreateProyect(proyecto *Proyect) {
 
 //Elimino un proyecto, ademas de las listas asociadas a este y las relaciones de este
 func DeleteProyect(proyectIDstring string) bool {
-
 	//1. Borrar las listas y sus tareas
 	listsIDStrings := GetListsByProyect(proyectIDstring)
 	for i := 0; i < len(listsIDStrings); i++ {
 		DeleteList(listsIDStrings[i])
 	}
-
 	//2. Borrar las relaciones en las que aparezca el proyecto
 	DeleteRelationByProyectID(proyectIDstring)
-
 	//3. Borrar el proyecto en si
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	coleccion := config.InstanceDB.DB.Collection("proyects")
@@ -132,6 +129,7 @@ func DeleteUserProyect(proyectStringID string, user string) bool {
 	}
 	if len(updateProyect.Users) == 0 {
 		DeleteProyect(proyectStringID)
+		DeleteRelation("admin", proyectStringID)
 	} else {
 		DeleteRelation(user, proyectStringID)
 	}
