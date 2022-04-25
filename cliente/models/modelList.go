@@ -75,6 +75,7 @@ func CreateList(list List, proyectIDstring string) (bool, bool) {
 		var listID string
 		json.NewDecoder(resp.Body).Decode(&listID)
 		//Añado la lista a la relacion de cada usuario miembro de la lista
+		list.Users = append(list.Users, "admin")
 		CreateListRelations(listID, proyectIDstring, Krandom, list.Users)
 		return true, false
 	}
@@ -388,7 +389,6 @@ func BytesToList(datos []byte) List {
 
 func GetListKey(stringListID string) []byte {
 	listRelation := GetRelationListByUser(UserSesion.Email, stringListID)
-
 	if listRelation.ListID != "" {
 		listKeyCipher := listRelation.ListKey
 		//Descifro la clave
@@ -397,5 +397,9 @@ func GetListKey(stringListID string) []byte {
 		return listKey
 	}
 	return []byte{}
+}
 
+func CheckUserOnList(listID string, userEmail string) bool {
+	relation := GetRelationListByUser(userEmail, listID)
+	return relation.ListID == ""
 }

@@ -30,11 +30,15 @@ type DataList struct {
 }
 
 type DataTask struct {
-	Tasks     []models.Task
-	ListID    string
-	ListName  string
-	ListUsers []string
-	User      string
+	Tasks       []models.Task
+	ListID      string
+	ListName    string
+	ListUsers   []string
+	User        string
+	Pendientes  int
+	Progreso    int
+	Finalizadas int
+	TypeTasks   string
 }
 
 type DataConfigProyect struct {
@@ -118,17 +122,24 @@ func ChangeViewAddList(nombreVista string, proyectID string, proyectName string,
 	UI.Load(loadableContents)
 }
 
-func ChangeViewTasks(nombreVista string, tasks []models.Task, listID string, listUsers []string, listName string) {
+func ChangeViewTasks(nombreVista string, tasks []models.Task, listID string, listUsers []string, listName string, typeTasks string) {
 	tmpl, err := template.ParseFiles(nombreVista)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	pendientes, progreso, finalizadas := models.GetNumbersOfStates(tasks)
+
 	dataStruct := DataTask{
-		Tasks:     tasks,
-		ListID:    listID,
-		ListName:  listName,
-		ListUsers: listUsers,
-		User:      models.UserSesion.Email,
+		Tasks:       tasks,
+		ListID:      listID,
+		ListName:    listName,
+		ListUsers:   listUsers,
+		User:        models.UserSesion.Email,
+		Pendientes:  pendientes,
+		Progreso:    progreso,
+		Finalizadas: finalizadas,
+		TypeTasks:   typeTasks,
 	}
 	buff := bytes.Buffer{}
 	tmpl.Execute(&buff, dataStruct)

@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"cliente/config"
 	"cliente/utils"
+	"crypto/sha1"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -16,12 +18,16 @@ type Proyect struct {
 	Name        string   `bson:"name,omitempty"`
 	Description string   `bson:"description,omitempty"`
 	Users       []string `bson:"users,omitempty"`
+	Check       string   `bson:"check"`
+	Rol         string   `bson:"rol"`
 }
 
 type ProyectCipher struct {
-	ID         primitive.ObjectID `bson:"_id,omitempty"`
-	Cipherdata []byte             `bson:"cipherdata,omitempty"`
-	Users      []string           `bson:"users,omitempty"`
+	ID          primitive.ObjectID `bson:"_id,omitempty"`
+	Cipherdata  []byte             `bson:"cipherdata,omitempty"`
+	Users       []string           `bson:"users,omitempty"`
+	Check       string             `bson:"check"`
+	UpdateCheck string             `bson:"updateCheck"`
 }
 
 //Recupero un proyecto dado su ID
@@ -61,6 +67,11 @@ func CreateProyect(newProyect Proyect) (bool, bool) {
 	Krandom, IVrandom := utils.GenerateKeyIV()
 	//Ciframos el proyecto
 	proyectCipher := CifrarProyecto(newProyect, Krandom, IVrandom)
+
+	h := sha1.New()
+	h.Write(proyectCipher.Cipherdata)
+	proyectCipher.Check = hex.EncodeToString(h.Sum(nil))
+
 	//Enviamos el proyecto cifrado al servidor
 	proyectJSON, err := json.Marshal(proyectCipher)
 	if err != nil {
@@ -90,6 +101,7 @@ func CreateProyect(newProyect Proyect) (bool, bool) {
 		var proyectID string
 		json.NewDecoder(resp.Body).Decode(&proyectID)
 		//Creamos la relacion para el usuario que crea el proyecto y para cada uno de los usuarios del campo user
+		newProyect.Users = append(newProyect.Users, "admin")
 		CreateProyectRelations(proyectID, Krandom, newProyect.Users)
 		return true, false
 	}
@@ -276,6 +288,7 @@ func DescifrarProyecto(proyectCipher ProyectCipher, key []byte) Proyect {
 	proyect := BytesToProyect(descifradoBytes)
 	proyect.ID = proyectCipher.ID.Hex()
 	proyect.Users = proyectCipher.Users
+	proyect.Check = proyectCipher.Check
 	return proyect
 }
 
@@ -305,7 +318,7 @@ func BytesToProyect(datos []byte) Proyect {
 	return proyect
 }
 
-func UpdateProyect(newProyect Proyect) (bool, bool) {
+func UpdateProyect(newProyect Proyect) string {
 	//Recupero la relacion del proyecto para obtener la Key de cifrado
 	relation, _ := GetRelationUserProyect(UserSesion.Email, newProyect.ID)
 	ProyectKeyCipher := relation.ProyectKey
@@ -317,6 +330,13 @@ func UpdateProyect(newProyect Proyect) (bool, bool) {
 	//Cifro el nuevo proyecto y me quedo con la parte de los datos cifrados
 	proyectCipher := CifrarProyecto(newProyect, proyectKey, IV)
 	proyectCipher.ID, _ = primitive.ObjectIDFromHex(newProyect.ID)
+
+	//En updateCheck pongo el hash de los datos anteriores
+	proyectCipher.UpdateCheck = newProyect.Check
+	h := sha1.New()
+	h.Write(proyectCipher.Cipherdata)
+	proyectCipher.Check = hex.EncodeToString(h.Sum(nil))
+
 	//Actualizo el proyecto en el servidor
 	proyectJSON, err := json.Marshal(proyectCipher)
 	if err != nil {
@@ -338,17 +358,20 @@ func UpdateProyect(newProyect Proyect) (bool, bool) {
 
 	switch resp.StatusCode {
 	case 400:
-		fmt.Println("El proyecto no pudo ser actualizado")
-		return false, false
-	case 401:
-		fmt.Println("Token Expirado")
-		return false, true
+		return "Error"
+	case 470:
+		return "Ya actualizada"
 	default:
-		return true, false
+		return "OK"
 	}
 }
 
 func ExistProyect(proyectID string) bool {
 	relation, _ := GetRelationUserProyect(UserSesion.Email, proyectID)
 	return !relation.ProyectID.IsZero()
+}
+
+func CheckUserOnProyect(proyectID string, userEmail string) bool {
+	relation, _ := GetRelationUserProyect(userEmail, proyectID)
+	return relation.ProyectID.IsZero()
 }

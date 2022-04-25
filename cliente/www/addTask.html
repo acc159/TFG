@@ -9,43 +9,68 @@
         .firmado{
             margin-left: 5px;
         }
+        nav{
+            height: 55px;
+        }
+        .button_nav{
+            border-color: f8f9fa;
+            color: f8f9fa;
+            margin-right: 3px;
+        }
+        #buttonNav1, #buttonNav2{
+            border-width: 0px;
+            color: f8f9fa;
+        }
+        #buttonNav1:hover, #buttonNav2:hover{
+            color: rgba(0,0,0,.7);
+        }
     </style>
 </head>
 <body>
 
-    <nav class="navbar navbar-light bg-light">
+    <nav class="navbar navbar-light bg-dark">
         <form class="form-inline">
-            <a class="nav-link btn-outline-secondary" type="button" role="button" onclick="changeHome()">Volver al Home</a>
-            <a class="nav-link btn-outline-info" type="button" role="button" onclick="changeToTasks()">Volver a las tareas de la lista</a>
-            <a class="nav-link btn-outline-info" type="button" role="button" onclick="addTask()">Añadir Tarea</a>
+            <li class="nav-item btn-outline-light" type="button">
+                <a class="button_nav nav-link btn btn-outline-light" role="button" onclick="changeHome()">HOME</a>
+            </li>
+            <li class="nav-item btn-outline-light" type="button">
+                <a id="buttonNav1" class="button_nav nav-link btn btn-outline-light" role="button" onclick="changeToTasks()">Volver a las tareas de la lista</a>
+            </li>
+            <li class="nav-item btn-outline-light" type="button">
+                <a id="buttonNav2" class="button_nav nav-link btn btn-outline-light" role="button" onclick="addTask()">Añadir Tarea</a>
+            </li>
         </form>
     </nav>
+
     <h1 hidden id="user">{{.User}}</h1>
     <h1 hidden id="listID">{{.ListID}}</h1>
+    <h1 hidden id="listName">{{.ListName}}</h1>
     <div class="container">
         <div class="text-center">
             <h1 class="display-3">Añadir Tarea</h1>
-            <h2 class="display-4">En la lista: {{.ListName}}</h2>
+            <h2 class="display-4">En la lista: <span class="badge badge-secondary">{{.ListName}}</span></h2>
         </div>
         <div>
             <form>
                 <div class="form-group">
-                    <label for="taskName">Nombre de la tarea</label>
+                    <label for="taskName">Nombre de la tarea:</label>
                     <input placeholder="Nombre" class="form-control" type="text" id="taskName" name="taskName">
-    
-                    <label for="description">Descripcion de la tarea</label>
+                    <label for="description">Descripcion de la tarea:</label>
                     <textarea placeholder="Descripción" class="form-control" name="description" id="description" cols="10" rows="3"></textarea>
-    
-                    <label for="date">Fecha de la tarea</label>
-                    <input class="form-control" placeholder="Fecha" type="date" id="date" name="date">
-    
-                    <label for="state">Estado:</label>
-                    <select class="form-control" name="state" id="state">
-                        <option value="Por hacer">Por hacer</option>
-                        <option value="En progreso">En progreso</option>
-                        <option value="Hecho">Hecho</option>
-                    </select>
-    
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="date">Fecha de la tarea:</label>
+                            <input class="form-control" placeholder="Fecha" type="date" id="date" name="date">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="state">Estado:</label>
+                            <select class="form-control" name="state" id="state">
+                                <option value="Pendiente">Pendiente</option>
+                                <option value="En Proceso">En Proceso</option>
+                                <option value="Finalizada">Finalizada</option>
+                            </select> 
+                        </div>
+                    </div>
                     <label for="usuarios">Usuarios:</label>
                     <select class="form-control" name="usuarios" id="usuarios" multiple>
                         {{range .ListUsers}}
@@ -66,7 +91,6 @@
                         <button class="btn btn-primary" onclick="leerArchivo()">Adjuntar</button>
                     </div>
                 </div>
-
                 <ul id="archivosAdjuntos" class="list-group mb-3">
                 </ul>
                 <form class="card p-2">
@@ -74,10 +98,8 @@
                         <input type="file" id="subir_archivo" class="col-md-12 order-md-1">                       
                     </div>
                 </form>
-
             </div>
             <div class="col-md-12 order-md-2 mb-4">
-
                 <div class="d-flex mb-3 justify-content-between">
                     <h4 class="">
                         <span class="text-muted">Enlaces Adjuntos</span>
@@ -87,7 +109,6 @@
                         <button class="btn btn-primary" onclick="AddLink()">Adjuntar</button>
                     </div>
                 </div>
-
                 <ul id="enlacesAdjuntos" class="list-group mb-3">
                 </ul>
                 <form class="card p-2">
@@ -99,39 +120,6 @@
             </div>
         </div>
     </div>
-
-
-    <!-- <h1 hidden id="listID">{{.ListID}}</h1>
-    <label for="taskName">Nombre de la tarea</label>
-    <input type="text" id="taskName" name="taskName"><br><br>
-    <label for="description">Descripcion de la tarea</label>
-    <input type="text" id="description" name="description"><br><br>
-    <label for="state">Estado de la tarea</label>
-    <select name="state" id="state">
-        <option value="Por hacer">Por hacer</option>
-        <option value="En progreso">En progreso</option>
-        <option value="Hecho">Hecho</option>
-    </select>
-    <label for="date">Fecha de la tarea</label>
-    <input type="date" id="date" name="date"><br><br>
-    <select name="usuarios" id="usuarios" multiple>
-        {{range .ListUsers}}
-        <option value={{.}}>{{.}}</option>
-        {{end}}
-    </select>
-    <input type="file" id="subir_archivo"/>
-    <button onclick="leerArchivo()">Adjuntar archivo</button>
-
-    <div id="archivosAdjuntos">
-        <h3>Archivos adjuntos</h3>
-    </div>
-
-    <input type="url" name="link" id="link" placeholder="Url">
-    <input type="url" name="linkName" id="linkName" placeholder="Nombre Url">
-    <button onclick="AddLink()">Añadir enlace</button>
-    <ul id="links">
-    </ul> -->
-
 </body>
 </html>
 
@@ -139,13 +127,14 @@
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 
-
+<script src="https://momentjs.com/downloads/moment.js"></script>
 
 <script>
 
     function changeToTasks(){
         let listID = document.querySelector('#listID').textContent;
-        changeToTasksGO(listID, "").then(
+        let listName = document.querySelector('#listName').textContent;
+        changeToTasksGO(listID, listName).then(
             function(resultados){
                 let tokenExpire = resultados[1];
                 let changeOK = resultados[0];
@@ -355,6 +344,10 @@
             let creator =  document.querySelector('#user').textContent
             let listID = document.querySelector('#listID').textContent
             let date = document.querySelector('#date').value
+
+            dateFormat = moment(date)
+            let dateValue = dateFormat.format("DD/MM/YYYY")
+
             let description = document.querySelector('#description').value
             let state = document.querySelector('#state').value
             let users = document.querySelector('#usuarios').selectedOptions
@@ -364,12 +357,19 @@
             for (let index = 0; index < users.length; index++) {
                 usersNames.push(users[index].value)
             }
+            let progress = "0";
+            if (state == "Finalizada"){
+                progress = "100"
+            }
+
+
             let task = {
                 "Name" : taskName,
                 "Description" : description,
                 "Date" : date,
                 "State" : state,
                 "Users" : usersNames,
+                "Progress" : progress,
                 "Files" : archivos,
                 "Links" : TaskLinks,
                 "Creator" : creator
@@ -450,18 +450,6 @@
         let linkName = document.querySelector('#linkName').value;
         if (link != "" && linkName != "")
         {
-            // let links = document.querySelector('#links');
-            // let li = document.createElement('li');
-            // let a = document.createElement('a');
-            // a.setAttribute('target', '_blank');
-            // a.href = link;
-            // a.textContent = linkName;
-            // let button = document.createElement('button');
-            // button.innerHTML = "Eliminar enlace";
-            // button.onclick = function () {deleteLinkTask(event)};
-            // li.appendChild(a);
-            // li.appendChild(button);
-            // links.appendChild(li);
             AddUrl(link, linkName)
             let numUrls = document.querySelector('#numUrls').textContent 
             numUrls = parseInt(numUrls)
@@ -492,6 +480,8 @@
         for (let i = 0; i < forms.length; i++) {
             forms[i].addEventListener('submit',(event) => {event.preventDefault();}, false)
         }
+
+        document.querySelector('input[type=date]').valueAsDate = new Date()
     }
 
     document.addEventListener('DOMContentLoaded',init,false);

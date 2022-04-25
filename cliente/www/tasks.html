@@ -6,75 +6,178 @@
     <title>Tareas</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
+    <style>
+        i:hover{
+            color: #454d55;
+        }
+        nav{
+            height: 55px;
+        }
+        .button_nav{
+            border-color: f8f9fa;
+            color: f8f9fa;
+            margin-right: 3px;
+        }
+        #buttonNav1, #buttonNav2, #buttonNav3{
+            border-width: 0px;
+            color: f8f9fa;
+        }
+        #buttonNav1:hover, #buttonNav2:hover, #buttonNav3:hover{
+            color: rgba(0,0,0,.7);
+        }
 
+        .progress {
+            position: relative;
+        }
 
+        .progress span {
+            position: absolute;
+            display: block;
+            width: 100%;
+            color: black;
+        }
 
+        .display-4{
+            font-size: 3rem;
+        }
+
+        div h5{
+            margin-right: 15px;
+        }
+        .botonPendientes{
+            margin-right: 36px;
+        }
+        .botonFinalizadas{
+            margin-left: 6px;
+            margin-right: 10px;
+        }
+        .botonPorHacer{
+            margin-right: 34px;
+        }
+
+        
+
+    </style>
 </head>
 <body>
 
-    <nav class="navbar navbar-light bg-light">
+    <nav class="navbar navbar-light bg-dark">
         <form class="form-inline">
-            <a class="nav-link btn-outline-secondary" type="button" role="button" onclick="changeHome()">Volver al Home</a>
-            <a class="nav-link btn-outline-info" type="button" role="button" onclick="changeToAddTask()">Añadir Tareas a la lista</a>
+            <li class="nav-item btn-outline-light" type="button">
+                <a class="button_nav nav-link btn btn-outline-light" role="button" onclick="changeHome()">HOME</a>
+            </li>
+            <li class="nav-item btn-outline-light" type="button">
+                <a id="buttonNav1" class="button_nav nav-link btn btn-outline-light" role="button" onclick="changeToAddTask()">Añadir Tarea a la lista</a>
+            </li>
+            <li class="nav-item btn-outline-light" type="button">
+                <a id="buttonNav2" class="button_nav nav-link btn btn-outline-light" role="button" onclick="changeToTasks('{{.ListID}}', '{{.ListName}}')">Refrescar Lista de Tareas</a>
+            </li>
             {{if .Tasks}}
-                <a class="nav-link btn-outline-info" type="button" role="button" onclick="deleteAllTasks()">Borrar todas las Tareas</a>
+                <li class="nav-item btn-outline-light" type="button">
+                    <a id="buttonNav3" class="button_nav nav-link btn btn-outline-light" role="button" onclick="deleteAllTasks()">Borrar todas las Tareas</a>
+                </li>
             {{end}}
-            
         </form>
     </nav>
 
-    <!-- <button onclick="changeHome()">Volver al Home</button>
-    <button onclick="changeToAddTask()">Añadir Tareas a la lista</button>
-    {{if .Tasks}}
-        <button onclick="deleteAllTasks()">Borrar todas las Tareas</button>
-    {{end}} -->
+
+    {{if ne .TypeTasks ""}}
+        <h1 id="typeTasks" hidden>{{.TypeTasks}}</h1>
+    {{else}}
+        <h1 id="typeTasks" hidden></h1>
+    {{end}}
+
+    {{$pendientes:=.Pendientes}}
+    {{$progreso:=.Progreso}}
+    {{$finalizadas:=.Finalizadas}}
 
     <h1 hidden id="listID">{{.ListID}}</h1>
     <h1 hidden id="listName">{{.ListName}}</h1>
-        <div class="container">
+        <div>
             <div class="col-md-12">
                 <div class="card">
-                    <div class="card-header">
-                        <h2 class="display-3">Tareas de la lista: {{.ListName}}</h1>
-                        <h3 class="display-4">Numero de tareas: <span class="badge bg-info">{{len .Tasks}}</span> </h2>
+                    <div class="card-header text-center">
+                        <h1 class="display-3">Tareas de la lista: {{.ListName}}</h1>
+                        <h2 class="display-4">Numero de tareas: <span class="badge bg-info">{{len .Tasks}}</span> </h2>
+                        <!-- <h5>Pendientes: <span class="badge bg-warning">{{$pendientes}}</span> </h5>
+                        <h5>En proceso: <span class="badge bg-primary">{{$progreso}}</span> </h5>
+                        <h5>Finalizadas: <span class="badge bg-success">{{$finalizadas}}</span> </h5> -->
+
+                        <div style="display: inline-flex;">
+                            <h5>Pendientes: <span class="badge bg-warning">{{$pendientes}}</span> </h5>
+                            <h5>En proceso: <span class="badge bg-primary">{{$progreso}}</span> </h5>
+                            <h5>Finalizadas: <span class="badge bg-success">{{$finalizadas}}</span> </h5>  
+                        </div>
+                            <div style="/* display: inline-flex; */display: block;">
+                            <button type="button" class="botonPendientes btn btn-outline-warning" onclick="changeToTasksCustomGO('{{.ListID}}', '{{.ListName}}', 'Pendiente')">Pendientes</button>
+                            <button type="button" class="botonPorHacer btn btn-outline-primary" onclick="changeToTasksCustomGO('{{.ListID}}', '{{.ListName}}', 'En Proceso')">En proceso</button>
+                            <button type="button" class="botonFinalizadas btn btn-outline-success" onclick="changeToTasksCustomGO('{{.ListID}}', '{{.ListName}}', 'Finalizada')">Finalizadas</button> 
+                        </div>
+
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">
-                            <table id="table" data-search="true" class="table tablesorter">
+                            <table id="table" data-search="true" class="table tablesorter table-striped">
                                 <thead class="table-dark">
                                     <tr>
                                         <th>Nombre</th>
-                                        <th data-type="string"></i>Fecha <i class="fas fa-sort text-right"></th>
+                                        <th><b>Fecha</b> <i class="fa fa-fw fa-caret-up" type="button" role="button" onclick="sortByDate('ASC')"></i><i class="fa fa-fw fa-caret-down" type="button" role="button" onclick="sortByDate('DESC')"></i></th>
                                         <th>Estado</th>
-                                        <th>Opciones</th>
+                                        <th>Progreso</th>
+                                        <th class="text-center">Opciones</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+
+                                <tbody class="body-table">
                                     {{range .Tasks}}
                                     <tr>
                                         <td>{{.Name}}</td>
-                                        <td>{{.Date}}</td>
-                                        <td >
-                                            {{if eq .State "En progreso"}}
+                                        <td data-fecha="{{.Date}}" class="fechas">{{.Date}}</td>
+                                        
+                                            {{if eq .State "En Proceso"}}
+                                            <td>
                                                 <div style="margin-top:5px">
                                                     <span class="badge badge-primary rounded-pill d-inline">{{.State}}</span>
+                                                </div> 
+                                            </td>
+
+                                            <td>
+                                                <div class="progress">
+                                                    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="{{.Progress}}" aria-valuemin="0" aria-valuemax="100"></div>
+                                                    <small class="justify-content-center d-flex position-absolute w-100"><strong>{{.Progress}}%</strong></small>
                                                 </div>
+                                            </td>
                                             {{end}}
 
-                                            {{if eq .State "Hecho"}}
+                                            {{if eq .State "Finalizada"}}
+                                            <td>
                                                 <div style="margin-top:5px">
                                                     <span class="badge badge-success rounded-pill d-inline">{{.State}}</span>
                                                 </div>
+                                            </td>
+                                            <td>
+                                                <div class="progress">
+                                                    <div class="bg-success progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="{{.Progress}}" aria-valuemin="0" aria-valuemax="100"></div>
+                                                    <small class="justify-content-center d-flex position-absolute w-100"><strong>{{.Progress}}%</strong></small>
+                                                </div>
+                                            </td>
                                             {{end}}
 
-                                            {{if eq .State "Por hacer"}}
+                                            {{if eq .State "Pendiente"}}
+                                            <td>
                                                 <div style="margin-top:5px">
                                                     <span class="badge badge-warning rounded-pill d-inline">{{.State}}</span>
                                                 </div>
+                                            </td>
+                                            <td>
+                                                <div class="progress">
+                                                    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="{{.Progress}}" aria-valuemin="0" aria-valuemax="100"></div>
+                                                    <small class="justify-content-center d-flex position-absolute w-100"><strong>{{.Progress}}%</strong></small>
+                                                </div>
+                                            </td>
                                             {{end}}
-
-                                        </td>
-                                        <td id="{{.ID}}">
+                                    
+                                        <td id="{{.ID}}" class="text-center">
                                             <button type="button" class="btn btn-secondary" onclick="changeToTaskConfig(event)">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pen-fill" viewBox="0 0 16 16">
                                                     <path d="m13.498.795.149-.149a1.207 1.207 0 1 1 1.707 1.708l-.149.148a1.5 1.5 0 0 1-.059 2.059L4.854 14.854a.5.5 0 0 1-.233.131l-4 1a.5.5 0 0 1-.606-.606l1-4a.5.5 0 0 1 .131-.232l9.642-9.642a.5.5 0 0 0-.642.056L6.854 4.854a.5.5 0 1 1-.708-.708L9.44.854A1.5 1.5 0 0 1 11.5.796a1.5 1.5 0 0 1 1.998-.001z"></path>
@@ -95,32 +198,6 @@
                 </div>
             </div>
         </div>
-
-    <!-- <h1>Tareas de la lista: {{.ListName}}</h1>
-    <h2>Numero de tareas: {{len .Tasks}}</h2>
-    {{range .Tasks}}
-        <div id="{{.ID}}">
-            <h2>Nombre: {{.Name}}</h2>
-            <p>Description: {{.Description}}</p>
-            <h3>Fecha: {{.Date}}</h3>
-            <h3>{{.State}}</h3>
-            <h3>Usuarios asignados: </h3>
-            {{range .Users}}
-                <h4>{{.}}</h4>
-            {{end}}
-
-            <div id="archivosAdjuntos">
-                <h3>Archivos adjuntos:</h3>
-                {{range .Files}}
-                    <a href="{{.FileData}}" download="{{.FileName}}">{{.FileName}}</a>
-                {{end}}
-            </div>
-
-            <button onclick="changeToTaskConfig(event)">Ver Tarea</button>
-        </div>
-    {{end}} -->
-
-
     <div class="modal" id="taskModal" style="display: none;" aria-hidden="true">
         <div class="modal-dialog">
           <div class="modal-content">
@@ -139,17 +216,14 @@
           </div>
         </div>
       </div>
-
 </body>
 </html>
-
-<script type="text/javascript" src="/path/to/jquery-latest.js"></script>
-<script type="text/javascript" src="/path/to/jquery.tablesorter.js"></script>
-<script type="text/javascript" src="/path/to/jquery.tablesorter.widgets.js"></script>
 
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+<script src="https://momentjs.com/downloads/moment.js"></script>
 
 <script>
     function changeToAddTask(){
@@ -290,38 +364,108 @@
     }
 
     function checkTaskChanges(){
-        let listID = document.querySelector('#listID').textContent
-        checkTaskChangesGO(listID).then(
-            function(result){
-                if (result){
-                    $('#taskModal').modal('show')
+        if (document.querySelector('#typeTasks').textContent == ""){
+            let listID = document.querySelector('#listID').textContent
+            checkTaskChangesGO(listID).then(
+                function(result){
+                    if (result){
+                        $('#taskModal').modal('show')
+                    }
                 }
+            )
+        }
+    }
+
+    function datesSorterDesc(a, b) {
+        if (new Date(a) < new Date(b)) return -1;
+        if (new Date(a) > new Date(b)) return 1;
+        return 0;
+    }
+
+    function datesSorterAsc(a, b) {
+        if (new Date(a) < new Date(b)) return +1;
+        if (new Date(a) > new Date(b)) return -1;
+        return 0;
+    }
+
+
+
+    function sortByDate(type){ 
+
+        let table = document.getElementById("table");
+
+        let tableRows = table.rows
+
+        let rows = []
+        let rowsNoDate = []
+
+        for (let index = tableRows.length - 1; index > 0; index--) {
+            if(tableRows[index].getElementsByTagName("TD")[1].dataset.fecha == ""){
+                rowsNoDate.push(tableRows[index])
+            }else{
+                rows.push(tableRows[index])
             }
-        )
+            tableRows[index].remove()
+        }
+
+        if (type == "DESC"){
+            rows.sort(function (a, b){
+            return datesSorterDesc(a.getElementsByTagName("TD")[1].dataset.fecha, b.getElementsByTagName("TD")[1].dataset.fecha)
+            });
+        }else{
+            rows.sort(function (a, b){
+            return datesSorterAsc(a.getElementsByTagName("TD")[1].dataset.fecha, b.getElementsByTagName("TD")[1].dataset.fecha)
+            });
+        } 
+        //Añado el nuevo orden
+        for (let index = 0; index < rows.length; index++) {
+            document.querySelector('.body-table').appendChild(rows[index])
+        }
+        
+        for (let index = 0; index < rowsNoDate.length; index++) {
+            document.querySelector('.body-table').appendChild(rowsNoDate[index])
+        }
     }
 
 
 
 
-
-
-    //PRUEBAS
-    function sortByDate(){ 
-
-        // let allTR = document.querySelector('tbody').querySelectorAll('tr');
-
-        // document.querySelector('tbody').querySelectorAll('tr')[0].querySelectorAll('td')[1].textContent
-
-
-        // let fechas = ["2022-04-23", "2022-04-19", "2023-04-23", "2022-01-23"]
-        // fechas.sort(function datesSorter(a, b) {
-        // if (new Date(a) < new Date(b)) return -1;
-        // if (new Date(a) > new Date(b)) return 1;
-        // return 0;
-        // })
-        // console.log(fechas)
-
+    function UpdateProgressStyle(){
+        let divs = document.querySelectorAll('.progress-bar')
+        for (let index = 0; index < divs.length; index++) {
+            valor = divs[index].ariaValueNow
+            divs[index].style.width = valor + "%"
+        }
     }
+
+
+    function UpdateDatesStyle(){
+        let fechas = document.querySelectorAll('.fechas')
+        for (let index = 0; index < fechas.length; index++) {
+            if(fechas[index].dataset.fecha != ""){
+                dateFormat = moment(fechas[index].dataset.fecha)
+                let dateValue = dateFormat.format("DD/MM/YYYY")
+                fechas[index].textContent = dateValue
+            }
+        }
+    }
+
+
+    // function sortByState(){ 
+    //     let table = document.getElementById("table");
+    //     let tableRows = table.rows
+    //     let rows = []
+    //     for (let index = tableRows.length - 1; index > 0; index--) {
+    //         rows.push(tableRows[index])
+    //         tableRows[index].remove()
+    //     }
+    //     rows.sort();
+
+    //     //Añado el nuevo orden
+    //     for (let index = 0; index < rows.length; index++) {
+    //         document.querySelector('.body-table').appendChild(rows[index])
+    //     }
+    // }
 
 
 
@@ -330,9 +474,9 @@
         for (let i = 0; i < forms.length; i++) {
             forms[i].addEventListener('submit',(event) => {event.preventDefault();}, false)
         }
-
-        
         setInterval('checkTaskChanges()',300000);
+        UpdateProgressStyle()
+        UpdateDatesStyle()
     }
 
     document.addEventListener('DOMContentLoaded',init,false);

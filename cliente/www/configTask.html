@@ -10,6 +10,39 @@
         .recepciones{
             margin-top: 10px;
         }
+
+        nav{
+            height: 55px;
+        }
+        .button_nav{
+            border-color: f8f9fa;
+            color: f8f9fa;
+            margin-right: 3px;
+        }
+        #buttonNav1, #buttonNav2, #buttonNav3, #buttonNav4{
+            border-width: 0px;
+            color: f8f9fa;
+        }
+        #buttonNav1:hover, #buttonNav2:hover, #buttonNav3:hover, #buttonNav4:hover{
+            color: rgba(0,0,0,.7);
+        }
+
+        .btn-link{
+            color: black;
+            text-decoration: none;
+        }
+        
+        .btn-link:hover{
+            color: #4f5670;
+            text-decoration: none;
+        }
+        .btn-link:focus{
+            text-decoration: none;
+        }
+        .card-header:hover, .card-header:focus, .card-header button .collapse:active, .card-header button .collapse:hover, .card-header button .collapse:target{
+            background-color: #e5e4e4;
+        }
+
     </style>
 
 </head>
@@ -20,15 +53,35 @@
     <h1 id="taskCheck" hidden>{{.Task.Check}}</h1>
     <h1 id="user" hidden>{{.User}}</h1>
 
-    <nav class="navbar navbar-light bg-light">
+    <nav class="navbar navbar-light bg-dark">
         <form class="form-inline">
-            <a class="nav-link btn-outline-secondary" type="button" role="button" onclick="changeHome()">Volver al Home</a>
+            <li class="nav-item btn-outline-light" type="button">
+                <a class="button_nav nav-link btn btn-outline-light" role="button" onclick="changeHome()">HOME</a>
+            </li>
+            <li class="nav-item btn-outline-light" type="button">
+                <a id="buttonNav1" class="button_nav nav-link btn btn-outline-light" role="button" onclick="changeToTasks()">Ver Tareas de la lista</a>
+            </li>
+            <li class="nav-item btn-outline-light" type="button">
+                <a id="buttonNav2" class="button_nav nav-link btn btn-outline-light" role="button" onclick="UpdateTask()">Actualizar Tarea</a>
+            </li>
+            <li class="nav-item btn-outline-light" type="button">
+                <a id="buttonNav3" class="button_nav nav-link btn btn-outline-light" role="button" onclick="changeToTaskConfig('{{.Task.ID}}', '{{.List.ID}}')">Refrescar Tarea</a>
+            </li>
+            <li class="nav-item btn-outline-light" type="button">
+                <a id="buttonNav4" class="button_nav nav-link btn btn-outline-light" role="button" onclick="DeleteTask()">Borrar Tarea</a>
+            </li>
+        </form>
+    </nav>
+
+    <!-- <nav class="navbar navbar-light bg-light">
+        <form class="form-inline">
+            <a class="nav-link btn-outline-secondary" type="button" role="button" onclick="changeHome(false)">Volver al Home</a>
             <a class="nav-link btn-outline-info" type="button" role="button" onclick="changeToTasks()">Ver Tareas de la lista</a>
             <a class="nav-link btn-outline-info" type="button" role="button" onclick="UpdateTask()">Actualizar Tarea</a>
             <a class="nav-link btn-outline-info" type="button" role="button" onclick="changeToTaskConfig('{{.Task.ID}}', '{{.List.ID}}')">Refrescar Tarea</a>
             <a class="nav-link btn-outline-info" type="button" role="button" onclick="DeleteTask()">Borrar Tarea</a>
         </form>
-    </nav>
+    </nav> -->
     
     {{$user:=.User}}
     <div class="container">
@@ -36,23 +89,19 @@
             <h1 class="display-4">Editar</h1>
         </div>
         <div>
-
             <div id="accordion">
-
                 <!-- Datos -->
-
                 <div class="card">
-                  <div class="card-header" id="headingOne">
+                  <div class="card-header text-center" id="headingOne">
                     <h5 class="mb-0">
                       <button class="btn btn-link" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
                         <h2 class="display-4">Datos</h2>
                       </button>
                     </h5>
                   </div>
-              
                   <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
                     <div class="card-body">
-                        <form>
+                        <form id="formDatos">
                             <div class="form-group">
                                 <label for="taskName">Nombre de la tarea</label>
                                 <input placeholder="Nombre" class="form-control" type="text" id="taskName" name="taskName" value="{{.Task.Name}}">
@@ -60,24 +109,32 @@
                                 <textarea placeholder="Descripción" class="form-control" name="description" id="description" cols="10" rows="3">{{.Task.Description}}</textarea>
                                 <label for="date">Fecha de la tarea</label>
                                 <input class="form-control" placeholder="Fecha" type="date" id="date" name="date" value="{{.Task.Date}}">
-                                
-                                <label for="state">Estado:</label>
-                                <select class="form-control" name="state" id="state">
-                                {{if eq .Task.State "Por hacer"}}
-                                    <option selected value="Por hacer">Por hacer</option>
-                                    <option value="En progreso">En progreso</option>
-                                    <option value="Hecho">Hecho</option>
-                                {{end}}
-                                {{if eq .Task.State "En progreso"}}
-                                    <option value="Por hacer">Por hacer</option>
-                                    <option selected value="En progreso">En progreso</option>
-                                    <option value="Hecho">Hecho</option>
-                                {{end}}
-                                {{if eq .Task.State "Hecho"}}
-                                    <option disabled read-only selected value="Hecho">Hecho</option>
-                                {{end}}                    
-                                </select>
 
+
+                                <div class="form-row">
+                                    <div class="col">
+                                        <label for="state">Estado:</label>
+                                        <select class="form-control" name="state" id="state">
+                                        {{if eq .Task.State "Pendiente"}}
+                                            <option selected value="Pendiente">Pendiente</option>
+                                            <option value="En Proceso">En Proceso</option>
+                                            <option value="Finalizada">Finalizada</option>
+                                        {{end}}
+                                        {{if eq .Task.State "En Proceso"}}
+                                            <option value="Pendiente">Pendiente</option>
+                                            <option selected value="En Proceso">En Proceso</option>
+                                            <option value="Finalizada">Finalizada</option>
+                                        {{end}}
+                                        {{if eq .Task.State "Finalizada"}}
+                                            <option disabled read-only selected value="Finalizada">Finalizada</option>
+                                        {{end}}                    
+                                        </select>
+                                    </div>
+                                    <div class="col">
+                                        <label for="state">Progreso: <span type="text" id="textInputProgress" value="">{{.Task.Progress}}</span></label>
+                                        <input class="form-range form-control" value="{{.Task.Progress}}" type="range" name="rangeInput" min="0" max="100" onchange="updateTextInput(this.value);">
+                                    </div>
+                                  </div>
                                 <label for="creator">Creada por:</label>
                                 <input class="form-control" id="creator" type="text" value="{{.Task.Creator}}" disabled readonly>
                             </div>
@@ -87,16 +144,14 @@
                 </div>
 
                 <!-- USUARIOS -->
-
                 <div class="card">
-                    <div class="card-header" id="headingTwo">
+                    <div class="card-header text-center" id="headingTwo">
                       <h5 class="mb-0">
                         <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
                             <h2 class="display-4">Usuarios</h2>
                         </button>
                       </h5>
                     </div>
-
                     <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
                       <div class="card-body">
                         <div class="row"> 
@@ -117,16 +172,14 @@
                                         {{end}}
                                     </ul>
                                 </div>
-                                
                               </div>
                               <div class="col">
-                                
                                 <div class="d-flex mb-3 justify-content-between">
                                     <h4 class="">
                                         <span class="text-muted">Usuarios de la Lista</span>
                                     </h4>
                                     <div>
-                                        <button class="btn btn-primary" onclick="addUserTask()">Adjuntar</button>
+                                        <button class="test btn btn-primary" onclick="addUserTask()">Adjuntar</button>
                                     </div>
                                 </div>
                                 <select class="form-control" name="usersList" id="usersList" multiple>
@@ -140,11 +193,9 @@
                     </div>
                 </div>
 
-
                 <!-- Adjuntos -->
-
                 <div class="card">
-                    <div class="card-header" id="headingThree">
+                    <div class="card-header text-center" id="headingThree">
                       <h5 class="mb-0">
                         <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
                             <h2 class="display-4">Adjuntos</h2>
@@ -153,7 +204,6 @@
                     </div>
                     <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordion">
                       <div class="card-body">
-                        
                         <div class="row">
                             <div class="col-md-12 order-md-1">
                                 <div class="d-flex mb-3 justify-content-between">
@@ -165,9 +215,7 @@
                                         <button class="btn btn-primary" onclick="leerArchivo()">Adjuntar</button>
                                     </div>
                                 </div>
-                
                                 <ul id="archivosAdjuntos" class="list-group mb-3">
-                                    
                                     {{range .Task.Files}}
                                         <li class="list-group-item d-flex justify-content-between lh-condensed">
                                             <div class="container row">
@@ -191,17 +239,14 @@
                                             </div>
                                         </li>
                                     {{end}}
-
                                 </ul>
                                 <form class="card p-2">
                                     <div class="input-group row">
                                         <input type="file" id="subir_archivo" class="col-md-12 order-md-1">                       
                                     </div>
                                 </form>
-                
                             </div>
                             <div class="col-md-12 order-md-2 mb-4">
-                
                                 <div class="d-flex mb-3 justify-content-between">
                                     <h4 class="">
                                         <span class="text-muted">Enlaces Adjuntos</span>
@@ -211,7 +256,6 @@
                                         <button class="btn btn-primary" onclick="AddLink()">Adjuntar</button>
                                     </div>
                                 </div>
-                
                                 <ul id="enlacesAdjuntos" class="list-group mb-3">
                                     {{range .Task.Links}}
                                         <li class="list-group-item d-flex justify-content-between lh-condensed">
@@ -223,7 +267,6 @@
                                                     <a class="text-muted" type="button" role="button" onclick="deleteUrl(event)">Eliminar</a>
                                                 </div>
                                                 <div class="col-md-3 order-md-3">
-
                                                     {{if .SignData.Sign}}
                                                         <a data-type="link" class="text-muted" type="button" role="button" onclick="verifySignDataTask(event)">Verificar Firma</a>
                                                     {{else}}
@@ -252,17 +295,15 @@
 
                 <!-- EVENTOS  -->
                 <div class="card">
-                    <div class="card-header" id="headingTwo">
+                    <div class="card-header text-center" id="headingTwo">
                       <h5 class="mb-0">
                         <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
                             <h2 class="display-4">Registro de Eventos</h2>
                         </button>
                       </h5>
                     </div>
-
                     <div id="collapseFour" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
                       <div class="card-body">
-
                         <!-- Creacion -->
                         <div class="row">
                         <div class="col-md-12 order-md-1 border-bottom">
@@ -327,8 +368,6 @@
                         </div>
                     </div>
 
-
-
                     <!-- Finalizacion -->
                         <div class="row">
                             <div class="col-md-12 order-md-1 border-bottom recepciones">
@@ -337,7 +376,7 @@
                                         <span class="text-muted">Confirmaciones de Finalización</span>
                                     </h4>
                                     <div>
-                                        {{if eq .Task.State "Hecho"}}
+                                        {{if eq .Task.State "Finalizada"}}
                                             {{if (call .IsUserAssigned .Task)}}
                                                 {{if not (call .HasSignCloseByUser .Task)}}
                                                     <button class="btn btn-primary" onclick="signEventTask(event, 'Finalizacion')">Firmar Finalización de la tarea</button>
@@ -348,27 +387,63 @@
                                 </div>
                                 <ul id="finalizaciones" class="list-group mb-3">
                                     {{range .Task.SignsClose}}
-                                    <li class="list-group-item d-flex justify-content-between lh-condensed">
-                                        <div class="container row">
-                                            <div class="col-md-11 order-md-1">
-                                                <a data-sign="{{.Sign}}" data-usersign="{{.UserSign}}">{{.Message}}</a>
+                                        <li class="list-group-item d-flex justify-content-between lh-condensed">
+                                            <div class="container row">
+                                                <div class="col-md-11 order-md-1">
+                                                    <a data-sign="{{.Sign}}" data-usersign="{{.UserSign}}">{{.Message}}</a>
+                                                </div>
+                                                <div class="col-md-1 order-md-2">
+                                                    <button class="btn btn-outline-info" onclick="verifySignEvent(event, 'Finalizacion')">Verificar</button>
+                                                </div>
                                             </div>
-                                            <div class="col-md-1 order-md-2">
-                                                <button class="btn btn-outline-info" onclick="verifySignEvent(event, 'Finalizacion')">Verificar</button>
-                                            </div>
-                                        </div>
-                                    </li>
+                                        </li>
                                     {{end}}
                                 </ul>
                             </div>
                         </div>
-
                       </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Modales -->
+    <div class="modal" id="myModal2" style="display: none;" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">Cambios sin guardar</h4>
+              <button type="button" class="close" data-dismiss="modal">×</button>
+            </div>
+            <div class="modal-body">
+              Hay cambios sin actualizar, sube tus cambios al servidor antes de salir
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="UpdateTask()" class="btn btn-info">Actualizar</button>
+                <button type="button" onclick="changeHome(true)" class="btn btn-danger" data-dismiss="modal">Salir sin actualizar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal" id="myModal3" style="display: none;" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">Cambios sin guardar</h4>
+              <button type="button" class="close" data-dismiss="modal">×</button>
+            </div>
+            <div class="modal-body">
+              Hay cambios sin actualizar, sube tus cambios al servidor antes de salir
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="UpdateTask()" class="btn btn-info">Actualizar</button>
+                <button type="button" onclick="changeToTasks(true)" class="btn btn-danger" data-dismiss="modal">Salir sin actualizar</button>
+            </div>
+          </div>
+        </div>
+      </div>
 
 </body>
 </html>
@@ -379,6 +454,24 @@
 
 <script>
 
+function updateTextInput(val) {
+    document.getElementById('textInputProgress').textContent=val;
+    if (val == '0'){
+        document.querySelector('#state').value = "Pendiente"
+    } else if (val == '100'){
+        document.querySelector('#state').value = "Finalizada"
+    }
+}
+
+let changes = false
+
+$("#formDatos").change(function() {
+    changes = true
+});
+
+$('div .card-body').on('DOMSubtreeModified', function(){
+    changes = true
+});
 
 let extensionAllow = ['jpg', 'jpeg', 'png', 'pdf', 'txt'];
 
@@ -537,9 +630,6 @@ function leerArchivo(){
     }
 
 
-
-
-
     function deleteUrl(event){
         li = event.target.closest('li')
         li.remove()
@@ -548,8 +638,6 @@ function leerArchivo(){
         numUrls--
         document.querySelector('#numUrls').textContent = numUrls
     }
-
-
 
     function AddUrl(datosArchivo, nombreArchivo){
         let ulPadre = document.querySelector('#enlacesAdjuntos');
@@ -596,27 +684,27 @@ function leerArchivo(){
     }
 
 
-
-
-
-    function changeToTasks(){
-        let listID = document.querySelector('#listID').textContent
-        let listName = document.querySelector('#listName').textContent
-        changeToTasksGO(listID , listName).then(
-            function(resultados){
-                let tokenExpire = resultados[1];
-                let changeOK = resultados[0];
-                if (tokenExpire){
-                    alert('El Token de la sesión expiro')
-                    exitSesion();
-                }else{
-                    if (changeOK == false){
-                        alert('La lista ya no existe')
-                        changeHome()
+    function changeToTasks(exit){
+        if (changes == false || exit){
+            let listID = document.querySelector('#listID').textContent
+            let listName = document.querySelector('#listName').textContent
+            changeToTasksGO(listID , listName).then(
+                function(resultados){
+                    let tokenExpire = resultados[1];
+                    let changeOK = resultados[0];
+                    if (tokenExpire){
+                        alert('El Token de la sesión expiro')
+                        exitSesion();
+                    }else{
+                        if (changeOK == false){
+                            alert('La lista ya no existe')
+                            changeHome(true)
+                        }
                     }
-                }
-            }
-        )
+                })
+        }else{
+            $('#myModal3').modal('show')
+        }
     }
 
     function deleteUserTask(){
@@ -666,25 +754,6 @@ function leerArchivo(){
            alert('Marca algun usuario para añadirlo asignarlo a la tarea')
        }
     }
-
-
-
-
-
-
-
-
-    //Sin usar actualmente
-    function ComprobarUsersList(){
-        let numUsersList = document.querySelector('#usersList').querySelectorAll('option').length
-        if (numUsersList == 0){
-            let h2 = document.createElement('h2');
-            h2.textContent = "No hay ningun usuario mas por añadir"
-            document.querySelector('#usersListDiv').innerHTML = "";
-            document.querySelector('#usersListDiv').append(h2);
-        }
-    }
-
 
     function GetFiles(){
         let archivos = []
@@ -763,19 +832,17 @@ function leerArchivo(){
     }
 
     function GetSignCreator(){
+        let creator 
         let creatorSign = document.querySelector('#creacion').querySelector('a');
-        let creator = {
-            "Sign" : creatorSign.dataset.sign,
-            "UserSign" : creatorSign.dataset.usersign,
-            "Message": creatorSign.textContent,
+        if (creatorSign != null){
+            creator = {
+                "Sign" : creatorSign.dataset.sign,
+                "UserSign" : creatorSign.dataset.usersign,
+                "Message": creatorSign.textContent,
+            }
         }
         return creator
     }
-
-
-
-
-
 
     function UpdateTask(){
         //Recupero los campos de la tarea
@@ -787,6 +854,7 @@ function leerArchivo(){
         let state = document.querySelector('#state').selectedOptions[0].value
         let description = document.querySelector('#description').value;
         let check = document.querySelector('#taskCheck').textContent;
+        let progress = document.getElementsByName('rangeInput')[0].value
         let usersTaskLI = document.querySelector('#usersTask').querySelectorAll('li');
         let usersTask = [];
         for (let index = 0; index < usersTaskLI.length; index++) {
@@ -804,6 +872,7 @@ function leerArchivo(){
             "Date" : date,
             "State" : state,
             "Users" : usersTask,
+            "Progress": progress,
             "Files" : archivos,
             "Links" : TaskLinks,
             "Check" : check,
@@ -829,11 +898,11 @@ function leerArchivo(){
                             changeToTaskConfigGO(taskID, listID)
                         } else{
                             alert('La tarea ya fue actualizada previamente por otro usuario')
-                            changeToTasks()
+                            changeToTaskConfigGO(taskID, listID)
                         }
                     }else{
                         alert('La lista fue borrada')
-                        changeHome()
+                        changeHome(true)
                     }
                 }
             }
@@ -858,14 +927,14 @@ function leerArchivo(){
                     if (listOK){
                         if (deleteOK == false){
                             alert('No pudo ser borrada la tarea')
-                            changeToTasks(listID, listName)
+                            changeToTasks(true)
                         }else{
                             alert('La tarea se borro')
-                            changeToTasks(listID, listName)
+                            changeToTasks(true)
                         }
                     }else{
                         alert('La lista fue borrada')
-                        changeHome()
+                        changeHome(true)
                     }
                 }
             }
@@ -1007,15 +1076,19 @@ function leerArchivo(){
     }
 
 
-    function changeHome(){
-        changeHomeGO().then(
-            function(tokenExpire){
-                if (tokenExpire){
-                    alert('El Token de la sesión expiro')
-                    exitSesion();
+    function changeHome(exit){
+        if (changes == false || exit){
+                changeHomeGO().then(
+                function(tokenExpire){
+                    if (tokenExpire){
+                        alert('El Token de la sesión expiro')
+                        exitSesion();
+                    }
                 }
-            }
-        )
+            )
+        }else{
+            $('#myModal2').modal('show')
+        }
     }
 
     function init () {

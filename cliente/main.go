@@ -61,6 +61,7 @@ func main() {
 			return tokenExpire
 		}
 		emails = utils.FindAndDelete(emails, models.UserSesion.Email)
+		emails = utils.FindAndDelete(emails, "admin")
 		ChangeViewWithValues(config.PreView+"addProyect.html", emails)
 		return false
 	})
@@ -90,7 +91,31 @@ func main() {
 				tasks, tasksCipher := models.GetTasksByList(listID)
 				models.TasksLocal = tasksCipher
 
-				ChangeViewTasks(config.PreView+"tasks.html", tasks, listID, nil, listName)
+				ChangeViewTasks(config.PreView+"tasks.html", tasks, listID, nil, listName, "")
+			}
+			return []bool{false, false}
+		}
+	})
+
+	UI.Bind("changeToTasksCustomGO", func(listID string, listName string, typeTasks string) []bool {
+		if !utils.CheckExpirationTimeToken(models.UserSesion.Token) {
+			return []bool{false, true}
+		} else {
+			//Compruebo que la lista existe
+			if models.ExistList(listID) {
+				tasks, tasksCipher := models.GetTasksByList(listID)
+
+				var tasksFilter []models.Task
+				var tasksCipherFilter []models.TaskCipher
+
+				for i := 0; i < len(tasks); i++ {
+					if tasks[i].State == typeTasks {
+						tasksFilter = append(tasksFilter, tasks[i])
+						tasksCipherFilter = append(tasksCipherFilter, tasksCipher[i])
+					}
+				}
+				models.TasksLocal = tasksCipherFilter
+				ChangeViewTasks(config.PreView+"tasks.html", tasksFilter, listID, nil, listName, typeTasks)
 			}
 			return []bool{false, false}
 		}
@@ -107,6 +132,7 @@ func main() {
 				proyectCipher := models.GetProyect(proyectID)
 				proyect := models.DescifrarProyecto(proyectCipher, proyectKey)
 				emailsNotInProyect := models.GetEmailsNotInProyect(proyect)
+				emailsNotInProyect = utils.FindAndDelete(emailsNotInProyect, "admin")
 				ChangeViewConfigProyect(config.PreView+"configProyect.html", proyect, emailsNotInProyect, models.UserSesion.Email)
 				return []bool{true, false}
 			}
@@ -158,7 +184,7 @@ func main() {
 				listCipher := models.GetList(listID)
 				list := models.DescifrarLista(listCipher, models.GetListKey(listID))
 				listUsers := list.Users
-				ChangeViewTasks(config.PreView+"addTask.html", nil, listID, listUsers, list.Name)
+				ChangeViewTasks(config.PreView+"addTask.html", nil, listID, listUsers, list.Name, "")
 				return []bool{true, false}
 			}
 			return []bool{false, false}
@@ -200,16 +226,6 @@ func main() {
 		return result
 	})
 
-	//Recuperar los emails de los usuarios registrados
-	// UI.Bind("getEmailsGO", func() []string {
-	// 	users := models.GetUsers()
-	// 	var usersEmails []string
-	// 	for i := 0; i < len(users); i++ {
-	// 		usersEmails = append(usersEmails, users[i].Email)
-	// 	}
-	// 	return usersEmails
-	// })
-
 	//Cerrar la sesion
 	UI.Bind("exitSesion", func() {
 		models.LogOut()
@@ -246,34 +262,49 @@ func main() {
 	//Borrar un usuario de un Proyecto
 	UI.Bind("deleteUserProyectGO", func(userEmail string, proyectID string) []bool {
 		if !utils.CheckExpirationTimeToken(models.UserSesion.Token) {
-			return []bool{false, false, true}
+			return []bool{false, false, false, true}
 		} else if models.ExistProyect(proyectID) {
-			deleteOk, tokenExpire := models.DeleteUserProyect(proyectID, userEmail)
-			return []bool{true, deleteOk, tokenExpire}
+			if !models.CheckUserOnProyect(proyectID, userEmail) {
+				deleteOk, tokenExpire := models.DeleteUserProyect(proyectID, userEmail)
+				return []bool{true, deleteOk, true, tokenExpire}
+			} else {
+				return []bool{true, true, false, false}
+			}
 		}
-		return []bool{false, false, false}
+		return []bool{false, false, false, false}
 	})
 
 	//Añadir un usuario al proyecto
 	UI.Bind("addUserProyectGO", func(userEmail string, proyectID string) []bool {
 		if !utils.CheckExpirationTimeToken(models.UserSesion.Token) {
-			return []bool{false, false, true}
+			return []bool{false, false, false, true}
 		} else if models.ExistProyect(proyectID) {
-			addOk, tokenExpire := models.AddUserProyect(proyectID, userEmail)
-			return []bool{true, addOk, tokenExpire}
+			if models.CheckUserOnProyect(proyectID, userEmail) {
+				addOk, tokenExpire := models.AddUserProyect(proyectID, userEmail)
+				return []bool{true, addOk, true, tokenExpire}
+			} else {
+				return []bool{true, true, false, false}
+			}
 		}
-		return []bool{false, false, false}
+		return []bool{false, false, false, false}
 	})
 
 	//Actualizar un proyecto
-	UI.Bind("updateProyectGO", func(newProyect models.Proyect) []bool {
+	UI.Bind("updateProyectGO", func(newProyect models.Proyect) []string {
 		if !utils.CheckExpirationTimeToken(models.UserSesion.Token) {
-			return []bool{false, false, true}
-		} else if models.ExistProyect(newProyect.ID) {
-			updateOk, tokenExpire := models.UpdateProyect(newProyect)
-			return []bool{true, updateOk, tokenExpire}
+			return []string{"false", "false", "true"}
+		} else {
+			var proyectOK string
+			if models.ExistProyect(newProyect.ID) {
+				proyectOK = "True"
+				updateStatus := models.UpdateProyect(newProyect)
+				return []string{proyectOK, updateStatus, "false"}
+			} else {
+				proyectOK = "false"
+				return []string{proyectOK, "false", "false"}
+			}
+
 		}
-		return []bool{false, false, false}
 	})
 
 	//Añadir una lista
@@ -307,43 +338,47 @@ func main() {
 		}
 	})
 
-	//Borrar un usuario de una Lista
-	UI.Bind("deleteUserListGO", func(userEmail string, listID string, proyectID string) []bool {
-		if !utils.CheckExpirationTimeToken(models.UserSesion.Token) {
-			return []bool{false, false, true}
-		} else if models.ExistList(listID) {
-
-			//Borro al usuario de la lista
-			models.DeleteUserList(listID, userEmail)
-			//Borro la lista en la relacion donde aparece
-			deleteOk := models.DeleteRelationList(proyectID, listID, userEmail)
-			return []bool{true, deleteOk, false}
-		} else {
-			return []bool{false, false, false}
-		}
-	})
-
 	//Actualizar una lista
 	UI.Bind("updateListGO", func(newList models.List) []string {
 		if !utils.CheckExpirationTimeToken(models.UserSesion.Token) {
-			return []string{"false", "true"}
+			return []string{"false", "false", "true"}
 		} else {
-
 			listOK, updateStatus, tokenExpire := models.UpdateList(newList)
 			return []string{listOK, updateStatus, tokenExpire}
 		}
 	})
 
+	//Borrar un usuario de una Lista
+	UI.Bind("deleteUserListGO", func(userEmail string, listID string, proyectID string) []bool {
+		if !utils.CheckExpirationTimeToken(models.UserSesion.Token) {
+			return []bool{false, false, false, true}
+		} else if models.ExistProyect(proyectID) {
+			if !models.CheckUserOnList(listID, userEmail) {
+				//Borro al usuario de la lista
+				models.DeleteUserList(listID, userEmail)
+				//Borro la lista en la relacion donde aparece
+				deleteOk := models.DeleteRelationList(proyectID, listID, userEmail)
+				return []bool{true, deleteOk, true, false}
+			} else {
+				return []bool{true, true, false, false}
+			}
+		}
+		return []bool{false, false, false, false}
+	})
+
 	//Añadir un usuario a una lista
 	UI.Bind("addUserListGO", func(userEmail string, proyectID string, listID string) []bool {
 		if !utils.CheckExpirationTimeToken(models.UserSesion.Token) {
-			return []bool{false, false, true}
-		} else if models.ExistList(listID) {
-			addOK := models.AddUserList(userEmail, proyectID, listID)
-			return []bool{true, addOK, false}
-		} else {
-			return []bool{false, false, false}
+			return []bool{false, false, false, true}
+		} else if models.ExistProyect(proyectID) {
+			if models.CheckUserOnList(listID, userEmail) {
+				addOk := models.AddUserList(userEmail, proyectID, listID)
+				return []bool{true, addOk, true, false}
+			} else {
+				return []bool{true, true, false, false}
+			}
 		}
+		return []bool{false, false, false, false}
 	})
 
 	//Añadir una tarea a una lista
@@ -402,25 +437,7 @@ func main() {
 		return signBase64
 	})
 
-	// UI.Bind("verifyFileSignGO", func(data string, fileName string, taskID string, listID string, signUser string) []bool {
-	// 	if !utils.CheckExpirationTimeToken(models.UserSesion.Token) {
-	// 		return []bool{false, true}
-	// 	} else {
-	// 		signBase64 := models.GetSignFile(taskID, listID, fileName)
-	// 		if signBase64 != "" {
-	// 			sign := utils.ToByteFromBase64(signBase64)
-	// 			publicKey, tokenExpire := models.GetPublicKey(signUser)
-	// 			if tokenExpire {
-	// 				return []bool{false, tokenExpire}
-	// 			}
-	// 			return []bool{utils.CheckSign(sign, []byte(data), publicKey), tokenExpire}
-	// 		} else {
-	// 			return []bool{false, false}
-	// 		}
-	// 	}
-	// })
-
-	UI.Bind("verifySignDataTaskGO", func(data string, linkName string, taskID string, listID string, signUser string, dataType string) []bool {
+	UI.Bind("verifySignDataTaskGO", func(data string, linkName string, taskID string, listID string, userSign string, dataType string) []bool {
 		if !utils.CheckExpirationTimeToken(models.UserSesion.Token) {
 			return []bool{false, true}
 		} else {
@@ -433,11 +450,9 @@ func main() {
 			}
 			if signBase64 != "" {
 				sign := utils.ToByteFromBase64(signBase64)
-				publicKey, tokenExpire := models.GetPublicKey(signUser)
-				if tokenExpire {
-					return []bool{false, tokenExpire}
-				}
-				return []bool{utils.CheckSign(sign, []byte(data), publicKey), tokenExpire}
+				certificate := models.GetCertificateUser(userSign)
+				publicKey := utils.PemToPublicKey(certificate.PublicKeyUser)
+				return []bool{utils.CheckSign(sign, []byte(data), publicKey), false}
 			} else {
 				return []bool{false, false}
 			}
@@ -459,11 +474,9 @@ func main() {
 			}
 			if signBase64 != "" {
 				sign := utils.ToByteFromBase64(signBase64)
-				publicKey, tokenExpire := models.GetPublicKey(userSign)
-				if tokenExpire {
-					return []bool{false, tokenExpire}
-				}
-				return []bool{utils.CheckSign(sign, []byte(data), publicKey), tokenExpire}
+				certificate := models.GetCertificateUser(userSign)
+				publicKey := utils.PemToPublicKey(certificate.PublicKeyUser)
+				return []bool{utils.CheckSign(sign, []byte(data), publicKey), false}
 			} else {
 				return []bool{false, false}
 			}

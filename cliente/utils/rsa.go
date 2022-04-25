@@ -110,3 +110,11 @@ func CheckSign(signature []byte, data []byte, publicKey *rsa.PublicKey) bool {
 	}
 	return true
 }
+
+//Del formato PEM obtengo el certificado
+func PemToCertificate(certBytes []byte) *x509.Certificate {
+	block, _ := pem.Decode(certBytes)
+	var cert *x509.Certificate
+	cert, _ = x509.ParseCertificate(block.Bytes)
+	return cert
+}

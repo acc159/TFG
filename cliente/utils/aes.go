@@ -48,8 +48,3 @@ func DescifrarAES(key []byte, ciphertext []byte) []byte {
 	stream.XORKeyStream(plaintext, ciphertext[aes.BlockSize:])
 	return plaintext
 }
-
-//Devolvera el IV para el texto cifrado dado
-func GetIV(ciphertext []byte) []byte {
-	return ciphertext[:aes.BlockSize]
-}

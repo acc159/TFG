@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"cliente/config"
 	"cliente/utils"
+	"crypto"
 	"crypto/aes"
 	"crypto/rsa"
+	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/json"
 	"fmt"
@@ -28,6 +30,12 @@ type User struct {
 type DataUser struct {
 	Proyecto Proyect
 	Listas   []List
+}
+
+type UserCertificate struct {
+	Certificate   []byte `json:"certificate"`
+	PublicKeyAC   []byte `json:"publicKeyAC"`
+	PublicKeyUser []byte `json:"publicKeyUser"`
 }
 
 //Contiene los proyectos y listas del usuario
@@ -278,7 +286,7 @@ func GetUserProyectsLists() {
 			proyectKey := utils.DescifrarRSA(privateKey, relations[i].ProyectKey)
 			//Desciframos el proyecto
 			proyectoDescifrado := DescifrarProyecto(proyecto, proyectKey)
-
+			proyectoDescifrado.Rol = relations[i].Rol
 			//Listas
 			var lists []List
 			//Por cada lista del proyecto la recupero descifrada usando mi clave privada para descifrar la clave de descifrado de la lista
@@ -301,24 +309,10 @@ func DeleteUser(userEmail string) bool {
 	//Recupero las relaciones junto a los proyectos y las listas Mejorable el pensar en llamar a una funcion que no descifre todo porque no lo necesitamos
 	GetUserProyectsLists()
 	for i := 0; i < len(DatosUsuario); i++ {
-		//Para cada Proyecto miro si el proyecto no tiene mas usuarios que el usuario a borrar
-		if len(DatosUsuario[i].Proyecto.Users) == 1 {
-			//Borro el proyecto
-			DeleteProyect(DatosUsuario[i].Proyecto.ID)
-		} else {
-			//Quito al usuario del array Users del proyecto
-			DeleteUserProyect(DatosUsuario[i].Proyecto.ID, userEmail)
-			//Por cada una de las listas del proyecto
-			for j := 0; j < len(DatosUsuario[i].Listas); j++ {
-				//Compruebo si la lista solo tiene de usuario a dicho usuario
-				if len(DatosUsuario[i].Listas[j].Users) == 1 {
-					//Borro la lista
-					DeleteList(DatosUsuario[i].Listas[j].ID)
-				} else {
-					//Quito al usuario del array Users de la Lista y de las tareas
-					DeleteUserList(DatosUsuario[i].Listas[j].ID, userEmail)
-				}
-			}
+		DeleteUserProyect(DatosUsuario[i].Proyecto.ID, userEmail)
+		for j := 0; j < len(DatosUsuario[i].Listas); j++ {
+			//Quito al usuario del array Users de la Lista y de las tareas
+			DeleteUserList(DatosUsuario[i].Listas[j].ID, userEmail)
 		}
 	}
 	//Borro las relaciones
@@ -378,4 +372,53 @@ func GetPublicKey(userEmail string) (*rsa.PublicKey, bool) {
 func AddTokenHeader(req *http.Request) *http.Request {
 	req.Header.Add("Authorization", "Bearer "+UserSesion.Token)
 	return req
+}
+
+func GetCertificateUser(userEmail string) UserCertificate {
+	url := config.URLbase + "user/certificate/" + userEmail
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req = AddTokenHeader(req)
+	client := utils.GetClientHTTPS()
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+	}
+	var userCertificate UserCertificate
+	defer resp.Body.Close()
+	if resp.StatusCode == 400 {
+		fmt.Println("El certificado no se encontro")
+		return userCertificate
+	} else {
+		json.NewDecoder(resp.Body).Decode(&userCertificate)
+		return userCertificate
+	}
+}
+
+func VerifyCertificateSign(userCertificate UserCertificate) bool {
+	certificate := utils.PemToCertificate(userCertificate.Certificate)
+	publicKeyAC := utils.PemToPublicKey(userCertificate.PublicKeyAC)
+
+	//Verificar Firma del certificado con la C.Publica de la AC
+	h := sha256.New()
+	h.Write(certificate.RawTBSCertificate)
+	hash_data := h.Sum(nil)
+
+	//Si coincide la firma devuelvo true, en caso contrario habra un error y dara false
+	err := rsa.VerifyPKCS1v15(publicKeyAC, crypto.SHA256, hash_data, certificate.Signature)
+	return err == nil
+}
+
+func VerifyPublicKeyWithCertificate(userCertificate UserCertificate) bool {
+	certificate := utils.PemToCertificate(userCertificate.Certificate)
+	userPublicKey := utils.PemToPublicKey(userCertificate.PublicKeyUser)
+	//Verificar si la clave publica del certificado coincide con la clave publica del usuario
+	if certificate.PublicKey.(*rsa.PublicKey).N.Cmp(userPublicKey.N) == 0 && userPublicKey.E == certificate.PublicKey.(*rsa.PublicKey).E {
+		return true
+	} else {
+		return false
+	}
 }

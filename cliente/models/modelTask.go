@@ -20,6 +20,7 @@ type Task struct {
 	Description   string      `bson:"description"`
 	Date          string      `bson:"date"`
 	State         string      `bson:"state"`
+	Progress      string      `bson:"progress"`
 	Files         []TaskFiles `bson:"files"`
 	Links         []TaskLinks `bson:"links"`
 	Users         []string    `bson:"users"`
@@ -111,10 +112,8 @@ func GetTasksByList(listID string) ([]Task, []TaskCipher) {
 	var tasks []Task
 	var tasksCipher []TaskCipher
 	if resp.StatusCode == 400 {
-		fmt.Println("Ninguna tarea para dicha lista")
 		return tasks, tasksCipher
 	} else {
-
 		json.NewDecoder(resp.Body).Decode(&tasksCipher)
 		var tasks []Task
 		listKey := GetListKey(listID)
@@ -395,4 +394,20 @@ func GetEventClosed(userSign string) string {
 		}
 	}
 	return sign
+}
+
+func GetNumbersOfStates(tasks []Task) (int, int, int) {
+	var numberPendiente int
+	var numberProgreso int
+	var numberFinalizada int
+	for i := 0; i < len(tasks); i++ {
+		if tasks[i].State == "Pendiente" {
+			numberPendiente++
+		} else if tasks[i].State == "En Proceso" {
+			numberProgreso++
+		} else {
+			numberFinalizada++
+		}
+	}
+	return numberPendiente, numberProgreso, numberFinalizada
 }

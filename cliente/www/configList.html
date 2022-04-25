@@ -5,14 +5,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Configuración de la Lista</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <style>
+        nav{
+            height: 55px;
+        }
+        .button_nav{
+            border-color: f8f9fa;
+            color: f8f9fa;
+            margin-right: 3px;
+        }
+        #buttonNav1, #buttonNav2{
+            border-width: 0px;
+            color: f8f9fa;
+        }
+        #buttonNav1:hover, #buttonNav2:hover{
+            color: rgba(0,0,0,.7);
+        }
+    </style>
 </head>
 <body>
-    <nav class="navbar navbar-light bg-light">
+
+    <nav class="navbar navbar-light bg-dark">
         <form class="form-inline">
-            <a class="nav-link btn-outline-secondary" type="button" role="button" onclick="changeHome()">Volver al Home</a>
-            <a class="nav-link btn-outline-info" type="button" role="button" onclick="updateList()">Actualizar Lista</a>
-            <a class="nav-link btn-outline-info" type="button" role="button" onclick="deleteList()">Borrar Lista</a>
-            
+            <li class="nav-item btn-outline-light" type="button">
+                <a class="button_nav nav-link btn btn-outline-light" role="button" onclick="changeHome()">HOME</a>
+            </li>
+            <li class="nav-item btn-outline-light" type="button">
+                <a id="buttonNav1" class="button_nav nav-link btn btn-outline-light" role="button" onclick="updateList()">Actualizar Lista</a>
+            </li>
+            <li class="nav-item btn-outline-light" type="button">
+                <a id="buttonNav2" class="button_nav nav-link btn btn-outline-light" role="button" onclick="deleteList()">Borrar Lista</a>
+            </li>
         </form>
     </nav>
 
@@ -20,42 +43,58 @@
     <h2 hidden id="listID">{{.List.ID}}</h2>
     <h1 hidden id="listCheck">{{.List.Check}}</h1>
     <span hidden id="usuarioActual">{{.User}}</span>
-
-
     <form>
         <div class="form-group container">
             <h2 class="display-4 text-center">Datos</h2>
-            <label for="listName">Nombre del proyecto:</label>
+            <label for="listName">Nombre de la lista:</label>
             <input contenteditable class="form-control" type="text" id="listName" name="listName" value="{{.List.Name}}">
-            <label for="listDescription">Descripción del proyecto:</label>
+            <label for="listDescription">Descripción de la lista:</label>
             <textarea class="form-control" name="listDescription" id="listDescription" cols="30" rows="10">{{.List.Description}}</textarea>
             <h2 class="display-4 text-center">Gestión Usuarios</h2>
-            <ul class="users_list">
-                {{range .List.Users}}
-                    <li id={{.}}>{{.}}</li>
-                    <button onclick="deleteUser('{{.}}')">Eliminar usuario</button>
-                {{end}}
-            </ul>
-            {{if not .Emails}}
-                <h2>Ningun usuario mas en el proyecto por añadir a la lista</h2>
-            {{else}}
-                <label for="users">Usuarios del proyecto:</label>
-                <select name="users" id="users">
-                {{range .Emails}}
-                    <option value="{{.}}">{{.}}</option>
-                {{end}}
-                </select>
-                <button onclick="addUserList()">Añadir usuario</button>
-            {{end}}
+            <div class="row"> 
+                <div class="col border-right">
+                    <div class="d-flex mb-3 justify-content-between">
+                        <h4 class="">
+                            <span class="text-muted">Usuarios Asignados</span>
+                            <span class="badge badge-secondary badge-pill">{{len .List.Users}}</span>
+                        </h4>
+                    </div>
+                    <div id="users_list">    
+                        <ul class="list-group">
+                            {{range .List.Users}}
+                            <li id="{{.}}" class="list-group-item d-flex justify-content-between align-items-center">
+                                {{.}}
+                                <span onclick="deleteUser('{{.}}')" role="button" class="badge badge-danger badge-pill" type="button">X</span>
+                            </li>
+                            {{end}}
+                        </ul>
+                    </div>
+                  </div>
+                  <div class="col">
+                    <div class="d-flex mb-3 justify-content-between">
+                        <h4 class="">
+                            <span class="text-muted">Usuarios del proyecto</span>
+                        </h4>
+                        {{if ne (len .Emails) 0}}
+                            <div>
+                                <button class="btn btn-primary" onclick="addUserList()">Añadir usuario</button>
+                            </div>
+                        {{end}}
+                    </div>
+                    {{if eq (len .Emails) 0}}
+                        <h2>Nadie mas en el proyecto</h2>
+                    {{else}}
+                        <select class="form-control" name="users" id="users">
+                            {{range .Emails}}
+                                <option value={{.}}>{{.}}</option>
+                            {{end}}
+                        </select>
+                    {{end}}
+
+                  </div>
+            </div>
         </div>
     </form>
-    
-    <!-- <h1>Configuración de la Lista</h1>
-    <h2>Nombre: </h2>
-    <h3 contenteditable id="listName">{{.List.Name}}</h3>
-    <h2>Descripcion: </h2>
-    <p contenteditable id="listDescription">{{.List.Description}}</p> -->
-
 </body>
 </html>
 
@@ -69,24 +108,29 @@
         let listID = document.querySelector('#listID').textContent;
         let usuarioActual = document.querySelector('#usuarioActual').textContent;
         deleteUserListGO(userEmail, listID, proyectID).then(
-
             function(resultados){
-                let tokenExpire = resultados[2];
+                let tokenExpire = resultados[3];
+                let checkUser = resultados[2];
                 let deleteOk = resultados[1];
                 let listOK = resultados[0];
-                if (tokenExpire == "true"){
+                if (tokenExpire){
                     alert('El Token de la sesión expiro')
                     exitSesion();
                 }else{
                     if (listOK){
-                        if (deleteOk){
-                            alert('Usuario borrado')
-                            changeToListConfig(listID, proyectID)
+                        if (checkUser){
+                            if (deleteOk){
+                                alert('Usuario borrado')
+                                changeToListConfig(listID, proyectID)
+                            }else{
+                                alert('No se pudo borrar al usuario')
+                            }
                         }else{
-                            alert('No se pudo borrar al usuario')
+                            alert('El usuario ya fue borrado')
+                            changeToListConfig(listID, proyectID)
                         }
                     }else{
-                        alert('La lista fue borrada')
+                        alert('La lista ya no esta disponible')
                         changeHome()
                     }
                 }
@@ -98,47 +142,50 @@
         let listID = document.querySelector('#listID').textContent;
         let proyectID = document.querySelector('#proyectID').textContent;
         let userEmail = document.querySelector('#users').value
-        addUserListGO(userEmail, proyectID, listID).then(
+        if (userEmail == ""){
+            alert('Selecciona un usuario para añadirlo')
+        }else{
+            addUserListGO(userEmail, proyectID, listID).then(
             function(resultados){
-                let tokenExpire = resultados[2];
+                let tokenExpire = resultados[3];
+                let checkUser = resultados[2];
                 let addOK = resultados[1];
                 let listOK = resultados[0];
-                if (tokenExpire == "true"){
+                if (tokenExpire){
                     alert('El Token de la sesión expiro')
                     exitSesion();
                 }else{
                     if (listOK){
-                        if (addOK){
-                            alert('Usuario añadido')
-                            changeToListConfig(listID, proyectID)
+                        if (checkUser){
+                            if (addOK){
+                                alert('Usuario añadido')
+                                changeToListConfig(listID, proyectID)
+                            }else{
+                                alert('No se añadio el usuario')
+                            }
                         }else{
-                            alert('No se añadio el usuario')
+                            alert('El usuario ya fue añadido')
+                            changeToListConfig(listID, proyectID)
                         }
                     }else{
-                        alert('La lista fue borrada')
+                        alert('La lista ya no esta disponible')
                         changeHome()
                     }
                 }
-            }
-        )
+            })
+        }
     }
 
     function updateList(){
         let proyectID = document.querySelector('#proyectID').textContent;
         let listID = document.querySelector('#listID').textContent;
         let listName = document.querySelector('#listName').value;
-        let listDescription = document.querySelector('#listDescription').textContent;
+        let listDescription = document.querySelector('#listDescription').value;
         let check = document.querySelector('#listCheck').textContent;
-        let usersHTML = document.querySelectorAll('li')
-        let users = []
-        for (let index = 0; index < usersHTML.length; index++) {
-            users.push(usersHTML[index].textContent)
-        }
         let list = {
             "ID" : listID,
             "Name" : listName,
             "Description" : listDescription,
-            "Users" : users,
             "ProyectID" : proyectID,
             "Check" : check
         }
@@ -156,6 +203,7 @@
                             alert('La lista no pudo ser actualizada')
                         }else if (updateStatus == "OK"){
                             alert('La lista fue actualizada')
+                            changeToListConfig(listID, proyectID)
                         } else{
                             alert('La lista ya fue actualizada previamente por otro usuario')
                             changeToListConfig(listID, proyectID)

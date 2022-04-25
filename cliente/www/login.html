@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <style>
 
-body{
+    body{
             margin: 0;
             padding: 0;
             background: whitesmoke;
@@ -101,7 +101,7 @@ body{
         .loader {
             width: 50px;
             height: 50px;
-            border: 10px solid #eee;
+            border: 10px solid #2ecc71;
             border-top: 10px solid #000;
             border-radius: 50%;
             animation-name: girar;
@@ -122,38 +122,26 @@ body{
         .oculto{
             display: none;
         }
+
         
     </style>
 </head>
 
 <body>
-
     <form class="box">
         <h1 class="display-4">Login</h1>
         <input type="text" id="email" name="email" placeholder="Email">
         <input type="password" id="password" name="password" placeholder="Password">
         <div class="row">
-            <input type="submit" id="login" onclick="iniciarSesion()" value="Login">
-            <input type="submit" id="register" onclick="changeToRegister()" value="Register">
+            <div class="col-md-12 order-md-1">
+                <input type="submit" id="login" onclick="iniciarSesion()" value="Login">
+            </div>
+            <div class="col-md-12 order-md-2">
+                <a type="button" role="button" href="#" onclick="changeToRegister()">Regístrate para crear una cuenta</a>
+            </div>
         </div>
-
         <div class="oculto loader container"></div>
     </form>
-        <!-- <form class="text-center form-signin shadow p-3 mb-5 bg-white rounded">
-            <h2 class="display-4">Identificarse</h2>
-            <input class="form-control" placeholder="Email" type="text" id="email" name="email">
-            <input class="form-control" placeholder="Password" type="password" id="password" name="password">
-            <div>
-                <button class="btn btn-lg btn-primary btn-block" onclick="login()">Identificarse</button>
-            </div>
-            <div>
-                <button class="btn btn-lg btn-secondary btn-block" onclick="changeToRegister()">Registrate</button>
-            </div>
-            
-            <div class="oculto loader container"></div>
-
-
-        </form> -->
 </body>
 </html>
 
@@ -178,8 +166,10 @@ body{
             loginGO(user_pass).then(
                 function(valorDesdeGO){
                     if (valorDesdeGO == false){
-                        alert('El usuario no se a logueado')
+                        alert('Error al iniciar sesión')
                         showLoading();
+                        document.querySelector('#email').value = "";
+                        document.querySelector('#password').value = "";
                     }
                 }
             )

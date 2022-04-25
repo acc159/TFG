@@ -17,6 +17,7 @@ type Relation struct {
 	ProyectID  primitive.ObjectID `bson:"proyectID,omitempty"`
 	ProyectKey []byte             `bson:"proyectKey,omitempty"`
 	Lists      []RelationLists    `bson:"lists,omitempty"`
+	Rol        string             `bson:"rol"`
 }
 
 type RelationLists struct {
@@ -44,7 +45,6 @@ func GetProyectsListsByUser(userEmail string) []Relation {
 	defer resp.Body.Close()
 	var relations []Relation
 	if resp.StatusCode == 400 {
-		fmt.Println("Ningun proyecto ni lista para dicho usuario")
 		return relations
 	} else {
 		json.NewDecoder(resp.Body).Decode(&relations)
@@ -57,11 +57,24 @@ func CreateRelation(userEmail string, proyectStringID string, proyectKey []byte)
 	//userID, _ := primitive.ObjectIDFromHex(userStringID)
 	proyectID, _ := primitive.ObjectIDFromHex(proyectStringID)
 	//Creo la relacion a enviar
-	relation := Relation{
-		UserEmail:  userEmail,
-		ProyectID:  proyectID,
-		ProyectKey: proyectKey,
+	var relation Relation
+
+	if userEmail == UserSesion.Email {
+		relation = Relation{
+			UserEmail:  userEmail,
+			ProyectID:  proyectID,
+			ProyectKey: proyectKey,
+			Rol:        "Admin",
+		}
+	} else {
+		relation = Relation{
+			UserEmail:  userEmail,
+			ProyectID:  proyectID,
+			ProyectKey: proyectKey,
+			Rol:        "User",
+		}
 	}
+
 	//Pasamos el tipo Relation a JSON
 	relationJSON, err := json.Marshal(relation)
 	if err != nil {
@@ -160,7 +173,6 @@ func DeleteUserRelation(userEmail string) bool {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode == 400 {
-		fmt.Println("Las relaciones del usuario no pudieron ser eliminadas")
 		return false
 	} else {
 		return true
@@ -209,7 +221,6 @@ func GetRelationUserProyect(userEmail string, proyectID string) (Relation, bool)
 
 	switch resp.StatusCode {
 	case 400:
-		fmt.Println("Ningun proyecto ni lista para dicho usuario")
 		return relation, false
 	case 401:
 		fmt.Println("Token Expirado")
