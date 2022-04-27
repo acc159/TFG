@@ -62,9 +62,21 @@
                     <div id="users_list">    
                         <ul class="list-group">
                             {{range .List.Users}}
-                            <li id="{{.}}" class="list-group-item d-flex justify-content-between align-items-center">
-                                {{.}}
-                                <span onclick="deleteUser('{{.}}')" role="button" class="badge badge-danger badge-pill" type="button">X</span>
+                            <li id="{{.User}}" class="list-group-item d-flex justify-content-between align-items-center">
+                                <!-- {{.}}
+                                <span onclick="deleteUser('{{.}}')" role="button" class="badge badge-danger badge-pill" type="button">X</span> -->
+                                <div class="col-md-8 order-md-1">
+                                    {{.User}}
+                                    <span onclick="deleteUser('{{.User}}')" role="button" class="badge badge-danger badge-pill" type="button">X</span>
+                                </div>
+                                <select class="col-md-3 order-md-2 form-control">
+                                    <option value="1">{{.Rol}}</option>
+                                    {{if eq .Rol "Admin"}}
+                                        <option value="2">User</option>
+                                    {{else}}
+                                        <option value="2">Admin</option>
+                                    {{end}}
+                                </select>
                             </li>
                             {{end}}
                         </ul>
@@ -202,18 +214,40 @@ $(".container").change(function() {
         }
     }
 
+
+
+    function getUsersList(){
+        let usersList = [];
+
+        let users = document.querySelector('ul').querySelectorAll('li')
+
+        for (let i = 0; i < users.length; i++) {
+            let user = {
+                "User": users[i].id,
+                "Rol": users[i].querySelector('select').selectedOptions[0].textContent,
+            }
+            usersList.push(user)
+        }
+        return usersList
+    }
+
+
     function updateList(){
         let proyectID = document.querySelector('#proyectID').textContent;
         let listID = document.querySelector('#listID').textContent;
         let listName = document.querySelector('#listName').value;
         let listDescription = document.querySelector('#listDescription').value;
         let check = document.querySelector('#listCheck').textContent;
+
+        let users = getUsersList();
+
         let list = {
             "ID" : listID,
             "Name" : listName,
             "Description" : listDescription,
             "ProyectID" : proyectID,
-            "Check" : check
+            "Check" : check,
+            "Users" : users
         }
         updateListGO(list).then(
             function(resultados){

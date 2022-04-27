@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"cliente/config"
 	"cliente/models"
-	"cliente/utils"
 
 	"html/template"
 	"io/ioutil"
@@ -26,14 +25,14 @@ type DataList struct {
 	User         models.User
 	ProyectID    string
 	ProyectName  string
-	UsersProyect []models.UserProyect
+	UsersProyect []models.UserRole
 }
 
 type DataTask struct {
 	Tasks       []models.Task
 	ListID      string
 	ListName    string
-	ListUsers   []string
+	ListUsers   []models.UserRole
 	User        string
 	Pendientes  int
 	Progreso    int
@@ -49,7 +48,7 @@ type DataConfigProyect struct {
 
 type DataConfigList struct {
 	List   models.List
-	Emails []models.UserProyect
+	Emails []models.UserRole
 	User   string
 }
 
@@ -105,7 +104,7 @@ func ChangeViewWithValues(nombreVista string, emails []string) {
 }
 
 //Cargo la vista de añadir una lista
-func ChangeViewAddList(nombreVista string, proyectID string, proyectName string, usersProyect []models.UserProyect) {
+func ChangeViewAddList(nombreVista string, proyectID string, proyectName string, usersProyect []models.UserRole) {
 	tmpl, err := template.ParseFiles(nombreVista)
 	if err != nil {
 		log.Fatal(err)
@@ -122,7 +121,7 @@ func ChangeViewAddList(nombreVista string, proyectID string, proyectName string,
 	UI.Load(loadableContents)
 }
 
-func ChangeViewTasks(nombreVista string, tasks []models.Task, listID string, listUsers []string, listName string, typeTasks string) {
+func ChangeViewTasks(nombreVista string, tasks []models.Task, listID string, listUsers []models.UserRole, listName string, typeTasks string) {
 	tmpl, err := template.ParseFiles(nombreVista)
 	if err != nil {
 		log.Fatal(err)
@@ -163,7 +162,7 @@ func ChangeViewConfigProyect(nombreVista string, proyect models.Proyect, emails 
 	UI.Load(loadableContents)
 }
 
-func ChangeViewConfigList(nombreVista string, list models.List, emails []models.UserProyect, userEmail string) {
+func ChangeViewConfigList(nombreVista string, list models.List, emails []models.UserRole, userEmail string) {
 	tmpl, err := template.ParseFiles(nombreVista)
 	if err != nil {
 		log.Fatal(err)
@@ -233,7 +232,7 @@ func LoadTask(taskID string, listID string) (models.Task, models.List) {
 		task := models.DescifrarTarea(taskCipher, listKey)
 		//Limpio de los usuarios de la lista aquellos que estan en la tarea
 		for i := 0; i < len(task.Users); i++ {
-			list.Users = utils.FindAndDelete(list.Users, task.Users[i])
+			list.Users = models.FindAndDeleteUsers(list.Users, task.Users[i])
 		}
 		return task, list
 	} else {

@@ -159,7 +159,7 @@ func main() {
 				emailsProyect := models.GetProyect(proyectID).Users
 				emailsList := list.Users
 				for i := 0; i < len(emailsList); i++ {
-					emailsProyect = models.FindAndDeleteUsersProyect(emailsProyect, emailsList[i])
+					emailsProyect = models.FindAndDeleteUsers(emailsProyect, emailsList[i].User)
 				}
 				ChangeViewConfigList(config.PreView+"list/configList.html", list, emailsProyect, models.UserSesion.Email)
 				return []bool{true, false}

@@ -72,14 +72,24 @@
         let description = document.querySelector('#description').value
         let usersList = []
         let usuarios = document.querySelector('select')
+        let usersWithRole = []
         if(usuarios != null){
             let usuariosSeleccionados = usuarios.selectedOptions;
             for (let index = 0; index < usuariosSeleccionados.length; index++) {
                 usersList.push(usuariosSeleccionados[index].value);
             }
+
+           
+            for (let i = 0; i < usuariosSeleccionados.length; i++) {
+                let userRole = {
+                    "User" : usuariosSeleccionados[i].textContent,
+                    "Rol" : "User",
+                }
+                usersWithRole.push(userRole)
+            }
         }
         let lista = {
-            Users : usersList,
+            Users : usersWithRole,
             Name : listName,
             Description : description,
         }

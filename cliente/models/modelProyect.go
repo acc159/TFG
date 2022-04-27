@@ -14,15 +14,15 @@ import (
 )
 
 type Proyect struct {
-	ID          string        `bson:"_id,omitempty"`
-	Name        string        `bson:"name,omitempty"`
-	Description string        `bson:"description,omitempty"`
-	Users       []UserProyect `bson:"users,omitempty"`
-	Check       string        `bson:"check"`
-	Rol         string        `bson:"rol"`
+	ID          string     `bson:"_id,omitempty"`
+	Name        string     `bson:"name,omitempty"`
+	Description string     `bson:"description,omitempty"`
+	Users       []UserRole `bson:"users,omitempty"`
+	Check       string     `bson:"check"`
+	Rol         string     `bson:"rol"`
 }
 
-type UserProyect struct {
+type UserRole struct {
 	User string `bson:"user,omitempty"`
 	Rol  string `bson:"rol,omitempty"`
 }
@@ -30,7 +30,7 @@ type UserProyect struct {
 type ProyectCipher struct {
 	ID          primitive.ObjectID `bson:"_id,omitempty"`
 	Cipherdata  []byte             `bson:"cipherdata,omitempty"`
-	Users       []UserProyect      `bson:"users,omitempty"`
+	Users       []UserRole         `bson:"users,omitempty"`
 	Check       string             `bson:"check"`
 	UpdateCheck string             `bson:"updateCheck"`
 }
@@ -68,14 +68,14 @@ func GetProyect(proyectID string) ProyectCipher {
 func CreateProyect(newProyect Proyect) (bool, bool) {
 	//Añadimos el email del usuario que esta creando el proyecto
 
-	userProyect := UserProyect{
+	UserRole := UserRole{
 		User: UserSesion.Email,
 		Rol:  "Admin",
 	}
 
 	//newProyect.Users = append(newProyect.Users, UserSesion.Email)
 
-	newProyect.Users = append(newProyect.Users, userProyect)
+	newProyect.Users = append(newProyect.Users, UserRole)
 
 	//Generamos la clave aleatoria que se utilizara en el cifrado AES
 	Krandom, IVrandom := utils.GenerateKeyIV()
@@ -120,7 +120,7 @@ func CreateProyect(newProyect Proyect) (bool, bool) {
 }
 
 //Le paso el ID del proyecto junto a su clave de cifrado y creo relaciones Usuario-Proyecto para cada usuario pasado
-func CreateProyectRelations(proyectID string, Krandom []byte, users []UserProyect) {
+func CreateProyectRelations(proyectID string, Krandom []byte, users []UserRole) {
 	for i := 0; i < len(users); i++ {
 		publicKeyUser, _ := GetPublicKey(users[i].User)
 		KrandomCipher := utils.EncryptKeyWithPublicKey(publicKeyUser, Krandom)
@@ -157,7 +157,7 @@ func DeleteProyect(proyectID string) (bool, bool) {
 }
 
 //Recuperar los usuarios de un proyecto
-func GetUsersProyect(proyectID string) ([]UserProyect, bool) {
+func GetUsersProyect(proyectID string) ([]UserRole, bool) {
 	url := config.URLbase + "proyect/users/" + proyectID
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -172,7 +172,7 @@ func GetUsersProyect(proyectID string) ([]UserProyect, bool) {
 	}
 	defer resp.Body.Close()
 	UserSesion.Token = resp.Header.Get("refreshToken")
-	var responseObject []UserProyect
+	var responseObject []UserRole
 	switch resp.StatusCode {
 	case 400:
 		fmt.Println("El usuario no pudo ser eliminado del proyecto")
@@ -222,7 +222,7 @@ func DeleteUserProyect(proyectID string, userEmail string) (bool, bool) {
 			//Actualizo el proyecto en local
 			for i := 0; i < len(DatosUsuario); i++ {
 				if DatosUsuario[i].Proyecto.ID == proyectID {
-					DatosUsuario[i].Proyecto.Users = FindAndDeleteUsersProyect(DatosUsuario[i].Proyecto.Users, userEmail)
+					DatosUsuario[i].Proyecto.Users = FindAndDeleteUsers(DatosUsuario[i].Proyecto.Users, userEmail)
 				}
 			}
 			return true, false
@@ -389,8 +389,8 @@ func CheckUserOnProyect(proyectID string, userEmail string) bool {
 	return relation.ProyectID.IsZero()
 }
 
-func FindAndDeleteUsersProyect(data []UserProyect, delete string) []UserProyect {
-	var respuesta []UserProyect
+func FindAndDeleteUsers(data []UserRole, delete string) []UserRole {
+	var respuesta []UserRole
 	for i := 0; i < len(data); i++ {
 		if data[i].User != delete {
 			respuesta = append(respuesta, data[i])

@@ -284,6 +284,7 @@ func GetUserProyectsLists() {
 			//Por cada lista del proyecto la recupero descifrada usando mi clave privada para descifrar la clave de descifrado de la lista
 			for j := 0; j < len(relations[i].Lists); j++ {
 				list := GetUserList(relations[i].Lists[j].ListID, relations[i].Lists[j].ListKey, privateKey)
+				list.Rol = GetUserListRol(list)
 				lists = append(lists, list)
 			}
 			datos := DataUser{
@@ -299,6 +300,15 @@ func GetUserProyectRol(proyect Proyect) string {
 	for i := 0; i < len(proyect.Users); i++ {
 		if proyect.Users[i].User == UserSesion.Email {
 			return proyect.Users[i].Rol
+		}
+	}
+	return "User"
+}
+
+func GetUserListRol(list List) string {
+	for i := 0; i < len(list.Users); i++ {
+		if list.Users[i].User == UserSesion.Email {
+			return list.Users[i].Rol
 		}
 	}
 	return "User"

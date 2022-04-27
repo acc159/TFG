@@ -15,10 +15,15 @@ import (
 type List struct {
 	ID          primitive.ObjectID `bson:"_id,omitempty"`
 	Cipherdata  []byte             `bson:"cipherdata,omitempty"`
-	Users       []string           `bson:"users,omitempty"`
+	Users       []UserRole         `bson:"users,omitempty"`
 	ProyectID   primitive.ObjectID `bson:"proyectID,omitempty"`
 	Check       string             `bson:"check,omitempty"`
 	UpdateCheck string             `bson:"updateCheck,omitempty"`
+}
+
+type UserRole struct {
+	User string `bson:"user,omitempty"`
+	Rol  string `bson:"rol,omitempty"`
 }
 
 //Crear una lista
@@ -77,7 +82,7 @@ func GetListsByIDs(stringsIDs []string) []Proyect {
 }
 
 //Recupero los usuarios de una lista
-func GetUsersList(idString string) []string {
+func GetUsersList(idString string) []UserRole {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	coleccion := config.InstanceDB.DB.Collection("lists")
@@ -152,10 +157,15 @@ func AddUserList(stringID string, user string) bool {
 	defer cancel()
 	coleccion := config.InstanceDB.DB.Collection("lists")
 	id, _ := primitive.ObjectIDFromHex(stringID)
-	filter := bson.D{{Key: "_id", Value: id}}
-	update := bson.M{"$push": bson.M{"users": user}}
+	// filter := bson.D{{Key: "_id", Value: id}}
+	// update := bson.M{"$push": bson.M{"users": user}}
 	var updatedDoc bson.D
-	err := coleccion.FindOneAndUpdate(ctx, filter, update).Decode(&updatedDoc)
+
+	pushQuery := bson.D{{Key: "user", Value: user}, {Key: "rol", Value: "User"}}
+	push := bson.D{{Key: "users", Value: pushQuery}}
+	filter := bson.D{{Key: "_id", Value: id}}
+	err := coleccion.FindOneAndUpdate(ctx, filter, bson.M{"$push": push}).Decode(&updatedDoc)
+
 	if err != nil {
 		log.Println(err)
 	}
@@ -171,20 +181,31 @@ func DeleteUserList(listStringID string, user string) bool {
 	defer cancel()
 	coleccion := config.InstanceDB.DB.Collection("lists")
 	id, _ := primitive.ObjectIDFromHex(listStringID)
-	filter := bson.D{{Key: "_id", Value: id}}
-	update := bson.M{"$pull": bson.M{"users": user}}
 	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
+	pullQuery := bson.M{"users": bson.M{"user": user}}
+	filter := bson.D{{Key: "_id", Value: id}}
 
 	var listUpdated List
-	err := coleccion.FindOneAndUpdate(ctx, filter, update, opts).Decode(&listUpdated)
+	err := coleccion.FindOneAndUpdate(ctx, filter, bson.M{"$pull": pullQuery}, opts).Decode(&listUpdated)
 	if err != nil {
 		log.Println(err)
 	}
 	//Si ya no quedan mas usuarios en la lista la borro
-	if len(listUpdated.Users) == 0 {
-		// DeleteListRelation("admin", listUpdated.ProyectID.Hex(), listUpdated.ID.Hex())
+	existeAdmin := false
+	if len(listUpdated.Users) > 0 {
+		for i := 0; i < len(listUpdated.Users); i++ {
+			if listUpdated.Users[i].Rol == "Admin" {
+				existeAdmin = true
+			}
+		}
+		if !existeAdmin {
+			listUpdated.Users[0].Rol = "Admin"
+			UpdateListUserRol(listUpdated, listStringID)
+		}
+	} else {
 		DeleteList(listStringID)
 	}
+
 	return true
 }
 
@@ -200,6 +221,22 @@ func GetList(idString string) List {
 		log.Println(err)
 	}
 	return list
+}
+
+func UpdateListUserRol(list List, stringID string) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	coleccion := config.InstanceDB.DB.Collection("lists")
+
+	id, _ := primitive.ObjectIDFromHex(stringID)
+	filter := bson.D{{Key: "_id", Value: id}}
+	update := bson.D{{Key: "$set", Value: list}}
+
+	var updatedDoc bson.D
+	err := coleccion.FindOneAndUpdate(ctx, filter, update).Decode(&updatedDoc)
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 /*

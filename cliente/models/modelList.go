@@ -16,18 +16,19 @@ import (
 )
 
 type List struct {
-	ID          string   `bson:"_id,omitempty"`
-	Name        string   `bson:"name,omitempty"`
-	Description string   `bson:"description,omitempty"`
-	Users       []string `bson:"users,omitempty"`
-	ProyectID   string   `bson:"proyectID,omitempty"`
-	Check       string   `bson:"check"`
+	ID          string     `bson:"_id,omitempty"`
+	Name        string     `bson:"name,omitempty"`
+	Description string     `bson:"description,omitempty"`
+	Users       []UserRole `bson:"users,omitempty"`
+	ProyectID   string     `bson:"proyectID,omitempty"`
+	Check       string     `bson:"check"`
+	Rol         string     `bson:"rol"`
 }
 
 type ListCipher struct {
 	ID          primitive.ObjectID `bson:"_id,omitempty"`
 	Cipherdata  []byte             `bson:"cipherdata,omitempty"`
-	Users       []string           `bson:"users,omitempty"`
+	Users       []UserRole         `bson:"users,omitempty"`
 	ProyectID   primitive.ObjectID `bson:"proyectID,omitempty"`
 	Check       string             `bson:"check"`
 	UpdateCheck string             `bson:"updateCheck"`
@@ -35,7 +36,11 @@ type ListCipher struct {
 
 //Creo una lista con el proyectID correspondiente
 func CreateList(list List, proyectIDstring string) (bool, bool) {
-	list.Users = append(list.Users, UserSesion.Email)
+	userList := UserRole{
+		User: UserSesion.Email,
+		Rol:  "Admin",
+	}
+	list.Users = append(list.Users, userList)
 	//1.Generamos la clave aleatoria que se utilizara en el cifrado AES
 	Krandom, IVrandom := utils.GenerateKeyIV()
 	//Ciframos la lista
@@ -82,11 +87,11 @@ func CreateList(list List, proyectIDstring string) (bool, bool) {
 	}
 }
 
-func CreateListRelations(listID string, proyectID string, Krandom []byte, users []string) {
+func CreateListRelations(listID string, proyectID string, Krandom []byte, users []UserRole) {
 	for i := 0; i < len(users); i++ {
-		publicKeyUser, _ := GetPublicKey(users[i])
+		publicKeyUser, _ := GetPublicKey(users[i].User)
 		KrandomCipher := utils.EncryptKeyWithPublicKey(publicKeyUser, Krandom)
-		AddListToRelation(proyectID, listID, users[i], KrandomCipher)
+		AddListToRelation(proyectID, listID, users[i].User, KrandomCipher)
 	}
 }
 
@@ -242,7 +247,7 @@ func DeleteUserList(listID string, userEmail string) bool {
 		for i := 0; i < len(DatosUsuario); i++ {
 			for j := 0; j < len(DatosUsuario[i].Listas); j++ {
 				if DatosUsuario[i].Listas[j].ID == listID {
-					DatosUsuario[i].Listas[j].Users = utils.FindAndDelete(DatosUsuario[i].Listas[j].Users, userEmail)
+					DatosUsuario[i].Listas[j].Users = FindAndDeleteUsers(DatosUsuario[i].Listas[j].Users, userEmail)
 				}
 			}
 		}
@@ -280,13 +285,13 @@ func AddUserList(userEmail string, proyectID string, listID string) bool {
 		return false
 	} else {
 		//Lo añado al usuario en local
-		for i := 0; i < len(DatosUsuario); i++ {
-			for j := 0; j < len(DatosUsuario[i].Listas); j++ {
-				if DatosUsuario[i].Listas[j].ID == listID {
-					DatosUsuario[i].Listas[j].Users = append(DatosUsuario[i].Listas[j].Users, userEmail)
-				}
-			}
-		}
+		// for i := 0; i < len(DatosUsuario); i++ {
+		// 	for j := 0; j < len(DatosUsuario[i].Listas); j++ {
+		// 		if DatosUsuario[i].Listas[j].ID == listID {
+		// 			DatosUsuario[i].Listas[j].Users = append(DatosUsuario[i].Listas[j].Users, userEmail)
+		// 		}
+		// 	}
+		// }
 		return true
 	}
 }

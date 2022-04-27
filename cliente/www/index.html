@@ -64,15 +64,6 @@
                     <a id="buttonNav1" class="button_nav nav-link btn btn-outline-light" role="button" onclick="changeToAddProyect()">Añadir un proyecto</a>
                 </li>
 
-
-
-                <!-- <li class="nav-item btn-outline-secondary" type="button">
-                    <a class="nav-link" role="button" onclick="changeToAddProyect()">Añadir un proyecto</a>
-                </li>
-
-                <li class="nav-item btn-outline-secondary" type="button">
-                    <a class="nav-link" role="button" onclick="deleteUser('{{$email}}')">Borrar Usuario</a>
-                </li> -->
             </ul>
             <form class="form-inline my-2 my-lg-0">
                 <input class="form-control mr-sm-2" type="search" placeholder="Proyectos y Listas">
@@ -150,8 +141,10 @@
                                                 <div class="justify-content-between align-items-center">
                                                     <div class="btn-group" id="{{.ID}}" data-proyectID="{{$proyectID}}" data-proyectName="{{$proyectName}}" data-listName="{{.Name}}">
                                                         <button type="button" class="btn btn-sm btn-outline-secondary"onclick="changeToTasks(event)">Ver Tareas</button>
-                                                        <button type="button" class="btn btn-sm btn-outline-secondary"onclick="changeToListConfig(event)">Config</button>
-                                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deleteList(event)">Eliminar Lista</button>
+                                                        {{if eq .Rol "Admin"}}
+                                                            <button type="button" class="btn btn-sm btn-outline-secondary"onclick="changeToListConfig(event)">Config</button>
+                                                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deleteList(event)">Eliminar Lista</button>
+                                                        {{end}}
                                                     </div>
                                                 </div>
                                             </div>
