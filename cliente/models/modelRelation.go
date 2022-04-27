@@ -44,6 +44,8 @@ func GetProyectsListsByUser(userEmail string) []Relation {
 	}
 	defer resp.Body.Close()
 	var relations []Relation
+	UserSesion.Token = resp.Header.Get("refreshToken")
+
 	if resp.StatusCode == 400 {
 		return relations
 	} else {
@@ -57,22 +59,10 @@ func CreateRelation(userEmail string, proyectStringID string, proyectKey []byte)
 	//userID, _ := primitive.ObjectIDFromHex(userStringID)
 	proyectID, _ := primitive.ObjectIDFromHex(proyectStringID)
 	//Creo la relacion a enviar
-	var relation Relation
-
-	if userEmail == UserSesion.Email {
-		relation = Relation{
-			UserEmail:  userEmail,
-			ProyectID:  proyectID,
-			ProyectKey: proyectKey,
-			Rol:        "Admin",
-		}
-	} else {
-		relation = Relation{
-			UserEmail:  userEmail,
-			ProyectID:  proyectID,
-			ProyectKey: proyectKey,
-			Rol:        "User",
-		}
+	relation := Relation{
+		UserEmail:  userEmail,
+		ProyectID:  proyectID,
+		ProyectKey: proyectKey,
 	}
 
 	//Pasamos el tipo Relation a JSON
@@ -94,6 +84,7 @@ func CreateRelation(userEmail string, proyectStringID string, proyectKey []byte)
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
+	UserSesion.Token = resp.Header.Get("refreshToken")
 	if resp.StatusCode == 400 {
 		return false
 	} else {
@@ -126,6 +117,7 @@ func AddListToRelation(proyectID string, listIDstring string, userEmail string, 
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
+	UserSesion.Token = resp.Header.Get("refreshToken")
 	if resp.StatusCode == 400 {
 		return false
 	} else {
@@ -149,6 +141,7 @@ func DeleteRelationList(proyectStringID string, listStringID string, userEmail s
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
+	UserSesion.Token = resp.Header.Get("refreshToken")
 	if resp.StatusCode == 400 {
 		fmt.Println("La lista en la relacion no pudo ser borrada")
 		return false
@@ -172,6 +165,7 @@ func DeleteUserRelation(userEmail string) bool {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
+	UserSesion.Token = resp.Header.Get("refreshToken")
 	if resp.StatusCode == 400 {
 		return false
 	} else {
@@ -194,6 +188,7 @@ func DeleteUserProyectRelation(userEmail string, proyectID string) bool {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
+	UserSesion.Token = resp.Header.Get("refreshToken")
 	if resp.StatusCode == 400 {
 		fmt.Println("La relacion usuario-proyecto no pudo ser eliminada")
 		return false
@@ -218,7 +213,7 @@ func GetRelationUserProyect(userEmail string, proyectID string) (Relation, bool)
 	}
 	defer resp.Body.Close()
 	var relation Relation
-
+	UserSesion.Token = resp.Header.Get("refreshToken")
 	switch resp.StatusCode {
 	case 400:
 		return relation, false
@@ -246,6 +241,7 @@ func GetRelationListByUser(userEmail string, listID string) RelationLists {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
+	UserSesion.Token = resp.Header.Get("refreshToken")
 	var relationList RelationLists
 	if resp.StatusCode == 400 {
 		fmt.Println("No existe la lista para dicho usuario")

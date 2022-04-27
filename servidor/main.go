@@ -29,19 +29,6 @@ func main() {
 
 	utils.PrepareJWT()
 
-	/*
-
-		secret := os.Getenv("SECRET")
-		if secret != "" {
-			fmt.Println(secret)
-		} else {
-			fmt.Println("No asignada")
-		}
-	*/
-
-	//Iniciar base de datos
-	//config.InitMongoDB()
-
 	//Base de datos
 	config.ConnectDB()
 	defer config.DisconectDB()

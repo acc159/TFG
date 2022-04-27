@@ -26,7 +26,7 @@ type DataList struct {
 	User         models.User
 	ProyectID    string
 	ProyectName  string
-	UsersProyect []string
+	UsersProyect []models.UserProyect
 }
 
 type DataTask struct {
@@ -49,7 +49,7 @@ type DataConfigProyect struct {
 
 type DataConfigList struct {
 	List   models.List
-	Emails []string
+	Emails []models.UserProyect
 	User   string
 }
 
@@ -72,7 +72,7 @@ func InitUI() {
 	//Inicializo
 	UI, _ = lorca.New("", "", 1250, 800, "--allow-insecure-localhost")
 	//Cargo la primera vista
-	ChangeView(config.PreView + "login.html")
+	ChangeView(config.PreView + "user/login.html")
 }
 
 //Cambia las vistas entre login y register
@@ -105,7 +105,7 @@ func ChangeViewWithValues(nombreVista string, emails []string) {
 }
 
 //Cargo la vista de añadir una lista
-func ChangeViewAddList(nombreVista string, proyectID string, proyectName string, usersProyect []string) {
+func ChangeViewAddList(nombreVista string, proyectID string, proyectName string, usersProyect []models.UserProyect) {
 	tmpl, err := template.ParseFiles(nombreVista)
 	if err != nil {
 		log.Fatal(err)
@@ -163,7 +163,7 @@ func ChangeViewConfigProyect(nombreVista string, proyect models.Proyect, emails 
 	UI.Load(loadableContents)
 }
 
-func ChangeViewConfigList(nombreVista string, list models.List, emails []string, userEmail string) {
+func ChangeViewConfigList(nombreVista string, list models.List, emails []models.UserProyect, userEmail string) {
 	tmpl, err := template.ParseFiles(nombreVista)
 	if err != nil {
 		log.Fatal(err)
@@ -178,14 +178,6 @@ func ChangeViewConfigList(nombreVista string, list models.List, emails []string,
 	loadableContents := "data:text/html," + url.PathEscape(buff.String())
 	UI.Load(loadableContents)
 }
-
-// func (d DataConfigTask) HasPermission() bool {
-// 	if d.Task.ID != "" {
-// 		return true
-// 	} else {
-// 		return false
-// 	}
-// }
 
 func ChangeViewConfigTask(nombreVista string, task models.Task, list models.List) {
 

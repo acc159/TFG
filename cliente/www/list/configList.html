@@ -3,7 +3,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Configuración del Proyecto</title>
+    <title>Configuración de la Lista</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <style>
         nav{
@@ -24,13 +24,6 @@
     </style>
 </head>
 <body>
-    <!-- <nav class="navbar navbar-light bg-light">
-        <form class="form-inline">
-            <a class="nav-link btn-outline-secondary" type="button" role="button" onclick="changeHome()">Volver al Home</a>
-            <a class="nav-link btn-outline-info" type="button" role="button" onclick="updateProyect()">Actualizar Proyecto</a>
-            <a class="nav-link btn-outline-info" type="button" role="button" onclick="deleteProyect('{{.Proyect.ID}}')">Eliminar Proyecto</a>
-        </form>
-    </nav> -->
 
     <nav class="navbar navbar-light bg-dark">
         <form class="form-inline">
@@ -38,36 +31,37 @@
                 <a class="button_nav nav-link btn btn-outline-light" role="button" onclick="changeHome()">HOME</a>
             </li>
             <li class="nav-item btn-outline-light" type="button">
-                <a id="buttonNav1" class="button_nav nav-link btn btn-outline-light" role="button" onclick="updateProyect()">Actualizar Proyecto</a>
+                <a id="buttonNav1" class="button_nav nav-link btn btn-outline-light" role="button" onclick="updateList()">Actualizar Lista</a>
             </li>
             <li class="nav-item btn-outline-light" type="button">
-                <a id="buttonNav2" class="button_nav nav-link btn btn-outline-light" role="button" onclick="deleteProyect('{{.Proyect.ID}}')">Eliminar Proyecto</a>
+                <a id="buttonNav2" class="button_nav nav-link btn btn-outline-light" role="button" onclick="deleteList()">Borrar Lista</a>
             </li>
         </form>
     </nav>
 
-    <h2 hidden id="proyectID">{{.Proyect.ID}}</h2>
+    <h2 hidden id="proyectID">{{.List.ProyectID}}</h2>
+    <h2 hidden id="listID">{{.List.ID}}</h2>
+    <h1 hidden id="listCheck">{{.List.Check}}</h1>
     <span hidden id="usuarioActual">{{.User}}</span>
-    <h1 hidden id="proyectCheck">{{.Proyect.Check}}</h1>
     <form>
-        <div class="container">
+        <div class="form-group container">
             <h2 class="display-4 text-center">Datos</h2>
-            <label for="proyectName">Nombre del proyecto:</label>
-            <input contenteditable class="form-control" type="text" id="proyectName" name="proyectName" value="{{.Proyect.Name}}">
-            <label for="description">Descripción del proyecto:</label>
-            <textarea class="form-control" name="description" id="proyectDescription" cols="30" rows="10">{{.Proyect.Description}}</textarea>
+            <label for="listName">Nombre de la lista:</label>
+            <input contenteditable class="form-control" type="text" id="listName" name="listName" value="{{.List.Name}}">
+            <label for="listDescription">Descripción de la lista:</label>
+            <textarea class="form-control" name="listDescription" id="listDescription" cols="30" rows="10">{{.List.Description}}</textarea>
             <h2 class="display-4 text-center">Gestión Usuarios</h2>
             <div class="row"> 
                 <div class="col border-right">
                     <div class="d-flex mb-3 justify-content-between">
                         <h4 class="">
                             <span class="text-muted">Usuarios Asignados</span>
-                            <span class="badge badge-secondary badge-pill">{{len .Proyect.Users}}</span>
+                            <span class="badge badge-secondary badge-pill">{{len .List.Users}}</span>
                         </h4>
                     </div>
-                    <div id="usersProyect">    
+                    <div id="users_list">    
                         <ul class="list-group">
-                            {{range .Proyect.Users}}
+                            {{range .List.Users}}
                             <li id="{{.}}" class="list-group-item d-flex justify-content-between align-items-center">
                                 {{.}}
                                 <span onclick="deleteUser('{{.}}')" role="button" class="badge badge-danger badge-pill" type="button">X</span>
@@ -79,21 +73,47 @@
                   <div class="col">
                     <div class="d-flex mb-3 justify-content-between">
                         <h4 class="">
-                            <span class="text-muted">Usuarios del sistema</span>
+                            <span class="text-muted">Usuarios del proyecto</span>
                         </h4>
-                        <div>
-                            <button class="btn btn-primary" onclick="addUserProyect()">Añadir usuario</button>
-                        </div>
-                    </div>
-                    <select class="form-control" name="users" id="users">
-                        {{range .Emails}}
-                            <option value={{.}}>{{.}}</option>
+                        {{if ne (len .Emails) 0}}
+                            <div>
+                                <button class="btn btn-primary" onclick="addUserList()">Añadir usuario</button>
+                            </div>
                         {{end}}
-                    </select>
+                    </div>
+                    {{if eq (len .Emails) 0}}
+                        <h2>Nadie mas en el proyecto</h2>
+                    {{else}}
+                        <select class="form-control" name="users" id="users">
+                            {{range .Emails}}
+                                <option value={{.User}}>{{.User}}</option>
+                            {{end}}
+                        </select>
+                    {{end}}
+
                   </div>
             </div>
         </div>
     </form>
+
+    <div class="modal" id="modalExit" style="display: none;" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">Cambios sin guardar</h4>
+              <button type="button" class="close" data-dismiss="modal">×</button>
+            </div>
+            <div class="modal-body">
+              Hay cambios sin actualizar, sube tus cambios al servidor antes de salir
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="updateList()" class="btn btn-info">Actualizar</button>
+                <button type="button" onclick="changeHome(true)" class="btn btn-danger" data-dismiss="modal">Salir sin actualizar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
 </body>
 </html>
 
@@ -102,14 +122,22 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 
 <script>
+let changes = false
+
+$(".container").change(function() {
+    changes = true
+});
+
+
     function deleteUser(userEmail){
         let proyectID = document.querySelector('#proyectID').textContent;
+        let listID = document.querySelector('#listID').textContent;
         let usuarioActual = document.querySelector('#usuarioActual').textContent;
-        deleteUserProyectGO(userEmail, proyectID).then(
+        deleteUserListGO(userEmail, listID, proyectID).then(
             function(resultados){
                 let tokenExpire = resultados[3];
                 let checkUser = resultados[2];
-                let deleteOK = resultados[1];
+                let deleteOk = resultados[1];
                 let listOK = resultados[0];
                 if (tokenExpire){
                     alert('El Token de la sesión expiro')
@@ -117,32 +145,33 @@
                 }else{
                     if (listOK){
                         if (checkUser){
-                            if (deleteOK == false){
-                                alert('El usuario no se borro')
-                            }else{
+                            if (deleteOk){
                                 alert('Usuario borrado')
-                                changeToProyectConfig(proyectID)
+                                changeToListConfig(listID, proyectID)
+                            }else{
+                                alert('No se pudo borrar al usuario')
                             }
                         }else{
                             alert('El usuario ya fue borrado')
-                            changeToProyectConfig(proyectID)
+                            changeToListConfig(listID, proyectID)
                         }
                     }else{
-                        alert('El proyecto ya no esta disponible')
-                        changeHome()
+                        alert('La lista ya no esta disponible')
+                        changeHome(true)
                     }
                 }
             }
         )
     }
 
-    function addUserProyect(){
+    function addUserList(){
+        let listID = document.querySelector('#listID').textContent;
         let proyectID = document.querySelector('#proyectID').textContent;
         let userEmail = document.querySelector('#users').value
         if (userEmail == ""){
             alert('Selecciona un usuario para añadirlo')
         }else{
-            addUserProyectGO(userEmail, proyectID).then(
+            addUserListGO(userEmail, proyectID, listID).then(
             function(resultados){
                 let tokenExpire = resultados[3];
                 let checkUser = resultados[2];
@@ -154,59 +183,60 @@
                 }else{
                     if (listOK){
                         if (checkUser){
-                            if (addOK == false){
-                                alert('No se añadio el usuario')
-                            }else{
+                            if (addOK){
                                 alert('Usuario añadido')
-                                changeToProyectConfig(proyectID)
+                                changeToListConfig(listID, proyectID)
+                            }else{
+                                alert('No se añadio el usuario')
                             }
                         }else{
                             alert('El usuario ya fue añadido')
-                            changeToProyectConfig(proyectID)
+                            changeToListConfig(listID, proyectID)
                         }
                     }else{
-                        alert('El proyecto ya no esta disponible')
-                        changeHome()
+                        alert('La lista ya no esta disponible')
+                        changeHome(true)
                     }
                 }
             })
         }
     }
 
-
-    function updateProyect(){
-        let check = document.querySelector('#proyectCheck').textContent;
+    function updateList(){
         let proyectID = document.querySelector('#proyectID').textContent;
-        let proyectName = document.querySelector('#proyectName').value;
-        let proyectDescription = document.querySelector('#proyectDescription').value;
-        let proyect = {
-            "ID" : proyectID,
-            "Name" : proyectName,
-            "Description" : proyectDescription,
+        let listID = document.querySelector('#listID').textContent;
+        let listName = document.querySelector('#listName').value;
+        let listDescription = document.querySelector('#listDescription').value;
+        let check = document.querySelector('#listCheck').textContent;
+        let list = {
+            "ID" : listID,
+            "Name" : listName,
+            "Description" : listDescription,
+            "ProyectID" : proyectID,
             "Check" : check
         }
-        updateProyectGO(proyect).then(
+        updateListGO(list).then(
             function(resultados){
                 let tokenExpire = resultados[2];
                 let updateStatus = resultados[1];
-                let proyectOK = resultados[0];
+                let listOK = resultados[0];
                 if (tokenExpire == "true"){
                     alert('El Token de la sesión expiro')
                     exitSesion();
                 }else{
-                    if (proyectOK == "True"){
+                    if (listOK == "True"){
                         if (updateStatus == "Error"){
-                            alert('El proyecto no pudo ser actualizado')
+                            alert('La lista no pudo ser actualizada')
                         }else if (updateStatus == "OK"){
-                            alert('El proyecto fue actualizado')
-                            changeToProyectConfig(proyectID)
+                            alert('La lista fue actualizada')
+                            changeToListConfig(listID, proyectID)
                         } else{
-                            alert('El proyecto fue actualizado previamente por otro usuario')
-                            changeToProyectConfig(proyectID)
+                            alert('La lista ya fue actualizada previamente por otro usuario')
+                            changeToListConfig(listID, proyectID)
                         }
                     }else{
-                        alert('El proyecto ya no esta disponible')
-                        changeHome()
+                        alert('La lista fue borrada')
+                        changeHome(true)
                     }
                 }
             }
@@ -214,61 +244,73 @@
     }
 
 
-    function changeToProyectConfig(proyectID){
-        changeToProyectConfigGO(proyectID).then(
+    function changeToListConfig(listID, proyectID){
+        changeToListConfigGO(listID, proyectID).then(
             function(resultados){
                 let tokenExpire = resultados[1];
-                let changeOK = resultados[0];
-                if (tokenExpire){
-                    alert('El Token de la sesión expiro')
-                    exitSesion();
-                }else{
-                    if (changeOK == false){
-                        alert('Ya no esta disponible el proyecto')
-                        changeHome()
-                    }
-                }
-            }
-        )
-    }
-
-
-    function deleteProyect(proyectID){
-        deleteProyectGO(proyectID).then(
-            function(resultados){
-                let tokenExpire = resultados[2];
-                let deleteOK = resultados[1];
                 let listOK = resultados[0];
                 if (tokenExpire){
                     alert('El Token de la sesión expiro')
                     exitSesion();
                 }else{
-                    if (listOK){
-                        if (deleteOK == false){
-                            alert('El proyecto no se borro')
-                        }else{
-                            alert('El proyecto se borro')
-                            changeHome()
-                        }
-                    }else{
-                        alert('El proyecto ya no esta disponible')
-                        changeHome()
+                    if (listOK == false){
+                        alert('La lista no esta disponible')
+                        changeHome(true)
                     }
                 }
             }
         )
     }
 
-    function changeHome(){
-        changeHomeGO().then(
+    function deleteList(){
+        let proyectID = document.querySelector('#proyectID').textContent;
+        let listID = document.querySelector('#listID').textContent;
+        deleteListGO(listID, proyectID).then(
+            function(resultados){
+                let tokenExpire = resultados[1];
+                let listOK = resultados[0];
+                if (tokenExpire){
+                    alert('El Token de la sesión expiro')
+                    exitSesion();
+                }else{
+                    if (listOK == false){
+                        alert('La lista ya fue borrada')
+                        changeHome(true)
+                    }else{
+                        alert('La lista fue borrada')
+                        changeHome(true)
+                    }
+                }
+            }
+        )
+    }
+
+
+    // function changeHome(){
+    //     changeHomeGO().then(
+    //         function(tokenExpire){
+    //             if (tokenExpire){
+    //                 alert('El Token de la sesión expiro')
+    //                 exitSesion();
+    //             }
+    //         }
+    //     )
+    // }
+
+    function changeHome(exit){
+        if (changes == false || exit){
+            changeHomeGO().then(
             function(tokenExpire){
                 if (tokenExpire){
                     alert('El Token de la sesión expiro')
                     exitSesion();
                 }
-            }
-        )
+            })
+        }else{
+            $('#modalExit').modal('show')
+        }
     }
+
 
     function init () {
         let forms = document.querySelectorAll('form');

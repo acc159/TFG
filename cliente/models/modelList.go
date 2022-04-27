@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"cliente/config"
 	"cliente/utils"
+
 	"crypto/rsa"
 	"crypto/sha1"
 	"encoding/hex"
@@ -64,6 +65,7 @@ func CreateList(list List, proyectIDstring string) (bool, bool) {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
+	UserSesion.Token = resp.Header.Get("refreshToken")
 	switch resp.StatusCode {
 	case 400:
 		fmt.Println("El proyecto no pudo ser creado")
@@ -75,7 +77,6 @@ func CreateList(list List, proyectIDstring string) (bool, bool) {
 		var listID string
 		json.NewDecoder(resp.Body).Decode(&listID)
 		//Añado la lista a la relacion de cada usuario miembro de la lista
-		list.Users = append(list.Users, "admin")
 		CreateListRelations(listID, proyectIDstring, Krandom, list.Users)
 		return true, false
 	}
@@ -108,6 +109,7 @@ func GetListsByIDs(stringsIDs []string) []ListCipher {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
+	UserSesion.Token = resp.Header.Get("refreshToken")
 	//Compruebo si no hay ningun usuario
 	var responseObject []ListCipher
 	if resp.StatusCode == 404 {
@@ -135,6 +137,7 @@ func DeleteList(listsID string) (bool, bool) {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
+	UserSesion.Token = resp.Header.Get("refreshToken")
 	switch resp.StatusCode {
 	case 400:
 		fmt.Println("La lista no pudo ser borrada")
@@ -165,6 +168,7 @@ func GetUsersList(listID string) []string {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
+	UserSesion.Token = resp.Header.Get("refreshToken")
 	var responseObject []string
 	if resp.StatusCode == 404 {
 		return responseObject
@@ -195,6 +199,7 @@ func GetList(listID string) ListCipher {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
+	UserSesion.Token = resp.Header.Get("refreshToken")
 	//Compruebo si no hay ningun usuario
 	if resp.StatusCode == 404 {
 		fmt.Println("Lista no encontrada")
@@ -229,6 +234,7 @@ func DeleteUserList(listID string, userEmail string) bool {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
+	UserSesion.Token = resp.Header.Get("refreshToken")
 	if resp.StatusCode == 400 {
 		fmt.Println("El usuario no pudo ser eliminado de la lista")
 		return false
@@ -268,6 +274,7 @@ func AddUserList(userEmail string, proyectID string, listID string) bool {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
+	UserSesion.Token = resp.Header.Get("refreshToken")
 	if resp.StatusCode == 400 {
 		fmt.Println("El usuario no pudo ser añadido a la lista")
 		return false
@@ -336,6 +343,7 @@ func UpdateList(newList List) (string, string, string) {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
+	UserSesion.Token = resp.Header.Get("refreshToken")
 	switch resp.StatusCode {
 	case 400:
 		fmt.Println("La lista no pudo ser actualizada")

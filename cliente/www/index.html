@@ -105,7 +105,7 @@
     
         {{if not .Datos}}
             <section class="text-center">
-                <h1>No tienes ningun proyecto</h1>
+                <h1 class="display-4">No tienes ningun proyecto</h1>
             </section>
         {{else}}
             {{range .Datos}}
@@ -120,15 +120,11 @@
                         <p>{{.Proyecto.Description}}</p>
                         <h2 class="display-4">Listas en el proyecto: <span class="badge badge-secondary">{{len .Listas}}</span></h2>
                         <div class="btn-group btn-group" role="group" id="{{.Proyecto.ID}}" data-proyectName="{{.Proyecto.Name}}">
-
                             {{if eq .Proyecto.Rol "Admin"}}
                                 <button type="button" class="btn btn-outline-dark" onclick="changeToProyectConfig(event)">Configuración del proyecto »</button>
                                 <button type="button" class="btn btn-outline-dark" onclick="changeToAddList(event)">Añadir Lista al proyecto »</button>
                                 <button type="button" class="btn btn-outline-dark" onclick="deleteProyect(event)">Eliminar Proyecto »</button>
                             {{end}}
-
-
-                        </p>
                     </div>
                 </section>
                 {{if not .Listas}}
@@ -185,6 +181,25 @@
                     <button type="button" class="btn btn-danger" data-dismiss="modal">Cerrar</button>
                 </div>
                 
+              </div>
+            </div>
+          </div>
+
+
+          <div class="modal" id="tokenModal" style="display: none;" aria-hidden="true">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h4 class="modal-title">Tu sesión esta apunto de expirar</h4>
+                  <button type="button" class="close" data-dismiss="modal">×</button>
+                </div>
+                <div class="modal-body">
+                  ¿Deseas mantener la sesión?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="refreshToken()" class="btn btn-info">Renovar Sesión</button>
+                    <button type="button" class="btn btn-danger" onclick="exitSesion()" data-dismiss="modal">Cerrar Sesión</button>
+                </div>
               </div>
             </div>
           </div>
@@ -390,31 +405,54 @@
 
 
 
-    function deleteUser(userEmail){
-        deleteUserGO(userEmail).then(
-            function(resultados){
-                let tokenExpire = resultados[1];
-                let deleteOK = resultados[0];
-                if (tokenExpire){
-                    alert('El Token de la sesión expiro')
-                    exitSesion();
+    // function deleteUser(userEmail){
+    //     deleteUserGO(userEmail).then(
+    //         function(resultados){
+    //             let tokenExpire = resultados[1];
+    //             let deleteOK = resultados[0];
+    //             if (tokenExpire){
+    //                 alert('El Token de la sesión expiro')
+    //                 exitSesion();
+    //             }else{
+    //                 if (deleteOK == false){
+    //                     alert('El usuario no se borro')
+    //                 }else{
+    //                     changeToLogin();
+    //                 }
+    //             }
+    //         }
+    //     )
+    // }
+
+
+        
+    function checkToken(){
+        $('#tokenModal').modal('show')
+    }
+
+
+    function refreshToken(){
+        refreshTokenGO().then(
+            function(result){
+                if (!result){
+                    alert('La sesión expiro')
+                    exitSesion()
                 }else{
-                    if (deleteOK == false){
-                        alert('El usuario no se borro')
-                    }else{
-                        changeToLogin();
-                    }
+                    $('#tokenModal').modal('hide')
+                    alert('Sesión renovada')
                 }
-            }
+            }   
         )
     }
+
 
     function init () {
         let forms = document.querySelectorAll('form');
         for (let i = 0; i < forms.length; i++) {
             forms[i].addEventListener('submit',(event) => {event.preventDefault();}, false)
         }
-        setInterval('checkChanges()',300000);
+        setInterval('checkChanges()',300000); //5 minutos
+        setInterval('checkToken()',540000); //9 minutos
     }
 
     document.addEventListener('DOMContentLoaded',init,false);

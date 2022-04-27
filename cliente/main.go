@@ -4,16 +4,9 @@ import (
 	"cliente/config"
 	"cliente/models"
 	"cliente/utils"
-	"fmt"
 	"os"
 	"os/signal"
 )
-
-func pruebaFirma() {
-	signature := utils.Sign([]byte("Hola mundo"), models.GetPrivateKeyUser())
-	resultado := utils.CheckSign(signature, []byte("Hola mundo"), utils.PemToPublicKey(models.UserSesion.PublicKey))
-	fmt.Println(resultado)
-}
 
 func main() {
 	//Inicio la interfaz visual
@@ -24,12 +17,12 @@ func main() {
 
 	//Cambiar a la pantalla de registro
 	UI.Bind("changeToRegister", func() {
-		ChangeView(config.PreView + "register.html")
+		ChangeView(config.PreView + "user/register.html")
 	})
 
 	//Cambiar a la pantalla de inicio de sesion
 	UI.Bind("changeToLogin", func() {
-		ChangeView(config.PreView + "login.html")
+		ChangeView(config.PreView + "user/login.html")
 	})
 
 	//Cambiar a la pantalla de Home
@@ -50,7 +43,7 @@ func main() {
 		if tokenExpire {
 			return tokenExpire
 		}
-		ChangeViewAdminPanel(config.PreView+"admin.html", users)
+		ChangeViewAdminPanel(config.PreView+"user/admin.html", users)
 		return false
 	})
 
@@ -62,7 +55,7 @@ func main() {
 		}
 		emails = utils.FindAndDelete(emails, models.UserSesion.Email)
 		emails = utils.FindAndDelete(emails, "admin")
-		ChangeViewWithValues(config.PreView+"addProyect.html", emails)
+		ChangeViewWithValues(config.PreView+"proyect/addProyect.html", emails)
 		return false
 	})
 
@@ -75,7 +68,7 @@ func main() {
 			if models.ExistProyect(proyectID) {
 				//Recupero los usuarios del proyecto
 				usersProyect, _ := models.GetUsersProyect(proyectID)
-				ChangeViewAddList(config.PreView+"addList.html", proyectID, proyectName, usersProyect)
+				ChangeViewAddList(config.PreView+"list/addList.html", proyectID, proyectName, usersProyect)
 			}
 			return []bool{false, false}
 		}
@@ -91,7 +84,7 @@ func main() {
 				tasks, tasksCipher := models.GetTasksByList(listID)
 				models.TasksLocal = tasksCipher
 
-				ChangeViewTasks(config.PreView+"tasks.html", tasks, listID, nil, listName, "")
+				ChangeViewTasks(config.PreView+"task/tasks.html", tasks, listID, nil, listName, "")
 			}
 			return []bool{false, false}
 		}
@@ -115,7 +108,7 @@ func main() {
 					}
 				}
 				models.TasksLocal = tasksCipherFilter
-				ChangeViewTasks(config.PreView+"tasks.html", tasksFilter, listID, nil, listName, typeTasks)
+				ChangeViewTasks(config.PreView+"task/tasks.html", tasksFilter, listID, nil, listName, typeTasks)
 			}
 			return []bool{false, false}
 		}
@@ -133,7 +126,7 @@ func main() {
 				proyect := models.DescifrarProyecto(proyectCipher, proyectKey)
 				emailsNotInProyect := models.GetEmailsNotInProyect(proyect)
 				emailsNotInProyect = utils.FindAndDelete(emailsNotInProyect, "admin")
-				ChangeViewConfigProyect(config.PreView+"configProyect.html", proyect, emailsNotInProyect, models.UserSesion.Email)
+				ChangeViewConfigProyect(config.PreView+"proyect/configProyect.html", proyect, emailsNotInProyect, models.UserSesion.Email)
 				return []bool{true, false}
 			}
 			return []bool{false, false}
@@ -166,9 +159,9 @@ func main() {
 				emailsProyect := models.GetProyect(proyectID).Users
 				emailsList := list.Users
 				for i := 0; i < len(emailsList); i++ {
-					emailsProyect = utils.FindAndDelete(emailsProyect, emailsList[i])
+					emailsProyect = models.FindAndDeleteUsersProyect(emailsProyect, emailsList[i])
 				}
-				ChangeViewConfigList(config.PreView+"configList.html", list, emailsProyect, models.UserSesion.Email)
+				ChangeViewConfigList(config.PreView+"list/configList.html", list, emailsProyect, models.UserSesion.Email)
 				return []bool{true, false}
 			}
 			return []bool{false, false}
@@ -184,7 +177,7 @@ func main() {
 				listCipher := models.GetList(listID)
 				list := models.DescifrarLista(listCipher, models.GetListKey(listID))
 				listUsers := list.Users
-				ChangeViewTasks(config.PreView+"addTask.html", nil, listID, listUsers, list.Name, "")
+				ChangeViewTasks(config.PreView+"task/addTask.html", nil, listID, listUsers, list.Name, "")
 				return []bool{true, false}
 			}
 			return []bool{false, false}
@@ -199,7 +192,7 @@ func main() {
 			task, list := LoadTask(taskID, listID)
 			if task.ID != "" && list.ID != "" {
 				models.CurrentTask = task
-				ChangeViewConfigTask(config.PreView+"configTask.html", task, list)
+				ChangeViewConfigTask(config.PreView+"task/configTask.html", task, list)
 				return []bool{true, true, false}
 			}
 			return []bool{true, false, false}
@@ -216,9 +209,10 @@ func main() {
 	})
 
 	//Login del usuario
-	UI.Bind("loginGO", func(user_pass []string) bool {
+	UI.Bind("loginGO", func(user_pass []string) string {
 		result := models.LogIn(user_pass[0], user_pass[1])
-		if result {
+
+		if result == "OK" {
 			utils.CheckExpirationTimeToken(models.UserSesion.Token)
 			models.GetUserProyectsLists()
 			ChangeViewWithValues(config.PreView+"index.html", nil)
@@ -229,17 +223,13 @@ func main() {
 	//Cerrar la sesion
 	UI.Bind("exitSesion", func() {
 		models.LogOut()
-		ChangeView(config.PreView + "login.html")
+		ChangeView(config.PreView + "user/login.html")
 	})
 
 	//Elimino a un usuario de todo el sistema
-	UI.Bind("deleteUserGO", func(userEmail string) []bool {
-		if !utils.CheckExpirationTimeToken(models.UserSesion.Token) {
-			return []bool{false, true}
-		} else {
-			deleteOk := models.DeleteUser(userEmail)
-			return []bool{deleteOk, false}
-		}
+	UI.Bind("UpdateStatusGO", func(userEmail string, status string) []bool {
+		blockOK, tokenExpire := models.UpdateStatus(userEmail, status)
+		return []bool{blockOK, tokenExpire}
 	})
 
 	//Añadir un Proyecto
@@ -476,11 +466,20 @@ func main() {
 				sign := utils.ToByteFromBase64(signBase64)
 				certificate := models.GetCertificateUser(userSign)
 				publicKey := utils.PemToPublicKey(certificate.PublicKeyUser)
-				return []bool{utils.CheckSign(sign, []byte(data), publicKey), false}
+				if models.VerifyCertificateSign(certificate) && models.VerifyPublicKeyWithCertificate(certificate) {
+					return []bool{utils.CheckSign(sign, []byte(data), publicKey), false}
+				} else {
+					return []bool{false, false}
+				}
 			} else {
 				return []bool{false, false}
 			}
 		}
+	})
+
+	UI.Bind("refreshTokenGO", func() bool {
+		refreshOK := models.RefreshTokenUser()
+		return refreshOK
 	})
 
 	sigc := make(chan os.Signal)

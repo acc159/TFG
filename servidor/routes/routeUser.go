@@ -24,8 +24,11 @@ func User(r *mux.Router) {
 
 	//Crear Usuario
 	r.HandleFunc("/user", handlers.CreateUser).Methods("POST")
+
+	r.HandleFunc("/user/refresh", handlers.GetRefreshToken).Methods("GET")
+
 	//Actualizar Usuario
-	r.HandleFunc("/users/{id}", handlers.UpdateUser).Methods("PUT")
+	r.HandleFunc("/users/{email}", handlers.UpdateUser).Methods("PUT")
 
 	//Certificado
 	r.HandleFunc("/user/certificate/{userEmail}", handlers.GetUserCertificate).Methods("GET")

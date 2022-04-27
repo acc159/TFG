@@ -453,7 +453,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 
 <script>
-
+//Actualiza el valor del range que indica el porcentaje de progreso de una tarea
 function updateTextInput(val) {
     document.getElementById('textInputProgress').textContent=val;
     if (val == '0'){
@@ -596,38 +596,7 @@ function leerArchivo(){
 
 
 
-    function signUrl(event){
-        li = event.target.closest('li')
-        let fileData = li.querySelector('div').querySelector('div').querySelector('a').href 
-        signGO(fileData).then(
-            function(signHash){
-                li.querySelector('.url').dataset.sign = signHash 
-                li.querySelector('.url').dataset.usersign = document.querySelector('#user').textContent 
-                let span = document.createElement('span')
-                span.textContent = " Firmado"
-                span.classList.add('badge', 'badge-secondary' , 'firmado')
-                li.querySelector('div').querySelector('div').appendChild(span)
-                li.querySelector('div').querySelectorAll('div')[2].querySelector('a').remove()
-            }
-        )
-    }
 
-
-    function signFile(event){
-        li = event.target.closest('li')
-        let fileData = li.querySelector('div').querySelector('div').querySelector('a').href 
-        signGO(fileData).then(
-            function(signHash){
-                li.querySelector('.file').dataset.sign = signHash 
-                li.querySelector('.file').dataset.usersign = document.querySelector('#user').textContent 
-                let span = document.createElement('span')
-                span.textContent = " Firmado"
-                span.classList.add('badge', 'badge-secondary' , 'firmado')
-                li.querySelector('div').querySelector('div').appendChild(span)
-                li.querySelector('div').querySelectorAll('div')[2].querySelector('a').remove()
-            }
-        )
-    }
 
 
     function deleteUrl(event){
@@ -681,6 +650,40 @@ function leerArchivo(){
         divPadre.appendChild(divSign)
         li.appendChild(divPadre)
         ulPadre.appendChild(li)
+    }
+
+
+    function signUrl(event){
+        li = event.target.closest('li')
+        let fileData = li.querySelector('div').querySelector('div').querySelector('a').href 
+        signGO(fileData).then(
+            function(signHash){
+                li.querySelector('.url').dataset.sign = signHash 
+                li.querySelector('.url').dataset.usersign = document.querySelector('#user').textContent 
+                let span = document.createElement('span')
+                span.textContent = " Firmado"
+                span.classList.add('badge', 'badge-secondary' , 'firmado')
+                li.querySelector('div').querySelector('div').appendChild(span)
+                li.querySelector('div').querySelectorAll('div')[2].querySelector('a').remove()
+            }
+        )
+    }
+
+
+    function signFile(event){
+        li = event.target.closest('li')
+        let fileData = li.querySelector('div').querySelector('div').querySelector('a').href 
+        signGO(fileData).then(
+            function(signHash){
+                li.querySelector('.file').dataset.sign = signHash 
+                li.querySelector('.file').dataset.usersign = document.querySelector('#user').textContent 
+                let span = document.createElement('span')
+                span.textContent = " Firmado"
+                span.classList.add('badge', 'badge-secondary' , 'firmado')
+                li.querySelector('div').querySelector('div').appendChild(span)
+                li.querySelector('div').querySelectorAll('div')[2].querySelector('a').remove()
+            }
+        )
     }
 
 

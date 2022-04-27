@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 	"net/http"
 	"servidor/models"
+	"servidor/utils"
 
 	"github.com/gorilla/mux"
 )
 
 func CreateTask(w http.ResponseWriter, r *http.Request) {
+	w = utils.SetRefreshToken(w, r)
 	var task models.Task
 	json.NewDecoder(r.Body).Decode(&task)
 	respuesta := models.CreateTask(task)
@@ -22,6 +24,7 @@ func CreateTask(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetTaskByID(w http.ResponseWriter, r *http.Request) {
+	w = utils.SetRefreshToken(w, r)
 	params := mux.Vars(r)
 	taskID := params["taskID"]
 	task := models.GetTaskByID(taskID)
@@ -34,6 +37,7 @@ func GetTaskByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetTasksByList(w http.ResponseWriter, r *http.Request) {
+	w = utils.SetRefreshToken(w, r)
 	params := mux.Vars(r)
 	listID := params["listID"]
 	tasks := models.GetTasksByList(listID)
@@ -46,6 +50,7 @@ func GetTasksByList(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteTasksByList(w http.ResponseWriter, r *http.Request) {
+	w = utils.SetRefreshToken(w, r)
 	params := mux.Vars(r)
 	listID := params["listID"]
 	result := models.DeleteTasksByListID(listID)
@@ -60,6 +65,7 @@ func DeleteTasksByList(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateTask(w http.ResponseWriter, r *http.Request) {
+	w = utils.SetRefreshToken(w, r)
 	params := mux.Vars(r)
 	id := params["id"]
 	var newTask models.Task
@@ -80,6 +86,7 @@ func UpdateTask(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteTask(w http.ResponseWriter, r *http.Request) {
+	w = utils.SetRefreshToken(w, r)
 	params := mux.Vars(r)
 	id := params["id"]
 	borrada := models.DeleteTask(id)

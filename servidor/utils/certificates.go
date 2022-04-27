@@ -19,7 +19,16 @@ var ACprivateKey *rsa.PrivateKey
 
 var ACpublicKey *rsa.PublicKey
 
+var server_AC_Key string
+
 func LoadAC() {
+
+	server_AC_Key = os.Getenv("Server_AC_Key")
+	if server_AC_Key == "" {
+		fmt.Println("Inserta la clave para descifrar la clave privada de la AC")
+		fmt.Scanf("%v\n", &server_AC_Key)
+	}
+
 	//Compruebo si existe el fichero del certificado de la AC y sino mando a crear el fichero junto a los de las claves publica y privada
 	certFileAC := ReadFile("certs/ac/certificateAC.pem")
 	if len(certFileAC) == 0 {
@@ -31,7 +40,7 @@ func LoadAC() {
 	AC = PemToCertificate(certFileAC)
 	ACpublicKey = PemToPublicKey(publicKeyFileAC)
 	//Clave privada primero necesito descifrarla
-	server_AC_Key := os.Getenv("Server_AC_Key")
+
 	key, _ := GenerateKeyIV([]byte(server_AC_Key))
 	privateKeyFileAC := DescifrarAES(key, privateKeyFileACcipher)
 	ACprivateKey = PemToPrivateKey(privateKeyFileAC)
@@ -77,7 +86,6 @@ func CreateACcertificateAndKeys() {
 	//Con la clave privada primero la cifro con AES para guardarla de manera segura
 	privateKeyPEM := PrivateKeyToPem(acPrivateKey)
 
-	server_AC_Key := os.Getenv("Server_AC_Key")
 	key, iv := GenerateKeyIV([]byte(server_AC_Key))
 
 	privateKeyCipher := CifrarAES(key, iv, privateKeyPEM)

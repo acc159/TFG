@@ -14,6 +14,12 @@ var SecretKey = []byte{}
 
 func PrepareJWT() {
 	var secret string = os.Getenv("SECRET_JWT")
+
+	if secret == "" {
+		fmt.Println("Inserta la clave para firmar los JWT")
+		fmt.Scanf("%v\n", &secret)
+	}
+
 	dataHash := sha256.New()
 	_, err := dataHash.Write([]byte(secret))
 	if err != nil {
@@ -28,7 +34,7 @@ func GenerateJWT(email string) string {
 	claims := token.Claims.(jwt.MapClaims)
 	claims["authorized"] = true
 	claims["user"] = email
-	claims["exp"] = time.Now().Add(time.Minute * 30).Unix()
+	claims["exp"] = time.Now().Add(time.Minute * 10).Unix()
 	tokenString, err := token.SignedString(SecretKey)
 	if err != nil {
 		fmt.Println(err)
@@ -36,7 +42,7 @@ func GenerateJWT(email string) string {
 	return tokenString
 }
 
-func ValidateToken(bearerToken string) bool {
+func ValidateToken(bearerToken string) (bool, string) {
 	tokenString := strings.Split(bearerToken, "Bearer ")[1]
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -48,11 +54,10 @@ func ValidateToken(bearerToken string) bool {
 		fmt.Println(err)
 	}
 
-	// if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-	// 	fmt.Println(claims["user"], claims["authorized"])
-	// } else {
-	// 	fmt.Println(err)
-	// }
+	var user string
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		user = claims["user"].(string)
+	}
 
-	return token.Valid
+	return token.Valid, user
 }

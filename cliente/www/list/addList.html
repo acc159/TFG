@@ -3,9 +3,8 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Añadir Proyecto</title>
+    <title>Añadir Lista</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-
     <style>
         nav{
             height: 55px;
@@ -25,37 +24,40 @@
     </style>
 </head>
 <body>
-    <h1 hidden id="userEmail">{{.User.Email}}</h1>
     <nav class="navbar navbar-light bg-dark">
         <form class="form-inline">
             <li class="nav-item btn-outline-light" type="button">
                 <a class="button_nav nav-link btn btn-outline-light" role="button" onclick="changeHome()">HOME</a>
             </li>
             <li class="nav-item btn-outline-light" type="button">
-                <a id="buttonNav1" class="button_nav nav-link btn btn-outline-light" role="button" onclick="addProyect()">Añadir Proyecto</a>
+                <a id="buttonNav1" class="button_nav nav-link btn btn-outline-light" role="button" onclick="AddList()">Añadir Lista</a>
             </li>
         </form>
     </nav>
-      <form>
+
+    <h1 hidden id="proyectID">{{.ProyectID}}</h1>
+    <form>
         <div class="form-group container">
-            <h3 class="text-center display-4">Datos del proyecto</h3>
-            <label for="proyectName">Nombre del proyecto:</label>
-            <input placeholder="Nombre" class="form-control" type="text" id="proyectName" name="proyectName">
-            <label for="description">Descripción del proyecto:</label>
-            <textarea placeholder="Descripción" class="form-control" name="description" id="proyectDescription" cols="30" rows="10"></textarea>
-            <label for="usuarios">Selecciona los usuarios:</label>
-            {{if not .Emails}}
-                <h4>Ningun usuario mas aparte de ti en el sistema</h4>
+            <h1 class="text-center display-4">Añadir una lista al proyecto: {{.ProyectName}}</h1>
+            <label for="name">Nombre de la lista:</label>
+            <input placeholder="Nombre" class="form-control" type="text" type="text" id="name" name="name">
+            <label for="description">Descripción de la lista:</label>
+            <textarea placeholder="Descripción" class="form-control" name="description" id="description" cols="30" rows="10"></textarea>
+            <label for="usuarios">Usuarios de la lista:</label>
+            {{$userActual:=.User.Email}}
+            {{if eq (len .UsersProyect) 1}}
+                <h4>Solo estas tu en el proyecto</h4>
             {{else}}
                 <select name="usuarios" class="form-control" id="usuarios" multiple>
-                    {{range .Emails}}
-                        <option value="{{.}}">{{.}}</option>
+                    {{range .UsersProyect}}
+                            {{if ne $userActual .User}}
+                                <option value={{.User}}>{{.User}}</option>
+                            {{end}}
                     {{end}}
                 </select>
             {{end}}
         </div>
     </form>
-    </div>
 </body>
 </html>
 
@@ -64,48 +66,47 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 
 <script>
-    function addProyect(){
-        //Obtengo los campos metidos por el usuario
-        let proyectName = document.querySelector('#proyectName').value;
-        let description = document.querySelector('#proyectDescription').value;
-        let usuarios = document.querySelector('select');
-        let usuariosSeleccionados;
-        if (usuarios == null){
-            usuariosSeleccionados = [];
-        }else{
-            usuariosSeleccionados = usuarios.selectedOptions;
-        }
 
-        if (proyectName == ""){
-            alert('Introduce todos los valores para añadir un proyecto')
-        }else{
-            let usuariosProyect = []
+    function AddList(){
+        let listName = document.querySelector('#name').value
+        let description = document.querySelector('#description').value
+        let usersList = []
+        let usuarios = document.querySelector('select')
+        if(usuarios != null){
+            let usuariosSeleccionados = usuarios.selectedOptions;
             for (let index = 0; index < usuariosSeleccionados.length; index++) {
-                usuariosProyect.push(usuariosSeleccionados[index].value);
+                usersList.push(usuariosSeleccionados[index].value);
             }
-            let proyect = {
-                "Name" : proyectName,
-                "Description": description,
-                "Users" : usuariosProyect
-            }
-            addProyectGO(proyect).then(
-                function(resultados){
-                    let tokenExpire = resultados[1];
-                    let proyectOk = resultados[0];
-                    if (tokenExpire){
-                        alert('El Token de la sesión expiro')
-                        exitSesion();
-                    }else{
-                        if (proyectOk == false){
-                            alert('El proyecto no se a creado')
+        }
+        let lista = {
+            Users : usersList,
+            Name : listName,
+            Description : description,
+        }
+        let proyectID = document.querySelector('#proyectID').textContent;
+        addListGO(lista, proyectID).then(
+            function(resultados){
+                let tokenExpire = resultados[2];
+                let addOK = resultados[1];
+                let listOK = resultados[0];
+                if (tokenExpire){
+                    alert('El Token de la sesión expiro')
+                    exitSesion();
+                }else{
+                    if (listOK){
+                        if (addOK == false){
+                            alert('La lista no se a creado')
                         }else{
-                            alert('El proyecto se creo')
+                            alert('La lista se creo')
                             changeHome()
                         }
+                    }else{
+                        alert('El proyecto ya no esta disponible')
+                        changeHome()
                     }
                 }
-            )
-        }
+            }
+        )
     }
 
     function init () {
@@ -129,3 +130,8 @@
 
     document.addEventListener('DOMContentLoaded',init,false);
 </script>
+
+
+
+
+

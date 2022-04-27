@@ -14,18 +14,23 @@ import (
 )
 
 type Proyect struct {
-	ID          string   `bson:"_id,omitempty"`
-	Name        string   `bson:"name,omitempty"`
-	Description string   `bson:"description,omitempty"`
-	Users       []string `bson:"users,omitempty"`
-	Check       string   `bson:"check"`
-	Rol         string   `bson:"rol"`
+	ID          string        `bson:"_id,omitempty"`
+	Name        string        `bson:"name,omitempty"`
+	Description string        `bson:"description,omitempty"`
+	Users       []UserProyect `bson:"users,omitempty"`
+	Check       string        `bson:"check"`
+	Rol         string        `bson:"rol"`
+}
+
+type UserProyect struct {
+	User string `bson:"user,omitempty"`
+	Rol  string `bson:"rol,omitempty"`
 }
 
 type ProyectCipher struct {
 	ID          primitive.ObjectID `bson:"_id,omitempty"`
 	Cipherdata  []byte             `bson:"cipherdata,omitempty"`
-	Users       []string           `bson:"users,omitempty"`
+	Users       []UserProyect      `bson:"users,omitempty"`
 	Check       string             `bson:"check"`
 	UpdateCheck string             `bson:"updateCheck"`
 }
@@ -46,6 +51,7 @@ func GetProyect(proyectID string) ProyectCipher {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
+	UserSesion.Token = resp.Header.Get("refreshToken")
 	//Compruebo si no hay ningun usuario
 	if resp.StatusCode == 404 {
 		fmt.Println("Proyecto no encontrado")
@@ -60,18 +66,24 @@ func GetProyect(proyectID string) ProyectCipher {
 
 //Creo un proyecto
 func CreateProyect(newProyect Proyect) (bool, bool) {
-
 	//Añadimos el email del usuario que esta creando el proyecto
-	newProyect.Users = append(newProyect.Users, UserSesion.Email)
+
+	userProyect := UserProyect{
+		User: UserSesion.Email,
+		Rol:  "Admin",
+	}
+
+	//newProyect.Users = append(newProyect.Users, UserSesion.Email)
+
+	newProyect.Users = append(newProyect.Users, userProyect)
+
 	//Generamos la clave aleatoria que se utilizara en el cifrado AES
 	Krandom, IVrandom := utils.GenerateKeyIV()
 	//Ciframos el proyecto
 	proyectCipher := CifrarProyecto(newProyect, Krandom, IVrandom)
-
 	h := sha1.New()
 	h.Write(proyectCipher.Cipherdata)
 	proyectCipher.Check = hex.EncodeToString(h.Sum(nil))
-
 	//Enviamos el proyecto cifrado al servidor
 	proyectJSON, err := json.Marshal(proyectCipher)
 	if err != nil {
@@ -90,6 +102,7 @@ func CreateProyect(newProyect Proyect) (bool, bool) {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
+	UserSesion.Token = resp.Header.Get("refreshToken")
 	switch resp.StatusCode {
 	case 400:
 		fmt.Println("El proyecto no pudo ser creado")
@@ -101,18 +114,17 @@ func CreateProyect(newProyect Proyect) (bool, bool) {
 		var proyectID string
 		json.NewDecoder(resp.Body).Decode(&proyectID)
 		//Creamos la relacion para el usuario que crea el proyecto y para cada uno de los usuarios del campo user
-		newProyect.Users = append(newProyect.Users, "admin")
 		CreateProyectRelations(proyectID, Krandom, newProyect.Users)
 		return true, false
 	}
 }
 
 //Le paso el ID del proyecto junto a su clave de cifrado y creo relaciones Usuario-Proyecto para cada usuario pasado
-func CreateProyectRelations(proyectID string, Krandom []byte, users []string) {
+func CreateProyectRelations(proyectID string, Krandom []byte, users []UserProyect) {
 	for i := 0; i < len(users); i++ {
-		publicKeyUser, _ := GetPublicKey(users[i])
+		publicKeyUser, _ := GetPublicKey(users[i].User)
 		KrandomCipher := utils.EncryptKeyWithPublicKey(publicKeyUser, Krandom)
-		CreateRelation(users[i], proyectID, KrandomCipher)
+		CreateRelation(users[i].User, proyectID, KrandomCipher)
 	}
 }
 
@@ -131,7 +143,7 @@ func DeleteProyect(proyectID string) (bool, bool) {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
-
+	UserSesion.Token = resp.Header.Get("refreshToken")
 	switch resp.StatusCode {
 	case 400:
 		fmt.Println("El proyecto no pudo ser borrado")
@@ -145,7 +157,7 @@ func DeleteProyect(proyectID string) (bool, bool) {
 }
 
 //Recuperar los usuarios de un proyecto
-func GetUsersProyect(proyectID string) ([]string, bool) {
+func GetUsersProyect(proyectID string) ([]UserProyect, bool) {
 	url := config.URLbase + "proyect/users/" + proyectID
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -159,8 +171,8 @@ func GetUsersProyect(proyectID string) ([]string, bool) {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
-	var responseObject []string
-
+	UserSesion.Token = resp.Header.Get("refreshToken")
+	var responseObject []UserProyect
 	switch resp.StatusCode {
 	case 400:
 		fmt.Println("El usuario no pudo ser eliminado del proyecto")
@@ -198,7 +210,7 @@ func DeleteUserProyect(proyectID string, userEmail string) (bool, bool) {
 			fmt.Println(err)
 		}
 		defer resp.Body.Close()
-
+		UserSesion.Token = resp.Header.Get("refreshToken")
 		switch resp.StatusCode {
 		case 400:
 			fmt.Println("El usuario no pudo ser eliminado del proyecto")
@@ -210,7 +222,7 @@ func DeleteUserProyect(proyectID string, userEmail string) (bool, bool) {
 			//Actualizo el proyecto en local
 			for i := 0; i < len(DatosUsuario); i++ {
 				if DatosUsuario[i].Proyecto.ID == proyectID {
-					DatosUsuario[i].Proyecto.Users = utils.FindAndDelete(DatosUsuario[i].Proyecto.Users, userEmail)
+					DatosUsuario[i].Proyecto.Users = FindAndDeleteUsersProyect(DatosUsuario[i].Proyecto.Users, userEmail)
 				}
 			}
 			return true, false
@@ -250,6 +262,7 @@ func AddUserProyect(proyectIDstring string, userEmail string) (bool, bool) {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
+	UserSesion.Token = resp.Header.Get("refreshToken")
 	switch resp.StatusCode {
 	case 400:
 		fmt.Println("El usuario no pudo ser añadido al proyecto")
@@ -258,12 +271,12 @@ func AddUserProyect(proyectIDstring string, userEmail string) (bool, bool) {
 		fmt.Println("Token Expirado")
 		return false, true
 	default:
-		//Actualizo el proyecto en local
-		for i := 0; i < len(DatosUsuario); i++ {
-			if DatosUsuario[i].Proyecto.ID == proyectIDstring {
-				DatosUsuario[i].Proyecto.Users = append(DatosUsuario[i].Proyecto.Users, userEmail)
-			}
-		}
+		// //Actualizo el proyecto en local
+		// for i := 0; i < len(DatosUsuario); i++ {
+		// 	if DatosUsuario[i].Proyecto.ID == proyectIDstring {
+		// 		DatosUsuario[i].Proyecto.Users = append(DatosUsuario[i].Proyecto.Users, userEmail)
+		// 	}
+		// }
 		return true, false
 	}
 }
@@ -277,7 +290,7 @@ func GetEmailsNotInProyect(proyect Proyect) []string {
 	//Elimino a los usuarios que ya pertenecen al proyecto
 	emailsProyect := proyect.Users
 	for i := 0; i < len(emailsProyect); i++ {
-		emails = utils.FindAndDelete(emails, emailsProyect[i])
+		emails = utils.FindAndDelete(emails, emailsProyect[i].User)
 	}
 	return emails
 }
@@ -355,7 +368,7 @@ func UpdateProyect(newProyect Proyect) string {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
-
+	UserSesion.Token = resp.Header.Get("refreshToken")
 	switch resp.StatusCode {
 	case 400:
 		return "Error"
@@ -374,4 +387,14 @@ func ExistProyect(proyectID string) bool {
 func CheckUserOnProyect(proyectID string, userEmail string) bool {
 	relation, _ := GetRelationUserProyect(userEmail, proyectID)
 	return relation.ProyectID.IsZero()
+}
+
+func FindAndDeleteUsersProyect(data []UserProyect, delete string) []UserProyect {
+	var respuesta []UserProyect
+	for i := 0; i < len(data); i++ {
+		if data[i].User != delete {
+			respuesta = append(respuesta, data[i])
+		}
+	}
+	return respuesta
 }

@@ -44,6 +44,7 @@
             <thead class="table-dark">
                 <tr>
                     <th>Usuario</th>
+                    <th>Estado</th>
                     <th>Opciones</th>
                 </tr>
             </thead>
@@ -52,8 +53,13 @@
                     {{if ne .Email "admin"}}
                         <tr>
                             <td>{{.Email}}</td>
+                            <td>{{.Status}}</td>
                             <td id="{{.Email}}">
-                                <button type="button" class="btn btn-secondary"  onclick="deleteUser('{{.Email}}')">Eliminar Usuario</button>
+                                {{if eq .Status "Activo"}}
+                                    <button type="button" class="btn btn-secondary"  onclick="updateStatus('{{.Email}}', 'Bloqueado')">Bloquear Usuario</button>
+                                {{else}}
+                                    <button type="button" class="btn btn-secondary"  onclick="updateStatus('{{.Email}}', 'Activo')">Desbloquear Usuario</button>
+                                {{end}}
                             </td>
                         </tr>
                     {{end}}
@@ -69,23 +75,24 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 
 <script>
-    function deleteUser(userEmail){
+    function updateStatus(userEmail, newStatus){
         let userActual = document.querySelector('#userActual').textContent;
-        deleteUserGO(userEmail).then(
+        UpdateStatusGO(userEmail, newStatus).then(
             function(resultados){
                 let tokenExpire = resultados[1];
-                let deleteOK = resultados[0];
+                let updateOK = resultados[0];
                 if (tokenExpire){
                     alert('El Token de la sesión expiro')
                     exitSesion();
                 }else{
-                    if (deleteOK == false){
-                        alert('El usuario no se borro')
-                    }else{
-                        if(userEmail == userActual){
-                            changeToLogin();
+                    if (updateOK == false){
+                        alert('La modificacion fallo')
+                    }else{   
+                        if (newStatus == "Activo"){
+                            alert('El usuario fue desbloqueado')
+                            changeToAdmin();
                         }else{
-                            alert('El usuario fue eliminado del sistema')
+                            alert('El usuario fue bloqueado')
                             changeToAdmin();
                         }
                     }

@@ -99,9 +99,6 @@
                     <div class="card-header text-center">
                         <h1 class="display-3">Tareas de la lista: {{.ListName}}</h1>
                         <h2 class="display-4">Numero de tareas: <span class="badge bg-info">{{len .Tasks}}</span> </h2>
-                        <!-- <h5>Pendientes: <span class="badge bg-warning">{{$pendientes}}</span> </h5>
-                        <h5>En proceso: <span class="badge bg-primary">{{$progreso}}</span> </h5>
-                        <h5>Finalizadas: <span class="badge bg-success">{{$finalizadas}}</span> </h5> -->
 
                         <div style="display: inline-flex;">
                             <h5>Pendientes: <span class="badge bg-warning">{{$pendientes}}</span> </h5>
@@ -120,8 +117,8 @@
                             <table id="table" data-search="true" class="table tablesorter table-striped">
                                 <thead class="table-dark">
                                     <tr>
-                                        <th>Nombre</th>
-                                        <th><b>Fecha</b> <i class="fa fa-fw fa-caret-up" type="button" role="button" onclick="sortByDate('ASC')"></i><i class="fa fa-fw fa-caret-down" type="button" role="button" onclick="sortByDate('DESC')"></i></th>
+                                        <th><b>Nombre</b> <i class="fa fa-fw fa-caret-up" type="button" role="button" onclick="sortByName(event, 'ASC')"></i><i class="fa fa-fw fa-caret-down" type="button" role="button" onclick="sortByName(event, 'DESC')"></i></th>
+                                        <th><b>Fecha</b> <i class="fa fa-fw fa-caret-up" type="button" role="button" onclick="sortByDate(event, 'ASC')"></i><i class="fa fa-fw fa-caret-down" type="button" role="button" onclick="sortByDate(event,'DESC')"></i></th>
                                         <th>Estado</th>
                                         <th>Progreso</th>
                                         <th class="text-center">Opciones</th>
@@ -212,10 +209,28 @@
                 <button type="button" onclick="changeToTasks('{{.ListID}}', '{{.ListName}}')" class="btn btn-info">Actualizar</button>
                 <button type="button" class="btn btn-danger" data-dismiss="modal">Cerrar</button>
             </div>
-            
           </div>
         </div>
       </div>
+
+      <div class="modal" id="tokenModal" style="display: none;" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">Tu sesión esta apunto de expirar</h4>
+              <button type="button" class="close" data-dismiss="modal">×</button>
+            </div>
+            <div class="modal-body">
+              ¿Deseas mantener la sesión?
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="refreshToken()" class="btn btn-info">Renovar Sesión</button>
+                <button type="button" class="btn btn-danger" onclick="exitSesion()" data-dismiss="modal">Cerrar Sesión</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
 </body>
 </html>
 
@@ -376,6 +391,19 @@
         }
     }
 
+    function namesSorterAsc(a, b){
+        if(a.firstname < b.firstname) { return 1; }
+        if(a.firstname > b.firstname) { return -1; }
+        return 0;
+    }
+
+    function namesSorterDesc(a, b){
+        if(a.firstname < b.firstname) { return -1; }
+        if(a.firstname > b.firstname) { return 1; }
+        return 0;
+    }
+
+
     function datesSorterDesc(a, b) {
         if (new Date(a) < new Date(b)) return -1;
         if (new Date(a) > new Date(b)) return 1;
@@ -390,15 +418,22 @@
 
 
 
-    function sortByDate(type){ 
+    function sortByDate(event, type){ 
 
+        // let botones = event.target.closest('th').querySelectorAll('i')
+        // for (let i = 0; i < botones.length; i++) {
+        //     if (botones[i] == event.target){
+        //         div.classList.add("disabled",);
+        //     }else{
+        //         if(botones[i].classList.contains("disabled")){
+        //             botones[i].classList.remove("disabled")
+        //         }
+        //     }
+        // }
         let table = document.getElementById("table");
-
         let tableRows = table.rows
-
         let rows = []
         let rowsNoDate = []
-
         for (let index = tableRows.length - 1; index > 0; index--) {
             if(tableRows[index].getElementsByTagName("TD")[1].dataset.fecha == ""){
                 rowsNoDate.push(tableRows[index])
@@ -407,7 +442,6 @@
             }
             tableRows[index].remove()
         }
-
         if (type == "DESC"){
             rows.sort(function (a, b){
             return datesSorterDesc(a.getElementsByTagName("TD")[1].dataset.fecha, b.getElementsByTagName("TD")[1].dataset.fecha)
@@ -425,6 +459,42 @@
         for (let index = 0; index < rowsNoDate.length; index++) {
             document.querySelector('.body-table').appendChild(rowsNoDate[index])
         }
+    }
+
+
+    function sortByName(event, type){ 
+
+        // let botones = event.target.closest('th').querySelectorAll('i')
+        // for (let i = 0; i < botones.length; i++) {
+        //     if (botones[i] == event.target){
+        //         botones[i].classList.add("disabled",);
+        //     }else{
+        //         if(botones[i].classList.contains("disabled")){
+        //             botones[i].classList.remove("disabled")
+        //         }
+        //     }
+        // }
+        let table = document.getElementById("table");
+        let tableRows = table.rows
+        let rows = []
+        for (let index = tableRows.length - 1; index > 0; index--) {
+            rows.push(tableRows[index])
+            tableRows[index].remove()
+        }
+        if (type == "DESC"){
+            rows.sort(function (a, b){
+            return namesSorterDesc(a.getElementsByTagName("TD")[0].textContent, b.getElementsByTagName("TD")[0].textContent)
+            });
+        }else{
+            rows.sort(function (a, b){
+            return namesSorterAsc(a.getElementsByTagName("TD")[0].textContent, b.getElementsByTagName("TD")[0].textContent)
+            });
+        } 
+        //Añado el nuevo orden
+        for (let index = 0; index < rows.length; index++) {
+            document.querySelector('.body-table').appendChild(rows[index])
+        }
+        
     }
 
 
@@ -451,22 +521,23 @@
     }
 
 
-    // function sortByState(){ 
-    //     let table = document.getElementById("table");
-    //     let tableRows = table.rows
-    //     let rows = []
-    //     for (let index = tableRows.length - 1; index > 0; index--) {
-    //         rows.push(tableRows[index])
-    //         tableRows[index].remove()
-    //     }
-    //     rows.sort();
+    function checkToken(){
+        $('#tokenModal').modal('show')
+    }
 
-    //     //Añado el nuevo orden
-    //     for (let index = 0; index < rows.length; index++) {
-    //         document.querySelector('.body-table').appendChild(rows[index])
-    //     }
-    // }
-
+    function refreshToken(){
+        refreshTokenGO().then(
+            function(result){
+                if (!result){
+                    alert('La sesión expiro')
+                    exitSesion()
+                }else{
+                    $('#tokenModal').modal('hide')
+                    alert('Sesión renovada')
+                }
+            }   
+        )
+    }
 
 
     function init () {
@@ -477,6 +548,7 @@
         setInterval('checkTaskChanges()',300000);
         UpdateProgressStyle()
         UpdateDatesStyle()
+        setInterval('checkToken()',540000);
     }
 
     document.addEventListener('DOMContentLoaded',init,false);

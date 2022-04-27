@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"servidor/models"
+	"servidor/utils"
 
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -14,6 +15,7 @@ type JsonCustom struct {
 }
 
 func GetProyects(w http.ResponseWriter, r *http.Request) {
+	w = utils.SetRefreshToken(w, r)
 	proyectos := models.GetProyects()
 	if len(proyectos) == 0 {
 		w.WriteHeader(400)
@@ -24,6 +26,7 @@ func GetProyects(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetProyect(w http.ResponseWriter, r *http.Request) {
+	w = utils.SetRefreshToken(w, r)
 	params := mux.Vars(r)
 	id := params["id"]
 	proyecto := models.GetProyect(id)
@@ -39,6 +42,7 @@ func GetProyect(w http.ResponseWriter, r *http.Request) {
 }
 
 func CreateProyect(w http.ResponseWriter, r *http.Request) {
+	w = utils.SetRefreshToken(w, r)
 	var proyecto *models.Proyect
 	json.NewDecoder(r.Body).Decode(&proyecto)
 	models.CreateProyect(proyecto)
@@ -52,9 +56,9 @@ func CreateProyect(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateProyect(w http.ResponseWriter, r *http.Request) {
+	w = utils.SetRefreshToken(w, r)
 	params := mux.Vars(r)
 	id := params["id"]
-
 	var proyecto models.Proyect
 	json.NewDecoder(r.Body).Decode(&proyecto)
 	resultado := models.UpdateProyect(proyecto, id)
@@ -73,6 +77,7 @@ func UpdateProyect(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteProyect(w http.ResponseWriter, r *http.Request) {
+	w = utils.SetRefreshToken(w, r)
 	params := mux.Vars(r)
 	id := params["id"]
 
@@ -86,6 +91,7 @@ func DeleteProyect(w http.ResponseWriter, r *http.Request) {
 }
 
 func AddUserProyect(w http.ResponseWriter, r *http.Request) {
+	w = utils.SetRefreshToken(w, r)
 	params := mux.Vars(r)
 	id := params["id"]
 	email := params["email"]
@@ -99,6 +105,7 @@ func AddUserProyect(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteUserProyect(w http.ResponseWriter, r *http.Request) {
+	w = utils.SetRefreshToken(w, r)
 	params := mux.Vars(r)
 	id := params["id"]
 	email := params["email"]
@@ -112,6 +119,7 @@ func DeleteUserProyect(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetProyectsByIDs(w http.ResponseWriter, r *http.Request) {
+	w = utils.SetRefreshToken(w, r)
 	var IDs JsonCustom
 	json.NewDecoder(r.Body).Decode(&IDs)
 	if len(IDs.StringIDs) > 0 {
@@ -130,6 +138,7 @@ func GetProyectsByIDs(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetUsersProyect(w http.ResponseWriter, r *http.Request) {
+	w = utils.SetRefreshToken(w, r)
 	params := mux.Vars(r)
 	id := params["id"]
 

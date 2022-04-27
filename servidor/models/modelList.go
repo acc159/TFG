@@ -82,12 +82,12 @@ func GetUsersList(idString string) []string {
 	defer cancel()
 	coleccion := config.InstanceDB.DB.Collection("lists")
 	id, _ := primitive.ObjectIDFromHex(idString)
-	var proyecto Proyect
-	err := coleccion.FindOne(ctx, bson.M{"_id": id}).Decode(&proyecto)
+	var list List
+	err := coleccion.FindOne(ctx, bson.M{"_id": id}).Decode(&list)
 	if err != nil {
 		log.Println(err)
 	}
-	return proyecto.Users
+	return list.Users
 }
 
 //Recupero los ids de las listas cuyo proyectID es el pasado
@@ -182,7 +182,7 @@ func DeleteUserList(listStringID string, user string) bool {
 	}
 	//Si ya no quedan mas usuarios en la lista la borro
 	if len(listUpdated.Users) == 0 {
-		DeleteListRelation("admin", listUpdated.ProyectID.Hex(), listUpdated.ID.Hex())
+		// DeleteListRelation("admin", listUpdated.ProyectID.Hex(), listUpdated.ID.Hex())
 		DeleteList(listStringID)
 	}
 	return true

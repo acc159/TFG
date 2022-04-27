@@ -164,12 +164,24 @@
         showLoading();
             let user_pass = [email, password];
             loginGO(user_pass).then(
-                function(valorDesdeGO){
-                    if (valorDesdeGO == false){
-                        alert('Error al iniciar sesión')
-                        showLoading();
-                        document.querySelector('#email').value = "";
-                        document.querySelector('#password').value = "";
+                function(resultado){
+
+                    switch (resultado) {
+                        case "Error":
+                            alert('Error al iniciar sesión')
+                            showLoading();
+                            document.querySelector('#email').value = "";
+                            document.querySelector('#password').value = "";
+                            break;
+
+                        case "Bloqueado":
+                            alert('Usuario bloqueado, contacta con el administrador del sistema')
+                            showLoading();
+                            document.querySelector('#email').value = "";
+                            document.querySelector('#password').value = "";
+                        break;
+                        default:
+                            break;
                     }
                 }
             )

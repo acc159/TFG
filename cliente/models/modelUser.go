@@ -22,9 +22,9 @@ type User struct {
 	ServerKey  []byte             `bson:"server_key"`
 	PublicKey  []byte             `bson:"public_key"`
 	PrivateKey []byte             `bson:"private_key"`
-	Rol        string             `bson:"rol"`
 	Kaes       []byte             `bson:"Kaes"`
 	Token      string             `bson:"token,omitempty"`
+	Status     string             `bson:"status,omitempty"`
 }
 
 type DataUser struct {
@@ -58,26 +58,6 @@ func HashUser(user_pass []byte) ([]byte, []byte, []byte) {
 	return Kservidor, IV, Kaes
 }
 
-// func CheckUserExist(email string) bool {
-// 	url := config.URLbase + "users/" + email
-// 	req, err := http.NewRequest("GET", url, nil)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	req.Header.Set("Content-Type", "application/json")
-// 	client := utils.GetClientHTTPS()
-// 	resp, err := client.Do(req)
-// 	if err != nil {
-// 		fmt.Println(err)
-// 	}
-// 	defer resp.Body.Close()
-// 	if resp.StatusCode == 400 {
-// 		return false
-// 	} else {
-// 		return true
-// 	}
-// }
-
 //Registro del usuario
 func Register(email string, password string) string {
 
@@ -105,18 +85,6 @@ func Register(email string, password string) string {
 	//Enviamos los datos al servidor
 	resultado := RegisterServer(user)
 	return resultado
-	// switch userIDstring {
-	// case "serverOFF":
-	// 	return userIDstring, true
-	// case "Error":
-	// 	return userIDstring, true
-	// case "Duplicado":
-	// 	return userIDstring, true
-	// default:
-	// 	id, _ := primitive.ObjectIDFromHex(userIDstring)
-	// 	UserSesion.ID = id
-	// 	return userIDstring, false
-	// }
 }
 
 //Registro del usuario en el servidor
@@ -141,6 +109,7 @@ func RegisterServer(user User) string {
 		return "serverOFF"
 	}
 	defer resp.Body.Close()
+	UserSesion.Token = resp.Header.Get("refreshToken")
 	//En caso de fallo del registro del usuario en el servidor
 	if resp.StatusCode == 400 {
 		return "Error"
@@ -155,24 +124,40 @@ func RegisterServer(user User) string {
 }
 
 //Login del usuario. Para el login solo envio al servidor el email y la Kservidor la cual se comprueba alli y si es correcta me devuelve todos los datos del usuario
-func LogIn(email string, password string) bool {
+func LogIn(email string, password string) string {
 	user_pass := []byte(email + password)
 	Kservidor, _, Kaes := HashUser(user_pass)
 	userLogin := User{
 		Email:     email,
 		ServerKey: Kservidor,
 	}
-	UserSesion = LogInServer(userLogin)
-	if UserSesion.Email != "" {
+	resultado := LogInServer(userLogin)
+
+	if resultado == "OK" {
 		UserSesion.Kaes = Kaes
-		return true
-	} else {
-		return false
 	}
+	return resultado
+
+	// switch resultado {
+	// case "Error":
+
+	// case "Bloqueado":
+
+	// default :
+	// 	UserSesion.Kaes = Kaes
+	// 	return true
+	// }
+
+	// if UserSesion.Email != "" {
+	// 	UserSesion.Kaes = Kaes
+	// 	return true
+	// } else {
+	// 	return false
+	// }
 }
 
 //Login del usuario en el servidor
-func LogInServer(userLogin User) User {
+func LogInServer(userLogin User) string {
 	userJSON, err := json.Marshal(userLogin)
 	if err != nil {
 		fmt.Println(err)
@@ -190,18 +175,23 @@ func LogInServer(userLogin User) User {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
+	UserSesion.Token = resp.Header.Get("refreshToken")
 	if resp.StatusCode == 400 {
-		return User{}
+		return "Error"
 	} else {
 		//Si todo fue correcto en el servidor devuelvo el id del usuario creado
 		var resultado User
 		json.NewDecoder(resp.Body).Decode(&resultado)
-
-		//Asigno el token que genero el servidor
-		token := resp.Header.Get("token")
-		fmt.Println(token)
-		UserSesion.Token = token
-		return resultado
+		if resultado.Email == "" {
+			return "Bloqueado"
+		} else {
+			//Asigno el token que genero el servidor
+			token := resp.Header.Get("token")
+			fmt.Println(token)
+			UserSesion = resultado
+			UserSesion.Token = token
+			return "OK"
+		}
 	}
 }
 
@@ -227,6 +217,7 @@ func GetUsers() ([]User, bool) {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
+	UserSesion.Token = resp.Header.Get("refreshToken")
 	switch resp.StatusCode {
 	case 400:
 		fmt.Println("Ningun usuario encontrado")
@@ -256,6 +247,7 @@ func GetUserByEmail(userEmail string) (User, bool) {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
+	UserSesion.Token = resp.Header.Get("refreshToken")
 	switch resp.StatusCode {
 	case 400:
 		fmt.Println("Ningun usuario encontrado")
@@ -286,7 +278,7 @@ func GetUserProyectsLists() {
 			proyectKey := utils.DescifrarRSA(privateKey, relations[i].ProyectKey)
 			//Desciframos el proyecto
 			proyectoDescifrado := DescifrarProyecto(proyecto, proyectKey)
-			proyectoDescifrado.Rol = relations[i].Rol
+			proyectoDescifrado.Rol = GetUserProyectRol(proyectoDescifrado)
 			//Listas
 			var lists []List
 			//Por cada lista del proyecto la recupero descifrada usando mi clave privada para descifrar la clave de descifrado de la lista
@@ -303,23 +295,64 @@ func GetUserProyectsLists() {
 	}
 }
 
-//Elimina a un usuario del sistema borrandolo de todo proyectos, listas y tareas
-func DeleteUser(userEmail string) bool {
-	DatosUsuario = []DataUser{}
-	//Recupero las relaciones junto a los proyectos y las listas Mejorable el pensar en llamar a una funcion que no descifre todo porque no lo necesitamos
-	GetUserProyectsLists()
-	for i := 0; i < len(DatosUsuario); i++ {
-		DeleteUserProyect(DatosUsuario[i].Proyecto.ID, userEmail)
-		for j := 0; j < len(DatosUsuario[i].Listas); j++ {
-			//Quito al usuario del array Users de la Lista y de las tareas
-			DeleteUserList(DatosUsuario[i].Listas[j].ID, userEmail)
+func GetUserProyectRol(proyect Proyect) string {
+	for i := 0; i < len(proyect.Users); i++ {
+		if proyect.Users[i].User == UserSesion.Email {
+			return proyect.Users[i].Rol
 		}
 	}
-	//Borro las relaciones
-	DeleteUserRelation(userEmail)
-	//Borro al usuario
-	DeleteUserByEmail(userEmail)
-	return true
+	return "User"
+}
+
+// //Elimina a un usuario del sistema borrandolo de todo proyectos, listas y tareas
+// func DeleteUser(userEmail string) bool {
+// 	DatosUsuario = []DataUser{}
+// 	//Recupero las relaciones junto a los proyectos y las listas Mejorable el pensar en llamar a una funcion que no descifre todo porque no lo necesitamos
+// 	GetUserProyectsLists()
+// 	for i := 0; i < len(DatosUsuario); i++ {
+// 		DeleteUserProyect(DatosUsuario[i].Proyecto.ID, userEmail)
+// 		for j := 0; j < len(DatosUsuario[i].Listas); j++ {
+// 			//Quito al usuario del array Users de la Lista y de las tareas
+// 			DeleteUserList(DatosUsuario[i].Listas[j].ID, userEmail)
+// 		}
+// 	}
+// 	//Borro las relaciones
+// 	DeleteUserRelation(userEmail)
+// 	//Borro al usuario
+// 	DeleteUserByEmail(userEmail)
+// 	return true
+// }
+
+func UpdateStatus(userEmail string, status string) (bool, bool) {
+	var user User
+	user.Status = status
+	userJSON, err := json.Marshal(user)
+	if err != nil {
+		fmt.Println(err)
+	}
+	url := config.URLbase + "users/" + userEmail
+	req, err := http.NewRequest("PUT", url, bytes.NewBuffer(userJSON))
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req = AddTokenHeader(req)
+	client := utils.GetClientHTTPS()
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer resp.Body.Close()
+	UserSesion.Token = resp.Header.Get("refreshToken")
+	switch resp.StatusCode {
+	case 400:
+		return false, false
+	case 401:
+		fmt.Println("Token Expirado")
+		return false, true
+	default:
+		return true, false
+	}
 }
 
 //Elimino al usuario del sistema
@@ -337,6 +370,7 @@ func DeleteUserByEmail(userEmail string) bool {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
+	UserSesion.Token = resp.Header.Get("refreshToken")
 	if resp.StatusCode == 400 {
 		fmt.Println("El usuario no pudo ser eliminado sistema")
 		return false
@@ -353,7 +387,9 @@ func GetEmails() ([]string, bool) {
 	}
 	var usersEmails []string
 	for i := 0; i < len(users); i++ {
-		usersEmails = append(usersEmails, users[i].Email)
+		if users[i].Status != "Bloqueado" {
+			usersEmails = append(usersEmails, users[i].Email)
+		}
 	}
 	return usersEmails, tokenExpire
 }
@@ -367,11 +403,6 @@ func GetPublicKey(userEmail string) (*rsa.PublicKey, bool) {
 	publicKeyUserPem := user.PublicKey
 	publicKey := utils.PemToPublicKey(publicKeyUserPem)
 	return publicKey, false
-}
-
-func AddTokenHeader(req *http.Request) *http.Request {
-	req.Header.Add("Authorization", "Bearer "+UserSesion.Token)
-	return req
 }
 
 func GetCertificateUser(userEmail string) UserCertificate {
@@ -389,6 +420,7 @@ func GetCertificateUser(userEmail string) UserCertificate {
 	}
 	var userCertificate UserCertificate
 	defer resp.Body.Close()
+	UserSesion.Token = resp.Header.Get("refreshToken")
 	if resp.StatusCode == 400 {
 		fmt.Println("El certificado no se encontro")
 		return userCertificate
@@ -421,4 +453,34 @@ func VerifyPublicKeyWithCertificate(userCertificate UserCertificate) bool {
 	} else {
 		return false
 	}
+}
+
+func RefreshTokenUser() bool {
+	url := config.URLbase + "user/refresh"
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req = AddTokenHeader(req)
+	client := utils.GetClientHTTPS()
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer resp.Body.Close()
+	switch resp.StatusCode {
+	case 400:
+		return false
+	case 401:
+		return false
+	default:
+		UserSesion.Token = resp.Header.Get("refreshToken")
+		return true
+	}
+}
+
+func AddTokenHeader(req *http.Request) *http.Request {
+	req.Header.Add("Authorization", "Bearer "+UserSesion.Token)
+	return req
 }

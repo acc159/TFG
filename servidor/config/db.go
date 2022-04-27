@@ -24,6 +24,12 @@ var InstanceDB MongoConection
 
 func ConnectDB() {
 	cadena := os.Getenv("CADENA_CONEXION")
+
+	if cadena == "" {
+		fmt.Println("Inserta la cadena de conexion de la base de datos")
+		fmt.Scanf("%v\n", &cadena)
+	}
+
 	//cadena_conexion := "mongodb://127.0.0.1:27017"
 	client, err := mongo.NewClient(options.Client().ApplyURI(cadena))
 	if err != nil {

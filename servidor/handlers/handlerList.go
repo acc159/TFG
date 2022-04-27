@@ -4,12 +4,14 @@ import (
 	"encoding/json"
 	"net/http"
 	"servidor/models"
+	"servidor/utils"
 
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func CreateList(w http.ResponseWriter, r *http.Request) {
+	w = utils.SetRefreshToken(w, r)
 	var list models.List
 	json.NewDecoder(r.Body).Decode(&list)
 	resultado := models.CreateList(list)
@@ -24,6 +26,7 @@ func CreateList(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteList(w http.ResponseWriter, r *http.Request) {
+	w = utils.SetRefreshToken(w, r)
 	params := mux.Vars(r)
 	id := params["id"]
 
@@ -38,7 +41,7 @@ func DeleteList(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateList(w http.ResponseWriter, r *http.Request) {
-
+	w = utils.SetRefreshToken(w, r)
 	params := mux.Vars(r)
 	id := params["id"]
 	var list models.List
@@ -60,6 +63,7 @@ func UpdateList(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetListsByIDs(w http.ResponseWriter, r *http.Request) {
+	w = utils.SetRefreshToken(w, r)
 	var IDs []string
 	json.NewDecoder(r.Body).Decode(&IDs)
 	if len(IDs) > 0 {
@@ -77,6 +81,7 @@ func GetListsByIDs(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetUsersList(w http.ResponseWriter, r *http.Request) {
+	w = utils.SetRefreshToken(w, r)
 	params := mux.Vars(r)
 	id := params["id"]
 	resultado := models.GetUsersList(id)
@@ -89,6 +94,7 @@ func GetUsersList(w http.ResponseWriter, r *http.Request) {
 }
 
 func AddUserList(w http.ResponseWriter, r *http.Request) {
+	w = utils.SetRefreshToken(w, r)
 	params := mux.Vars(r)
 	id := params["id"]
 	email := params["email"]
@@ -102,6 +108,7 @@ func AddUserList(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteUserList(w http.ResponseWriter, r *http.Request) {
+	w = utils.SetRefreshToken(w, r)
 	params := mux.Vars(r)
 	id := params["id"]
 	email := params["email"]
@@ -115,6 +122,7 @@ func DeleteUserList(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetList(w http.ResponseWriter, r *http.Request) {
+	w = utils.SetRefreshToken(w, r)
 	params := mux.Vars(r)
 	id := params["id"]
 	list := models.GetList(id)

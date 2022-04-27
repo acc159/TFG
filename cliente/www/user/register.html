@@ -188,11 +188,14 @@
     }
 
     function validateEmail (email){
-        if (email == "admin"){
-            return true
-        }else{
-            return (/@{1}/.test(email));
-        }
+
+        return true
+
+        // if (email == "admin"){
+        //     return true
+        // }else{
+        //     return (/@{1}/.test(email));
+        // }
     }
 
 
@@ -207,6 +210,9 @@
                     registerGO(user_pass).then(
                         function(valorDesdeGO){
                             switch (valorDesdeGO) {
+                                case "Admin no encontrado":
+                                    alert('Usuario Admin no creado, registrate primero como: admin')
+                                    break;                                
                                 case "Duplicado":
                                     alert('El usuario ya esta registrado, Identificate')
                                     changeToLogin();

@@ -15,9 +15,14 @@ import (
 type Proyect struct {
 	ID          primitive.ObjectID `bson:"_id,omitempty"`
 	Cipherdata  []byte             `bson:"cipherdata,omitempty"`
-	Users       []string           `bson:"users,omitempty"`
+	Users       []UserProyect      `bson:"users,omitempty"`
 	Check       string             `bson:"check"`
 	UpdateCheck string             `bson:"updateCheck"`
+}
+
+type UserProyect struct {
+	User string `bson:"user,omitempty"`
+	Rol  string `bson:"rol,omitempty"`
 }
 
 //Creo un proyecto
@@ -81,7 +86,7 @@ func GetProyectsByIDs(stringsIDs []string) []Proyect {
 //Campo Users:
 
 //Recupero los usuarios que tiene el proyecto cuyo id paso como parametro
-func GetUsersProyect(idString string) []string {
+func GetUsersProyect(idString string) []UserProyect {
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	coleccion := config.InstanceDB.DB.Collection("proyects")
 	id, _ := primitive.ObjectIDFromHex(idString)
@@ -98,10 +103,14 @@ func AddUserProyect(stringID string, user string) bool {
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	coleccion := config.InstanceDB.DB.Collection("proyects")
 	id, _ := primitive.ObjectIDFromHex(stringID)
-	filter := bson.D{{Key: "_id", Value: id}}
-	update := bson.M{"$push": bson.M{"users": user}}
 	var updatedDoc bson.D
-	err := coleccion.FindOneAndUpdate(ctx, filter, update).Decode(&updatedDoc)
+	pushQuery := bson.D{{Key: "user", Value: user}, {Key: "rol", Value: "User"}}
+	push := bson.D{{Key: "users", Value: pushQuery}}
+	filter := bson.D{{Key: "_id", Value: id}}
+	err := coleccion.FindOneAndUpdate(ctx, filter, bson.M{"$push": push}).Decode(&updatedDoc)
+
+	//update := bson.M{"$push": bson.M{"users": user}}
+
 	if err != nil {
 		log.Println(err)
 	}
@@ -117,26 +126,40 @@ func DeleteUserProyect(proyectStringID string, user string) bool {
 	defer cancel()
 	coleccion := config.InstanceDB.DB.Collection("proyects")
 	id, _ := primitive.ObjectIDFromHex(proyectStringID)
-	filter := bson.D{{Key: "_id", Value: id}}
-	update := bson.M{"$pull": bson.M{"users": user}}
-	//Para que me devuelva el documento actualizado
-	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
 
+	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
+	pullQuery := bson.M{"users": bson.M{"user": user}}
+	filter := bson.D{{Key: "_id", Value: id}}
 	var updateProyect Proyect
-	err := coleccion.FindOneAndUpdate(ctx, filter, update, opts).Decode(&updateProyect)
+	err := coleccion.FindOneAndUpdate(ctx, filter, bson.M{"$pull": pullQuery}, opts).Decode(&updateProyect)
 	if err != nil {
 		log.Println(err)
 	}
-	if len(updateProyect.Users) == 0 {
-		DeleteProyect(proyectStringID)
-		DeleteRelation("admin", proyectStringID)
-	} else {
+
+	existeAdmin := false
+	if len(updateProyect.Users) > 0 {
+		for i := 0; i < len(updateProyect.Users); i++ {
+			if updateProyect.Users[i].Rol == "Admin" {
+				existeAdmin = true
+			}
+		}
+		if !existeAdmin {
+			updateProyect.Users[0].Rol = "Admin"
+			UpdateProyectUserRol(updateProyect, proyectStringID)
+		}
 		DeleteRelation(user, proyectStringID)
+	} else {
+		DeleteProyect(proyectStringID)
 	}
+
+	// if len(updateProyect.Users) == 0 {
+	// 	DeleteProyect(proyectStringID)
+	// 	// DeleteRelation("admin", proyectStringID)
+	// } else {
+	// 	DeleteRelation(user, proyectStringID)
+	// }
 	return true
 }
-
-//Sin Usar
 
 //Actualizo el proyecto
 func UpdateProyect(proyecto Proyect, stringID string) string {
@@ -205,4 +228,20 @@ func CheckModificationProyect(proyectID string, Updatecheck string) bool {
 		return true
 	}
 	return false
+}
+
+func UpdateProyectUserRol(proyecto Proyect, stringID string) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	coleccion := config.InstanceDB.DB.Collection("proyects")
+
+	id, _ := primitive.ObjectIDFromHex(stringID)
+	filter := bson.D{{Key: "_id", Value: id}}
+	update := bson.D{{Key: "$set", Value: proyecto}}
+
+	var updatedDoc bson.D
+	err := coleccion.FindOneAndUpdate(ctx, filter, update).Decode(&updatedDoc)
+	if err != nil {
+		log.Println(err)
+	}
 }

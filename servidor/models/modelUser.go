@@ -19,7 +19,7 @@ type User struct {
 	ServerKey  []byte             `bson:"server_key,omitempty"`
 	PublicKey  []byte             `bson:"public_key,omitempty"`
 	PrivateKey []byte             `bson:"private_key,omitempty"`
-	Token      string             `bson:"token,omitempty"`
+	Status     string             `bson:"status,omitempty"`
 }
 
 //Metodo para comprobar si el usuario esta vacio o tiene datos
@@ -65,13 +65,12 @@ func Login(userLogin User) User {
 }
 
 //Revisar
-func UpdateUser(idString string, usuario User) bool {
+func UpdateUser(email string, status string) bool {
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	coleccion := config.InstanceDB.DB.Collection("users")
-	id, _ := primitive.ObjectIDFromHex(idString)
 
-	filter := bson.D{{Key: "_id", Value: id}}
-	update := bson.D{{Key: "$set", Value: usuario}}
+	filter := bson.D{{Key: "email", Value: email}}
+	update := bson.D{{Key: "$set", Value: bson.M{"status": status}}}
 
 	var updatedDoc bson.D
 	err := coleccion.FindOneAndUpdate(ctx, filter, update).Decode(&updatedDoc)

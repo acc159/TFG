@@ -3,6 +3,7 @@ package utils
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"servidor/config"
 	"time"
 
@@ -20,4 +21,11 @@ func SaveLogs(entrada string) {
 	if err != nil {
 		fmt.Println(err)
 	}
+}
+
+func SetRefreshToken(w http.ResponseWriter, r *http.Request) http.ResponseWriter {
+	userToken := r.Header.Values("UserToken")[0]
+	refreshToken := GenerateJWT(userToken)
+	w.Header().Set("refreshToken", refreshToken)
+	return w
 }

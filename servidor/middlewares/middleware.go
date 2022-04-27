@@ -34,7 +34,9 @@ func ValidateTokenMiddleware(next http.Handler) http.Handler {
 			} else {
 				bearerToken := r.Header.Get("Authorization")
 				if bearerToken != "" {
-					if utils.ValidateToken(bearerToken) {
+					valido, userToken := utils.ValidateToken(bearerToken)
+					if valido {
+						r.Header.Set("UserToken", userToken)
 						next.ServeHTTP(w, r)
 					} else {
 						w.WriteHeader(http.StatusUnauthorized)

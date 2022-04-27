@@ -83,6 +83,7 @@ func GetTask(taskID string, listID string) TaskCipher {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
+	UserSesion.Token = resp.Header.Get("refreshToken")
 	var taskCipher TaskCipher
 	if resp.StatusCode == 400 {
 		fmt.Println("No existe la tarea")
@@ -109,6 +110,7 @@ func GetTasksByList(listID string) ([]Task, []TaskCipher) {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
+	UserSesion.Token = resp.Header.Get("refreshToken")
 	var tasks []Task
 	var tasksCipher []TaskCipher
 	if resp.StatusCode == 400 {
@@ -171,6 +173,7 @@ func CreateTask(stringListID string, task Task) bool {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
+	UserSesion.Token = resp.Header.Get("refreshToken")
 	if resp.StatusCode == 400 {
 		fmt.Println("La tarea no pudo ser creada")
 		return false
@@ -214,6 +217,7 @@ func UpdateTask(listIDstring string, task Task) string {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
+	UserSesion.Token = resp.Header.Get("refreshToken")
 	switch resp.StatusCode {
 	case 400:
 		fmt.Println("La tarea no pudo ser borrada")
@@ -241,7 +245,7 @@ func DeleteTask(taskID string) (bool, bool) {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
-
+	UserSesion.Token = resp.Header.Get("refreshToken")
 	switch resp.StatusCode {
 	case 400:
 		fmt.Println("La tarea no pudo ser borrada")
@@ -271,7 +275,7 @@ func DeleteTaskByListID(listID string) (bool, bool) {
 		fmt.Println(err)
 	}
 	defer resp.Body.Close()
-
+	UserSesion.Token = resp.Header.Get("refreshToken")
 	switch resp.StatusCode {
 	case 400:
 		fmt.Println("Las tareas no pueden ser borradas")
