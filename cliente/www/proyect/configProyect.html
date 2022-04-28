@@ -106,7 +106,7 @@
     </form>
 
 
-    <div class="modal" id="modalExit" style="display: none;" aria-hidden="true">
+    <div class="modal" id="modalExit" style="display: none;" aria-hidden="true" data-backdrop="static" data-keyboard="false">
         <div class="modal-dialog">
           <div class="modal-content">
             <div class="modal-header">
@@ -167,7 +167,7 @@ $(".container").change(function() {
                         }
                     }else{
                         alert('El proyecto ya no esta disponible')
-                        changeHome(true)()
+                        changeHome(true)
                     }
                 }
             }
@@ -204,7 +204,7 @@ $(".container").change(function() {
                         }
                     }else{
                         alert('El proyecto ya no esta disponible')
-                        changeHome(true)()
+                        changeHome(true)
                     }
                 }
             })
@@ -263,7 +263,7 @@ $(".container").change(function() {
                         }
                     }else{
                         alert('El proyecto ya no esta disponible')
-                        changeHome(true)()
+                        changeHome(true)
                     }
                 }
             }
@@ -282,7 +282,7 @@ $(".container").change(function() {
                 }else{
                     if (changeOK == false){
                         alert('Ya no esta disponible el proyecto')
-                        changeHome(true)()
+                        changeHome(true)
                     }
                 }
             }
@@ -305,11 +305,11 @@ $(".container").change(function() {
                             alert('El proyecto no se borro')
                         }else{
                             alert('El proyecto se borro')
-                            changeHome(true)()
+                            changeHome(true)
                         }
                     }else{
                         alert('El proyecto ya no esta disponible')
-                        changeHome(true)()
+                        changeHome(true)
                     }
                 }
             }

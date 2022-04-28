@@ -32,6 +32,11 @@ type DataUser struct {
 	Listas   []List
 }
 
+type DataUserCipher struct {
+	ProyectoCipher ProyectCipher
+	ListasCipher   []ListCipher
+}
+
 type UserCertificate struct {
 	Certificate   []byte `json:"certificate"`
 	PublicKeyAC   []byte `json:"publicKeyAC"`
@@ -40,6 +45,7 @@ type UserCertificate struct {
 
 //Contiene los proyectos y listas del usuario
 var DatosUsuario []DataUser
+var DatosUsuarioCipher []DataUserCipher
 
 //Contiene los datos del usuario
 var UserSesion User
@@ -265,6 +271,7 @@ func GetUserByEmail(userEmail string) (User, bool) {
 func GetUserProyectsLists() {
 	//Limpio los datos del usuario
 	DatosUsuario = []DataUser{}
+	DatosUsuarioCipher = []DataUserCipher{}
 	//Obtengo mi clave privada
 	privateKey := GetPrivateKeyUser()
 	//Recupero las relaciones
@@ -273,24 +280,37 @@ func GetUserProyectsLists() {
 	if len(relations) > 0 {
 		//Proyectos
 		for i := 0; i < len(relations); i++ {
-			proyecto := GetProyect(relations[i].ProyectID.Hex())
+			proyectoCipher := GetProyect(relations[i].ProyectID.Hex())
 			//Descifro la clave del proyecto con la clave privada del usuario
 			proyectKey := utils.DescifrarRSA(privateKey, relations[i].ProyectKey)
 			//Desciframos el proyecto
-			proyectoDescifrado := DescifrarProyecto(proyecto, proyectKey)
-			proyectoDescifrado.Rol = GetUserProyectRol(proyectoDescifrado)
+			proyectoDescifrado := DescifrarProyecto(proyectoCipher, proyectKey)
+			proyectoDescifrado.Rol = GetUserProyectRol(proyectoDescifrado) //Este campo se utiliza para saber el rol del usuario actual sobre el proyecto
 			//Listas
 			var lists []List
+			var listsCipher []ListCipher
 			//Por cada lista del proyecto la recupero descifrada usando mi clave privada para descifrar la clave de descifrado de la lista
 			for j := 0; j < len(relations[i].Lists); j++ {
-				list := GetUserList(relations[i].Lists[j].ListID, relations[i].Lists[j].ListKey, privateKey)
-				list.Rol = GetUserListRol(list)
+				// list := GetUserList(relations[i].Lists[j].ListID, relations[i].Lists[j].ListKey, privateKey)
+
+				listKey := utils.DescifrarRSA(privateKey, relations[i].Lists[j].ListKey)
+				listCipher := GetList(relations[i].Lists[j].ListID)
+				list := DescifrarLista(listCipher, listKey)
+				listsCipher = append(listsCipher, listCipher)
+
+				list.Rol = GetUserListRol(list) //Este campo se utiliza para saber el rol del usuario actual sobre la lista
 				lists = append(lists, list)
 			}
 			datos := DataUser{
 				Proyecto: proyectoDescifrado,
 				Listas:   lists,
 			}
+
+			datosCifrados := DataUserCipher{
+				ProyectoCipher: proyectoCipher,
+				ListasCipher:   listsCipher,
+			}
+			DatosUsuarioCipher = append(DatosUsuarioCipher, datosCifrados)
 			DatosUsuario = append(DatosUsuario, datos)
 		}
 	}

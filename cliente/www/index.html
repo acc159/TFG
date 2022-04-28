@@ -112,9 +112,9 @@
                         <h2 class="display-4">Listas en el proyecto: <span class="badge badge-secondary">{{len .Listas}}</span></h2>
                         <div class="btn-group btn-group" role="group" id="{{.Proyecto.ID}}" data-proyectName="{{.Proyecto.Name}}">
                             {{if eq .Proyecto.Rol "Admin"}}
-                                <button type="button" class="btn btn-outline-dark" onclick="changeToProyectConfig(event)">Configuración del proyecto »</button>
                                 <button type="button" class="btn btn-outline-dark" onclick="changeToAddList(event)">Añadir Lista al proyecto »</button>
-                                <button type="button" class="btn btn-outline-dark" onclick="deleteProyect(event)">Eliminar Proyecto »</button>
+                                <button type="button" class="btn btn-outline-dark" onclick="changeToProyectConfig(event)">Configuración del proyecto »</button>
+                                <!-- <button type="button" class="btn btn-outline-dark" onclick="deleteProyect(event)">Eliminar Proyecto »</button> -->
                             {{end}}
                     </div>
                 </section>
@@ -135,15 +135,13 @@
                                             <div class="card-body box-shadow">
                                                 {{if .Description}}
                                                     <p class="card-text">{{.Description}}</p>
-                                                {{else}}
-                                                    <p class="card-text">Sin Descripción</p>
                                                 {{end}}
                                                 <div class="justify-content-between align-items-center">
                                                     <div class="btn-group" id="{{.ID}}" data-proyectID="{{$proyectID}}" data-proyectName="{{$proyectName}}" data-listName="{{.Name}}">
                                                         <button type="button" class="btn btn-sm btn-outline-secondary"onclick="changeToTasks(event)">Ver Tareas</button>
                                                         {{if eq .Rol "Admin"}}
-                                                            <button type="button" class="btn btn-sm btn-outline-secondary"onclick="changeToListConfig(event)">Config</button>
-                                                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deleteList(event)">Eliminar Lista</button>
+                                                            <button type="button" class="btn btn-sm btn-outline-secondary"onclick="changeToListConfig(event)">Configuración</button>
+                                                            <!-- <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deleteList(event)">Eliminar Lista</button> -->
                                                         {{end}}
                                                     </div>
                                                 </div>
@@ -159,7 +157,7 @@
         {{end}}        
                
 
-        <div class="modal" id="myModal" style="display: none;" aria-hidden="true">
+        <div class="modal" id="myModal" style="display: none;" aria-hidden="true" data-backdrop="static" data-keyboard="false">
             <div class="modal-dialog">
               <div class="modal-content">
                 <div class="modal-header">
@@ -179,7 +177,7 @@
           </div>
 
 
-          <div class="modal" id="tokenModal" style="display: none;" aria-hidden="true">
+          <div class="modal" id="tokenModal" style="display: none;" aria-hidden="true" data-backdrop="static" data-keyboard="false">
             <div class="modal-dialog">
               <div class="modal-content">
                 <div class="modal-header">
@@ -196,7 +194,6 @@
               </div>
             </div>
           </div>
-
 </body>
 
 
@@ -279,19 +276,19 @@
     }
 
 
-    function deleteProyect(event){
-        var div = event.target.closest('div');
-        proyectID = div.id;
-        deleteProyectGO(proyectID).then(
-            function(valorDesdeGO){
-                if (valorDesdeGO == false){
-                    alert('El proyecto no se borro')
-                }else{
-                    changeHome()
-                }
-            }
-        )
-    }
+    // function deleteProyect(event){
+    //     var div = event.target.closest('div');
+    //     proyectID = div.id;
+    //     deleteProyectGO(proyectID).then(
+    //         function(valorDesdeGO){
+    //             if (valorDesdeGO == false){
+    //                 alert('El proyecto no se borro')
+    //             }else{
+    //                 changeHome()
+    //             }
+    //         }
+    //     )
+    // }
 
 
     function changeToListConfig(event){
@@ -340,27 +337,27 @@
 
 
 
-    function deleteList(event){
-        var div = event.target.closest('div');
-        listID = div.id;
-        proyectID = div.dataset.proyectid;
-        deleteListGO(listID, proyectID).then(
-            function(resultados){
-                let tokenExpire = resultados[1];
-                let listOK = resultados[0];
-                if (tokenExpire){
-                    alert('El Token de la sesión expiro')
-                    exitSesion();
-                }else{
-                    if (listOK == false){
-                        alert('La lista no se borro')
-                    }else{
-                        changeHome()
-                    }
-                }
-            }
-        )
-    }
+    // function deleteList(event){
+    //     var div = event.target.closest('div');
+    //     listID = div.id;
+    //     proyectID = div.dataset.proyectid;
+    //     deleteListGO(listID, proyectID).then(
+    //         function(resultados){
+    //             let tokenExpire = resultados[1];
+    //             let listOK = resultados[0];
+    //             if (tokenExpire){
+    //                 alert('El Token de la sesión expiro')
+    //                 exitSesion();
+    //             }else{
+    //                 if (listOK == false){
+    //                     alert('La lista no se borro')
+    //                 }else{
+    //                     changeHome()
+    //                 }
+    //             }
+    //         }
+    //     )
+    // }
 
 
     function changeToAdmin(){

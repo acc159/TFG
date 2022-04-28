@@ -83,8 +83,9 @@ func main() {
 			if models.ExistList(listID) {
 				tasks, tasksCipher := models.GetTasksByList(listID)
 				models.TasksLocal = tasksCipher
+				pendientes, progreso, finalizadas := models.GetNumbersOfStates(tasks)
 
-				ChangeViewTasks(config.PreView+"task/tasks.html", tasks, listID, nil, listName, "")
+				ChangeViewTasks(config.PreView+"task/tasks.html", tasks, listID, nil, listName, "", pendientes, progreso, finalizadas)
 			}
 			return []bool{false, false}
 		}
@@ -97,6 +98,7 @@ func main() {
 			//Compruebo que la lista existe
 			if models.ExistList(listID) {
 				tasks, tasksCipher := models.GetTasksByList(listID)
+				pendientes, progreso, finalizadas := models.GetNumbersOfStates(tasks)
 
 				var tasksFilter []models.Task
 				var tasksCipherFilter []models.TaskCipher
@@ -108,7 +110,7 @@ func main() {
 					}
 				}
 				models.TasksLocal = tasksCipherFilter
-				ChangeViewTasks(config.PreView+"task/tasks.html", tasksFilter, listID, nil, listName, typeTasks)
+				ChangeViewTasks(config.PreView+"task/tasks.html", tasksFilter, listID, nil, listName, typeTasks, pendientes, progreso, finalizadas)
 			}
 			return []bool{false, false}
 		}
@@ -177,7 +179,7 @@ func main() {
 				listCipher := models.GetList(listID)
 				list := models.DescifrarLista(listCipher, models.GetListKey(listID))
 				listUsers := list.Users
-				ChangeViewTasks(config.PreView+"task/addTask.html", nil, listID, listUsers, list.Name, "")
+				ChangeViewTasks(config.PreView+"task/addTask.html", nil, listID, listUsers, list.Name, "", 0, 0, 0)
 				return []bool{true, false}
 			}
 			return []bool{false, false}
@@ -318,7 +320,7 @@ func main() {
 				usersList := models.GetUsersList(listID)
 				//Elimino la lista de todas las relaciones
 				for i := 0; i < len(usersList); i++ {
-					models.DeleteRelationList(proyectID, listID, usersList[i])
+					models.DeleteRelationList(proyectID, listID, usersList[i].User)
 				}
 				//Elimino la lista
 				deleteOk, tokenExpire := models.DeleteList(listID)

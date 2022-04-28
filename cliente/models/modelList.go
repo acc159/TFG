@@ -156,7 +156,7 @@ func DeleteList(listsID string) (bool, bool) {
 }
 
 //Recupero los usuarios de una lista
-func GetUsersList(listID string) []string {
+func GetUsersList(listID string) []UserRole {
 	url := config.URLbase + "list/users/" + listID
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -174,7 +174,7 @@ func GetUsersList(listID string) []string {
 	}
 	defer resp.Body.Close()
 	UserSesion.Token = resp.Header.Get("refreshToken")
-	var responseObject []string
+	var responseObject []UserRole
 	if resp.StatusCode == 404 {
 		return responseObject
 	} else {

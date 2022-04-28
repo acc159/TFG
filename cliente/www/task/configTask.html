@@ -184,7 +184,7 @@
                                 </div>
                                 <select class="form-control" name="usersList" id="usersList" multiple>
                                     {{range .List.Users}}
-                                        <option value={{.}}>{{.}}</option>
+                                        <option value={{.User}}>{{.User}}</option>
                                     {{end}}
                                 </select>
                               </div>
@@ -220,10 +220,12 @@
                                         <li class="list-group-item d-flex justify-content-between lh-condensed">
                                             <div class="container row">
                                                 <div class="col-md-6 order-md-1">
-                                                    <a href="{{.FileData}}" target="_blank" class="file" download="{{.FileName}}" data-user="{{.UserFile}}" data-Sign="{{.SignData.Sign}}" data-userSign="{{.SignData.UserSign}}">{{.FileName}}</a>
+                                                    <a href="{{.FileData}}" target="_blank" class="file" download="{{.FileName}}" data-user="{{.UserFile}}" data-userSign="{{.SignData.UserSign}}">{{.FileName}}</a>
                                                 </div>
                                                 <div class="col-md-3 order-md-2">
-                                                    <a class="text-muted" type="button" role="button" onclick="deleteFile(event)">Eliminar</a>
+                                                    {{if eq $user .UserFile}}
+                                                        <a class="text-muted" type="button" role="button" onclick="deleteFile(event)">Eliminar</a>
+                                                    {{end}}
                                                 </div>
                                                 <div class="col-md-3 order-md-3">
                                                     {{if .SignData.Sign}}
@@ -261,10 +263,12 @@
                                         <li class="list-group-item d-flex justify-content-between lh-condensed">
                                             <div class="container row">
                                                 <div class="col-md-6 order-md-1">
-                                                    <a class="url" target="_blank" href="{{.LinkUrl}}" data-user="{{.UserLink}}" data-Sign="{{.SignData.Sign}}" data-userSign="{{.SignData.UserSign}}">{{.LinkName}}</a>
+                                                    <a class="url" target="_blank" href="{{.LinkUrl}}" data-user="{{.UserLink}}" data-userSign="{{.SignData.UserSign}}">{{.LinkName}}</a>
                                                 </div>
                                                 <div class="col-md-3 order-md-2">
-                                                    <a class="text-muted" type="button" role="button" onclick="deleteUrl(event)">Eliminar</a>
+                                                    {{if eq $user .UserLink}}
+                                                        <a class="text-muted" type="button" role="button" onclick="deleteUrl(event)">Eliminar</a>
+                                                    {{end}}
                                                 </div>
                                                 <div class="col-md-3 order-md-3">
                                                     {{if .SignData.Sign}}
@@ -324,7 +328,7 @@
                                     <li class="list-group-item d-flex justify-content-between lh-condensed">
                                         <div class="container row">
                                             <div class="col-md-11 order-md-1">
-                                                <a data-sign="{{.Task.SignCreator.Sign}}" data-usersign="{{.Task.SignCreator.UserSign}}">{{.Task.SignCreator.Message}}</a>
+                                                <a data-usersign="{{.Task.SignCreator.UserSign}}">{{.Task.SignCreator.Message}}</a>
                                             </div>
                                             <div class="col-md-1 order-md-2">
                                                 <button class="btn btn-outline-info" onclick="verifySignEvent(event, 'Creacion')">Verificar</button>
@@ -356,7 +360,7 @@
                                 <li class="list-group-item d-flex justify-content-between lh-condensed">
                                     <div class="container row">
                                         <div class="col-md-11 order-md-1">
-                                            <a data-sign="{{.Sign}}" data-usersign="{{.UserSign}}">{{.Message}}</a>
+                                            <a data-usersign="{{.UserSign}}">{{.Message}}</a>
                                         </div>
                                         <div class="col-md-1 order-md-2">
                                             <button class="btn btn-outline-info" onclick="verifySignEvent(event, 'Recepcion')">Verificar</button>
@@ -390,7 +394,7 @@
                                         <li class="list-group-item d-flex justify-content-between lh-condensed">
                                             <div class="container row">
                                                 <div class="col-md-11 order-md-1">
-                                                    <a data-sign="{{.Sign}}" data-usersign="{{.UserSign}}">{{.Message}}</a>
+                                                    <a data-usersign="{{.UserSign}}">{{.Message}}</a>
                                                 </div>
                                                 <div class="col-md-1 order-md-2">
                                                     <button class="btn btn-outline-info" onclick="verifySignEvent(event, 'Finalizacion')">Verificar</button>
@@ -409,7 +413,7 @@
     </div>
 
     <!-- Modales -->
-    <div class="modal" id="myModal2" style="display: none;" aria-hidden="true">
+    <div class="modal" id="myModal2" style="display: none;" aria-hidden="true" data-backdrop="static" data-keyboard="false">
         <div class="modal-dialog">
           <div class="modal-content">
             <div class="modal-header">
@@ -427,7 +431,7 @@
         </div>
       </div>
 
-      <div class="modal" id="myModal3" style="display: none;" aria-hidden="true">
+      <div class="modal" id="myModal3" style="display: none;" aria-hidden="true" data-backdrop="static" data-keyboard="false">
         <div class="modal-dialog">
           <div class="modal-content">
             <div class="modal-header">
@@ -964,7 +968,7 @@ function leerArchivo(){
                         exitSesion();
                     }else{
                         if (signOK){
-                            alert('Firma verificada')
+                            alert('Firma verificada. Adjuntado por: ' + signUser)
                         }else{
                             alert('La firma no coincide')
                         }

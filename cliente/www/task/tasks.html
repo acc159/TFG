@@ -98,7 +98,21 @@
                 <div class="card">
                     <div class="card-header text-center">
                         <h1 class="display-3">Tareas de la lista: {{.ListName}}</h1>
-                        <h2 class="display-4">Numero de tareas: <span class="badge bg-info">{{len .Tasks}}</span> </h2>
+
+                        {{if eq .TypeTasks ""}}
+                            <h2 class="display-4">Numero de tareas: <span class="badge bg-info">{{len .Tasks}}</span> </h2>
+                        {{end}}
+                        {{if eq .TypeTasks "Pendiente"}}
+                            <h2 class="display-4">Pendientes</h2>
+                        {{end}}
+                        {{if eq .TypeTasks "En Proceso"}}
+                            <h2 class="display-4">En Proceso</h2>
+                        {{end}}
+                        {{if eq .TypeTasks "Finalizada"}}
+                            <h2 class="display-4">Finalizadas</h2>
+                        {{end}}                        
+
+                        
 
                         <div style="display: inline-flex;">
                             <h5>Pendientes: <span class="badge bg-warning">{{$pendientes}}</span> </h5>
@@ -195,7 +209,7 @@
                 </div>
             </div>
         </div>
-    <div class="modal" id="taskModal" style="display: none;" aria-hidden="true">
+    <div class="modal" id="taskModal" style="display: none;" aria-hidden="true" data-backdrop="static" data-keyboard="false">
         <div class="modal-dialog">
           <div class="modal-content">
             <div class="modal-header">
@@ -213,7 +227,7 @@
         </div>
       </div>
 
-      <div class="modal" id="tokenModal" style="display: none;" aria-hidden="true">
+      <div class="modal" id="tokenModal" style="display: none;" aria-hidden="true" data-backdrop="static" data-keyboard="false">
         <div class="modal-dialog">
           <div class="modal-content">
             <div class="modal-header">

@@ -69,7 +69,7 @@ type AdminView struct {
 
 func InitUI() {
 	//Inicializo
-	UI, _ = lorca.New("", "", 1250, 800, "--allow-insecure-localhost")
+	UI, _ = lorca.New("", "", 1250, 800, "--allow-insecure-localhost", "enable-native-notifications", "temporary-unexpire-flags-m97", "temporary-unexpire-flags-m98")
 	//Cargo la primera vista
 	ChangeView(config.PreView + "user/login.html")
 }
@@ -121,13 +121,11 @@ func ChangeViewAddList(nombreVista string, proyectID string, proyectName string,
 	UI.Load(loadableContents)
 }
 
-func ChangeViewTasks(nombreVista string, tasks []models.Task, listID string, listUsers []models.UserRole, listName string, typeTasks string) {
+func ChangeViewTasks(nombreVista string, tasks []models.Task, listID string, listUsers []models.UserRole, listName string, typeTasks string, pendientes int, progreso int, finalizadas int) {
 	tmpl, err := template.ParseFiles(nombreVista)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	pendientes, progreso, finalizadas := models.GetNumbersOfStates(tasks)
 
 	dataStruct := DataTask{
 		Tasks:       tasks,

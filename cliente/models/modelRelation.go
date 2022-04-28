@@ -258,8 +258,17 @@ func CheckChanges() bool {
 		return true
 	} else {
 		for i := 0; i < len(relations); i++ {
+			if !bytes.Equal(DatosUsuarioCipher[i].ProyectoCipher.Cipherdata, GetProyect(DatosUsuarioCipher[i].ProyectoCipher.ID.Hex()).Cipherdata) {
+				return true
+			}
 			if len(relations[i].Lists) != len(RelationsLocal[i].Lists) {
 				return true
+			} else {
+				for j := 0; j < len(relations[i].Lists); j++ {
+					if !bytes.Equal(DatosUsuarioCipher[i].ListasCipher[j].Cipherdata, GetList(DatosUsuarioCipher[i].ListasCipher[j].ID.Hex()).Cipherdata) {
+						return true
+					}
+				}
 			}
 		}
 	}
