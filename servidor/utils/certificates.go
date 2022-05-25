@@ -22,7 +22,6 @@ var ACpublicKey *rsa.PublicKey
 var server_AC_Key string
 
 func LoadAC() {
-
 	server_AC_Key = os.Getenv("Server_AC_Key")
 	if server_AC_Key == "" {
 		fmt.Println("Inserta la clave para descifrar la clave privada de la AC")
@@ -92,7 +91,6 @@ func CreateACcertificateAndKeys() {
 
 	//Escribir la Clave privada en un fichero
 	writeFile("certs/ac/privateKeyAC.pem", privateKeyCipher)
-
 }
 
 func CreateUserCertificate(username string, userPublicKeyBytes []byte) {
@@ -126,32 +124,6 @@ func CreateUserCertificate(username string, userPublicKeyBytes []byte) {
 	//Lo pongo en formato PEM y lo escribo en el fichero correspondiente
 	certUserPEM := CertificateToPem(certBytes)
 	writeFile("certs/users/"+username+"_cert.pem", certUserPEM)
-
-	// var cert2 *x509.Certificate
-	// cert2, _ = x509.ParseCertificate(certBytes)
-	// rsaPublicKey := cert2.PublicKey.(*rsa.PublicKey)
-
-	// fmt.Println(rsaPublicKey)
-
-	// certPem := CertificateToPem(certBytes)
-	// fmt.Println(certPem)
-
-	// //Verificar si la clave publica del certificado coincide con la clave publica del usuario
-	// if cert2.PublicKey.(*rsa.PublicKey).N.Cmp(certPrivKey.PublicKey.N) == 0 && certPrivKey.PublicKey.E == cert2.PublicKey.(*rsa.PublicKey).E {
-	// 	println("Same key")
-	// } else {
-	// 	println("Different keys")
-	// }
-
-	// //Verificar Signature del certificado con la C.Publica de la AC
-	// h := sha256.New()
-	// h.Write(cert2.RawTBSCertificate)
-	// hash_data := h.Sum(nil)
-
-	// err = rsa.VerifyPKCS1v15(ACpublicKey, crypto.SHA256, hash_data, cert2.Signature)
-	// if err != nil {
-	// 	println("Signature does not match")
-	// }
 
 }
 

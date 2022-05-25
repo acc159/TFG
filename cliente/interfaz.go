@@ -69,14 +69,13 @@ type AdminView struct {
 
 func InitUI() {
 	//Inicializo
-	UI, _ = lorca.New("", "", 1250, 800, "--allow-insecure-localhost", "enable-native-notifications", "temporary-unexpire-flags-m97", "temporary-unexpire-flags-m98")
+	UI, _ = lorca.New("", "", 1250, 800, "--allow-insecure-localhost")
 	//Cargo la primera vista
 	ChangeView(config.PreView + "user/login.html")
 }
 
 //Cambia las vistas entre login y register
 func ChangeView(nombreVista string) {
-
 	content, err := ioutil.ReadFile(nombreVista)
 	if err != nil {
 		log.Fatal(err)
@@ -86,7 +85,7 @@ func ChangeView(nombreVista string) {
 	UI.Load(loadableContents)
 }
 
-//Carga la pagina de Home con los proyectos y listas del usuario actual
+//Carga la pagina de Home con los proyectos y listas del usuario actual y a la pantalla de añadir un proyecto
 func ChangeViewWithValues(nombreVista string, emails []string) {
 	tmpl, err := template.ParseFiles(nombreVista)
 	if err != nil {

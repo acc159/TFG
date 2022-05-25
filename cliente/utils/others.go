@@ -43,7 +43,7 @@ func CheckExpirationTimeToken(tokenString string) bool {
 	case float64:
 		tm = time.Unix(int64(iat), 0)
 	}
-	now := time.Now().Add(time.Second * 20)
+	now := time.Now().Add(time.Second * 15)
 	result := now.Before(tm)
 	return result
 }

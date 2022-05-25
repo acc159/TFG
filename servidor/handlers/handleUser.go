@@ -76,7 +76,6 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	w = utils.SetRefreshToken(w, r)
 	var user models.User
 	json.NewDecoder(r.Body).Decode(&user)
-
 	params := mux.Vars(r)
 	email := params["email"]
 	resultado := models.UpdateUser(email, user.Status)

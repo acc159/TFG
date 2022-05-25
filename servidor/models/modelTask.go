@@ -70,7 +70,6 @@ func CreateTask(task Task) string {
 		fmt.Println(err)
 	}
 	stringObjectID := result.InsertedID.(primitive.ObjectID).Hex()
-	fmt.Println(stringObjectID)
 	return stringObjectID
 }
 

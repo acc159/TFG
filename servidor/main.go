@@ -40,6 +40,7 @@ func main() {
 	r.Use(middlewares.MiddlewareLog)
 	r.Use(middlewares.MiddlewareAddJsonHeader)
 	r.Use(middlewares.ValidateTokenMiddleware)
+
 	//Defino las rutas
 	//Usuarios
 	routes.User(r)

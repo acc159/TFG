@@ -27,7 +27,7 @@ type RelationLists struct {
 func CreateRelation(relation Relation) bool {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	coleccion := config.InstanceDB.DB.Collection("users_proyects_lists")
+	coleccion := config.InstanceDB.DB.Collection("relations")
 	_, err := coleccion.InsertOne(ctx, relation)
 	if err != nil {
 		log.Println(err)
@@ -40,7 +40,7 @@ func CreateRelation(relation Relation) bool {
 func GetRelationsbyUserEmail(userEmail string) []Relation {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	coleccion := config.InstanceDB.DB.Collection("users_proyects_lists")
+	coleccion := config.InstanceDB.DB.Collection("relations")
 	filter := bson.D{{Key: "userEmail", Value: userEmail}}
 	results, err := coleccion.Find(ctx, filter)
 	if err != nil {
@@ -59,7 +59,7 @@ func DeleteRelation(userEmail string, proyectIDString string) bool {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	proyectID, _ := primitive.ObjectIDFromHex(proyectIDString)
-	coleccion := config.InstanceDB.DB.Collection("users_proyects_lists")
+	coleccion := config.InstanceDB.DB.Collection("relations")
 	filter := bson.D{{Key: "userEmail", Value: userEmail}, {Key: "proyectID", Value: proyectID}}
 	err := coleccion.FindOneAndDelete(ctx, filter)
 	return err.Err() == nil
@@ -69,7 +69,7 @@ func DeleteRelation(userEmail string, proyectIDString string) bool {
 func DeleteRelationByProyectID(proyectID string) bool {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	coleccion := config.InstanceDB.DB.Collection("users_proyects_lists")
+	coleccion := config.InstanceDB.DB.Collection("relations")
 	id, _ := primitive.ObjectIDFromHex(proyectID)
 	filter := bson.D{{Key: "proyectID", Value: id}}
 	_, err := coleccion.DeleteMany(ctx, filter)
@@ -82,7 +82,7 @@ func DeleteRelationByProyectID(proyectID string) bool {
 func DeleteListRelation(userEmail string, proyectIDstring string, listIDstring string) bool {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	coleccion := config.InstanceDB.DB.Collection("users_proyects_lists")
+	coleccion := config.InstanceDB.DB.Collection("relations")
 	proyectID, _ := primitive.ObjectIDFromHex(proyectIDstring)
 	listID, _ := primitive.ObjectIDFromHex(listIDstring)
 	pullQuery := bson.M{"lists": bson.M{"listID": listID}}
@@ -102,7 +102,7 @@ func DeleteListRelation(userEmail string, proyectIDstring string, listIDstring s
 func AddListToRelation(userEmail string, proyectIDstring string, list RelationLists) bool {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	coleccion := config.InstanceDB.DB.Collection("users_proyects_lists")
+	coleccion := config.InstanceDB.DB.Collection("relations")
 	proyectID, _ := primitive.ObjectIDFromHex(proyectIDstring)
 	pushQuery := bson.D{{Key: "listID", Value: list.ListID}, {Key: "listKey", Value: list.ListKey}}
 	push := bson.D{{Key: "lists", Value: pushQuery}}
@@ -119,7 +119,7 @@ func AddListToRelation(userEmail string, proyectIDstring string, list RelationLi
 func GetRelationsByUserProyect(userEmail string, proyectIDstring string) Relation {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	coleccion := config.InstanceDB.DB.Collection("users_proyects_lists")
+	coleccion := config.InstanceDB.DB.Collection("relations")
 	proyectID, _ := primitive.ObjectIDFromHex(proyectIDstring)
 	filter := bson.D{{Key: "userEmail", Value: userEmail}, {Key: "proyectID", Value: proyectID}}
 	var relation Relation
@@ -136,7 +136,7 @@ func GetRelationsByUserProyect(userEmail string, proyectIDstring string) Relatio
 func DeleteRelationByUser(userEmail string) bool {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	coleccion := config.InstanceDB.DB.Collection("users_proyects_lists")
+	coleccion := config.InstanceDB.DB.Collection("relations")
 	filter := bson.D{{Key: "userEmail", Value: userEmail}}
 	_, err := coleccion.DeleteMany(ctx, filter)
 	return err == nil
@@ -145,7 +145,7 @@ func DeleteRelationByUser(userEmail string) bool {
 func UpdateRelationList(relation Relation) bool {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	coleccion := config.InstanceDB.DB.Collection("users_proyects_lists")
+	coleccion := config.InstanceDB.DB.Collection("relations")
 
 	//pullQuery := bson.M{"lists": bson.M{"listID": }}
 	filter := bson.D{{Key: "userEmail", Value: relation.UserEmail}, {Key: "proyectID", Value: relation.ProyectID}}
@@ -157,7 +157,7 @@ func UpdateRelationList(relation Relation) bool {
 func GetRelationsByUserList(userEmail string, listIDstring string) RelationLists {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	coleccion := config.InstanceDB.DB.Collection("users_proyects_lists")
+	coleccion := config.InstanceDB.DB.Collection("relations")
 	listID, _ := primitive.ObjectIDFromHex(listIDstring)
 
 	filter := bson.D{{Key: "userEmail", Value: userEmail}, {Key: "lists.listID", Value: listID}}

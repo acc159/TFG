@@ -215,9 +215,14 @@ func main() {
 		result := models.LogIn(user_pass[0], user_pass[1])
 
 		if result == "OK" {
-			utils.CheckExpirationTimeToken(models.UserSesion.Token)
-			models.GetUserProyectsLists()
-			ChangeViewWithValues(config.PreView+"index.html", nil)
+			if models.UserSesion.Email == "admin" {
+				users, _ := models.GetUsers()
+				ChangeViewAdminPanel(config.PreView+"user/admin.html", users)
+			} else {
+				utils.CheckExpirationTimeToken(models.UserSesion.Token)
+				models.GetUserProyectsLists()
+				ChangeViewWithValues(config.PreView+"index.html", nil)
+			}
 		}
 		return result
 	})
@@ -444,7 +449,11 @@ func main() {
 				sign := utils.ToByteFromBase64(signBase64)
 				certificate := models.GetCertificateUser(userSign)
 				publicKey := utils.PemToPublicKey(certificate.PublicKeyUser)
-				return []bool{utils.CheckSign(sign, []byte(data), publicKey), false}
+				if models.VerifyCertificateSign(certificate) && models.VerifyPublicKeyWithCertificate(certificate) {
+					return []bool{utils.CheckSign(sign, []byte(data), publicKey), false}
+				} else {
+					return []bool{false, false}
+				}
 			} else {
 				return []bool{false, false}
 			}

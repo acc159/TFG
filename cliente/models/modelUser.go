@@ -193,7 +193,6 @@ func LogInServer(userLogin User) string {
 		} else {
 			//Asigno el token que genero el servidor
 			token := resp.Header.Get("token")
-			fmt.Println(token)
 			UserSesion = resultado
 			UserSesion.Token = token
 			return "OK"

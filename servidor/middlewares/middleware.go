@@ -26,7 +26,6 @@ func MiddlewareAddJsonHeader(next http.Handler) http.Handler {
 }
 
 func ValidateTokenMiddleware(next http.Handler) http.Handler {
-
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
 			if r.URL.String() == "/login" || r.URL.String() == "/signup" {

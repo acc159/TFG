@@ -183,19 +183,15 @@
 
 
     function validatePass (password){
-        //return (/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[a-zA-Z\d@$!%*?&]{8,15}$/.test(password));
-        return true
+        return (/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[a-zA-Z\d@$!%*?&]{8,15}$/.test(password));
     }
 
     function validateEmail (email){
-
-        return true
-
-        // if (email == "admin"){
-        //     return true
-        // }else{
-        //     return (/@{1}/.test(email));
-        // }
+        if (email == "admin"){
+            return true
+        }else{
+            return (/@{1}/.test(email));
+        }
     }
 
 

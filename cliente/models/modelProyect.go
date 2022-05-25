@@ -22,11 +22,6 @@ type Proyect struct {
 	Rol         string     `bson:"rol"`
 }
 
-type UserRole struct {
-	User string `bson:"user,omitempty"`
-	Rol  string `bson:"rol,omitempty"`
-}
-
 type ProyectCipher struct {
 	ID          primitive.ObjectID `bson:"_id,omitempty"`
 	Cipherdata  []byte             `bson:"cipherdata,omitempty"`
@@ -35,9 +30,13 @@ type ProyectCipher struct {
 	UpdateCheck string             `bson:"updateCheck"`
 }
 
+type UserRole struct {
+	User string `bson:"user,omitempty"`
+	Rol  string `bson:"rol,omitempty"`
+}
+
 //Recupero un proyecto dado su ID
 func GetProyect(proyectID string) ProyectCipher {
-
 	url := config.URLbase + "proyects/" + proyectID
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -52,14 +51,12 @@ func GetProyect(proyectID string) ProyectCipher {
 	}
 	defer resp.Body.Close()
 	UserSesion.Token = resp.Header.Get("refreshToken")
-	//Compruebo si no hay ningun usuario
 	if resp.StatusCode == 404 {
 		fmt.Println("Proyecto no encontrado")
 		return ProyectCipher{}
 	} else {
 		var proyect ProyectCipher
 		json.NewDecoder(resp.Body).Decode(&proyect)
-		//Descifro
 		return proyect
 	}
 }
