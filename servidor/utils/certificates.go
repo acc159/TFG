@@ -74,7 +74,9 @@ func CreateACcertificateAndKeys() {
 		fmt.Println(err)
 	}
 
+	os.MkdirAll("certs/ac/", os.ModePerm)
 	//Escribir el certificado en un fichero
+
 	acPEM := CertificateToPem(acBytes)
 	writeFile("certs/ac/certificateAC.pem", acPEM)
 
@@ -121,6 +123,7 @@ func CreateUserCertificate(username string, userPublicKeyBytes []byte) {
 		fmt.Println(err)
 	}
 
+	os.MkdirAll("certs/users/", os.ModePerm)
 	//Lo pongo en formato PEM y lo escribo en el fichero correspondiente
 	certUserPEM := CertificateToPem(certBytes)
 	writeFile("certs/users/"+username+"_cert.pem", certUserPEM)
