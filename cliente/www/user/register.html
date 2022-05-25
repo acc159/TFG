@@ -1,0 +1,251 @@
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrarse</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <!-- <style>
+
+        body{
+            background: rgb(2,0,36);
+            background: linear-gradient(90deg, rgba(2,0,36,1) 0%, rgba(10,9,58,1) 15%, rgba(9,15,125,1) 47%, rgba(0,212,255,1) 100%); 
+        }
+
+        .form-signin {
+            width: 100%;
+            max-width: 330px;
+            padding: 15px;
+            margin: 0 auto;
+            margin-top: 200px;
+        }
+
+        button{
+            margin-bottom: 5px;
+        }
+        #password{
+            margin-bottom: 20px;
+        }
+    </style> -->
+
+    <style>
+
+        body{
+                margin: 0;
+                padding: 0;
+                background: whitesmoke;
+                font-family: sans-serif;
+            }
+    
+            .box{
+                width: 450px;
+                padding: 40px;
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: #191919;
+                text-align: center;
+                box-shadow: 10px 9px 19px 6px #838383;
+            }
+    
+            .box h1{
+                font-size : 3rem;
+                color: whitesmoke;
+                text-transform: uppercase;
+                font-weight: 500;
+            }
+    
+            .box input[type = "text"],.box input[type="password"]{
+                border:0;
+                background: none;
+                display: block;
+                margin: 20px auto;
+                text-align: center;
+                border: 2px solid #3498db;
+                padding: 14px 10px;
+                width: 200px;
+                outline: none;
+                color: white;
+                border-radius: 24px;
+                transition: 0.35s;
+            }
+    
+            .box input[type = "text"]:focus,.box input[type="password"]:focus{
+                width: 280px;
+                border-color: #2ecc71;
+            }   
+    
+    
+            .box input[type = "submit"]{
+                border:0;
+                background: none;
+                display: block;
+                margin: 20px auto;
+                text-align: center;
+                padding: 14px 40px;
+                outline: none;
+                color: white;
+                border-radius: 24px;
+                transition: 0.25s;
+                cursor: pointer;
+            }
+    
+            #register{
+                border: 2px solid #2ecc71;
+            }
+    
+            #register:hover{
+                background: #2ecc71;
+            }
+            .form-signin {
+                width: 100%;
+                max-width: 330px;
+                padding: 15px;
+                margin: 0 auto;
+                margin-top: 200px;
+            }
+    
+            button{
+                margin-bottom: 5px;
+            }
+            #password{
+                margin-bottom: 20px;
+            }
+    
+            .loader {
+                width: 50px;
+                height: 50px;
+                border: 10px solid #2ecc71;
+                border-top: 10px solid #000;
+                border-radius: 50%;
+                animation-name: girar;
+                animation-duration: 1s;
+                animation-iteration-count: infinite;
+                animation-timing-function: linear;
+            }
+            @keyframes girar {
+                from {
+                    transform: rotate(0deg);
+                }
+                to {
+                    transform: rotate(360deg);
+                }
+            }
+    
+    
+            .oculto{
+                display: none;
+            }
+    
+            
+        </style>
+</head>
+<!-- <body>
+    <form class="text-center form-signin shadow p-3 mb-5 bg-white rounded">
+        <h2 class="display-4">Registrarse</h2>
+        <input class="form-control" placeholder="Email" type="text" id="email" name="email">
+        <input class="form-control" placeholder="Password" type="password" id="password" name="password">
+        <div>
+            <button class="btn btn-lg btn-primary btn-block" onclick="register()">Registrarse</button>
+        </div>
+        <div>
+            <button class="btn btn-lg btn-secondary btn-block" onclick="changeToLogin()">Identificate</button>
+        </div>
+    </form>
+</body> -->
+
+<body>
+    <form class="box">
+        <h1>Registrarse</h1>
+        <input type="text" id="email" name="email" placeholder="Email">
+        <input type="password" id="password" name="password" title="La contraseña debe tener entre 8 y 15 caracteres, al menos un dígito, al menos una minúscula y al menos una mayúscula y un caracter especial: @$!%*?& " placeholder="Password">
+        <div class="row">
+            <div class="col-md-12 order-md-1">
+                <input type="submit" id="register" onclick="registrarse()" value="Registrarse">
+            </div>
+            <div class="col-md-12 order-md-2">
+                <a type="button" role="button" href="#" onclick="changeToLogin()">¿Ya tienes una cuenta? Inicia sesión</a>
+            </div>
+        </div>
+        <div class="oculto loader container"></div>
+    </form>
+</body>
+
+</html>
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+
+<script>
+
+
+    function validatePass (password){
+        return (/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[a-zA-Z\d@$!%*?&]{8,15}$/.test(password));
+    }
+
+    function validateEmail (email){
+        if (email == "admin"){
+            return true
+        }else{
+            return (/@{1}/.test(email));
+        }
+    }
+
+
+    function registrarse(){
+        let email = document.querySelector('#email').value;
+        let password = document.querySelector('#password').value;
+
+        if (email != "" && password != ""){
+            if (validateEmail(email)){
+                if (validatePass(password)){
+                    let user_pass = [email, password];
+                    registerGO(user_pass).then(
+                        function(valorDesdeGO){
+                            switch (valorDesdeGO) {
+                                case "Admin no encontrado":
+                                    alert('Usuario Admin no creado, registrate primero como: admin')
+                                    break;                                
+                                case "Duplicado":
+                                    alert('El usuario ya esta registrado, Identificate')
+                                    changeToLogin();
+                                    break;
+                                case "Error":
+                                    alert('Error al registrarse')
+                                    break;
+                                case "serverOFF":
+                                    alert('Servidor Offline')
+                                    break;
+                                default:
+                                    alert('El usuario se registro correctamente haz login para entrar')
+                                    changeToLogin();
+                                    break;
+                            }
+                            let email = document.querySelector('#email').value = "";
+                            let password = document.querySelector('#password').value = "";
+                        }
+                    )
+                }else{
+                    alert('La contraseña no cumple los requisitos')
+                }
+            }else{
+                alert('Introduce una direccion de email valida')
+            }
+        }else{
+            alert('Introduce todos los campos')
+        }
+    }
+
+
+    function init () {
+        let forms = document.querySelectorAll('form');
+        for (let i = 0; i < forms.length; i++) {
+            forms[i].addEventListener('submit',(event) => {event.preventDefault();}, false)
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded',init,false);
+</script>

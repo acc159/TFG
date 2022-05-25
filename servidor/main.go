@@ -1,16 +1,33 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"net/http"
 	"servidor/config"
 	"servidor/middlewares"
 	"servidor/routes"
+	"servidor/utils"
 
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 )
 
+func LoadEnv() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env")
+	}
+}
+
 func main() {
+
+	//Cargar variables de entorno
+	LoadEnv()
+
+	//Cargo la Autoridad Certificadora
+	utils.LoadAC()
+
+	utils.PrepareJWT()
 
 	//Base de datos
 	config.ConnectDB()
@@ -22,13 +39,28 @@ func main() {
 	//Middlewares
 	r.Use(middlewares.MiddlewareLog)
 	r.Use(middlewares.MiddlewareAddJsonHeader)
+	r.Use(middlewares.ValidateTokenMiddleware)
 
 	//Defino las rutas
 	//Usuarios
 	routes.User(r)
+	//Proyectos
+	routes.Proyect(r)
+	//Tareas
+	routes.Task(r)
+	//Listas
+	routes.List(r)
+	//Relaciones
+	routes.Relation(r)
 
 	//Lanzo el servidor
-	http.ListenAndServe("localhost:8080", r)
-	fmt.Println("Servidor corriendo en el puerto 8080")
+	//http.ListenAndServe("localhost:8080", r)
+	http.ListenAndServeTLS("localhost:443", "certs/server.crt", "certs/server.key", r)
 
+	// sigChan := make(chan os.Signal)
+	// signal.Notify(sigChan)
+	// select {
+	// case <-sigChan:
+	// 	config.Hola()
+	// }
 }

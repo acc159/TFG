@@ -1,0 +1,203 @@
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Identificarse</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <style>
+
+    body{
+            margin: 0;
+            padding: 0;
+            background: whitesmoke;
+            font-family: sans-serif;
+        }
+
+        .box{
+            width: 450px;
+            padding: 40px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #191919;
+            text-align: center;
+            box-shadow: 10px 9px 19px 6px #838383;
+        }
+
+        .box h1{
+            color: whitesmoke;
+            text-transform: uppercase;
+            font-weight: 500;
+        }
+
+        .box input[type = "text"],.box input[type="password"]{
+            border:0;
+            background: none;
+            display: block;
+            margin: 20px auto;
+            text-align: center;
+            border: 2px solid #3498db;
+            padding: 14px 10px;
+            width: 200px;
+            outline: none;
+            color: white;
+            border-radius: 24px;
+            transition: 0.35s;
+        }
+
+        .box input[type = "text"]:focus,.box input[type="password"]:focus{
+            width: 280px;
+            border-color: #2ecc71;
+        }   
+
+
+        .box input[type = "submit"]{
+            border:0;
+            background: none;
+            display: block;
+            margin: 20px auto;
+            text-align: center;
+            padding: 14px 40px;
+            outline: none;
+            color: white;
+            border-radius: 24px;
+            transition: 0.25s;
+            cursor: pointer;
+        }
+
+        #login{
+            border: 2px solid #2ecc71;
+        }
+
+        #login:hover{
+            background: #2ecc71;
+        }
+
+        #register{
+            border: 2px solid #f12c2c;
+        }
+
+        #register:hover{
+            background: #f12c2c;
+        }
+
+        .form-signin {
+            width: 100%;
+            max-width: 330px;
+            padding: 15px;
+            margin: 0 auto;
+            margin-top: 200px;
+        }
+
+        button{
+            margin-bottom: 5px;
+        }
+        #password{
+            margin-bottom: 20px;
+        }
+
+        .loader {
+            width: 50px;
+            height: 50px;
+            border: 10px solid #2ecc71;
+            border-top: 10px solid #000;
+            border-radius: 50%;
+            animation-name: girar;
+            animation-duration: 1s;
+            animation-iteration-count: infinite;
+            animation-timing-function: linear;
+        }
+        @keyframes girar {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+
+        .oculto{
+            display: none;
+        }
+
+        
+    </style>
+</head>
+
+<body>
+    <form class="box">
+        <h1 class="display-4">Login</h1>
+        <input type="text" id="email" name="email" placeholder="Email">
+        <input type="password" id="password" name="password" placeholder="Password">
+        <div class="row">
+            <div class="col-md-12 order-md-1">
+                <input type="submit" id="login" onclick="iniciarSesion()" value="Login">
+            </div>
+            <div class="col-md-12 order-md-2">
+                <a type="button" role="button" href="#" onclick="changeToRegister()">Regístrate para crear una cuenta</a>
+            </div>
+        </div>
+        <div class="oculto loader container"></div>
+    </form>
+</body>
+</html>
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+<script>
+
+
+    function showLoading(){
+        let loader = document.querySelector('.loader').classList.toggle('oculto')
+    }
+
+    function iniciarSesion(){
+      let email = document.querySelector('#email').value;
+      let password = document.querySelector('#password').value;
+
+      if (email != "" && password != ""){
+        showLoading();
+            let user_pass = [email, password];
+            loginGO(user_pass).then(
+                function(resultado){
+
+                    switch (resultado) {
+                        case "Error":
+                            alert('Error al iniciar sesión')
+                            showLoading();
+                            document.querySelector('#email').value = "";
+                            document.querySelector('#password').value = "";
+                            break;
+
+                        case "Bloqueado":
+                            alert('Usuario bloqueado, contacta con el administrador del sistema')
+                            showLoading();
+                            document.querySelector('#email').value = "";
+                            document.querySelector('#password').value = "";
+                        break;
+                        default:
+                            break;
+                    }
+                }
+            )
+        }else{
+            alert('Introduce todos los campos')
+        }
+    }
+
+
+    function init () {
+        let forms = document.querySelectorAll('form');
+        for (let i = 0; i < forms.length; i++) {
+            forms[i].addEventListener('submit',(event) => {event.preventDefault();}, false)
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded',init,false);
+
+</script>

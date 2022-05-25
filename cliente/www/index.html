@@ -1,0 +1,449 @@
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>Home</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    
+    <style>
+        .button_nav{
+            border-color: f8f9fa;
+            color: f8f9fa;
+            margin-right: 3px;
+        }
+        #buttonNav1, #buttonNav2{
+            border-width: 0px;
+            color: f8f9fa;
+        }
+
+        #buttonNav1:hover, #buttonNav2:hover{
+            color: rgba(0,0,0,.7);
+        }
+        .jumbotron{
+            /* background-color: #e6e6f3; */
+            /* background-color: #bdbdcd; */
+            background-color: #c2c2d3;
+          
+            margin-bottom: 0px;
+        }
+        .card-header{
+            background-color: #d2d2df;
+        }
+
+        .lista-shadow{
+            box-shadow: 13px 4px 14px 2px #838383
+        }
+        .user-icon{
+            margin-left: 5px;
+            color: #f8f9fa;
+        }
+
+        .display-4{
+            font-size: 2.5rem;
+        }
+    </style>
+</head>
+
+<body>
+    {{$email:=.User.Email}}
+    <nav class="navbar navbar-expand-lg navbar-light bg-dark">
+        <li class="nav-item btn-outline-light" type="button">
+            <a class="button_nav nav-link btn btn-outline-light" role="button" onclick="changeHome()">HOME</a>
+        </li>
+        
+        <!-- <a class="navbar-brand" type="button" onclick="changeHome()">Home</a> -->
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+
+                <li class="nav-item btn-outline-light" type="button">
+                    <a id="buttonNav1" class="button_nav nav-link btn btn-outline-light" role="button" onclick="changeToAddProyect()">Añadir un proyecto</a>
+                </li>
+
+            </ul>
+            <form class="form-inline my-2 my-lg-0">
+                <input class="form-control mr-sm-2" type="search" placeholder="Proyectos y Listas">
+                <button class="btn btn-outline-info my-2 my-sm-0" type="submit" onclick="buscar(event)">Buscar</button>
+    
+            </form>
+            <form class="form-inline my-2 my-lg-0">
+                <div class="dropdown inline" type="button">  
+                    <svg class="user-icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-person dropdown-toggle r-sm-2 my-2 my-sm-0" viewBox="0 0 16 16"  data-toggle="dropdown">
+                        <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/>
+                    </svg>
+                    <ul class="dropdown-menu dropdown-menu-right inline">  
+                        <li class="dropdown-item">Usuario: {{$email}} </li>  
+                        <li class="dropdown-item">Nº Proyectos: {{len .Datos}}</li> 
+                        {{if eq $email "admin"}}
+                            <li class="dropdown-item" onclick="changeToAdminGO()">Panel Admin</li> 
+                        {{end}}
+                        <li class="dropdown-item" onclick="exitSesion()"> 
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-door-open-fill" viewBox="0 0 16 16">
+                                <path d="M1.5 15a.5.5 0 0 0 0 1h13a.5.5 0 0 0 0-1H13V2.5A1.5 1.5 0 0 0 11.5 1H11V.5a.5.5 0 0 0-.57-.495l-7 1A.5.5 0 0 0 3 1.5V15H1.5zM11 2h.5a.5.5 0 0 1 .5.5V15h-1V2zm-2.5 8c-.276 0-.5-.448-.5-1s.224-1 .5-1 .5.448.5 1-.224 1-.5 1z"/>
+                            </svg> Cerrar Sesión
+                        </li> 
+                        <!-- <li class="dropdown-item" onclick="deleteUser('{{$email}}')">Borrar Usuario</li> -->
+                    </ul>  
+                </div>
+            </form>
+        </div>
+    </nav>
+
+    
+        {{if not .Datos}}
+            <section class="text-center">
+                <h1 class="display-4">No tienes ningun proyecto</h1>
+            </section>
+        {{else}}
+            {{range .Datos}}
+
+            <!-- <h1>Rol: {{.Proyecto.Rol}}</h1> -->
+
+            {{$proyectID:=.Proyecto.ID}}
+            {{$proyectName:=.Proyecto.Name}}
+                <section class="jumbotron text-center">
+                    <div class="container" >
+                        <h1 name="{{.Proyecto.Name}}" class="display-3">{{.Proyecto.Name}}</h1>
+                        <p>{{.Proyecto.Description}}</p>
+                        <h2 class="display-4">Listas en el proyecto: <span class="badge badge-secondary">{{len .Listas}}</span></h2>
+                        <div class="btn-group btn-group" role="group" id="{{.Proyecto.ID}}" data-proyectName="{{.Proyecto.Name}}">
+                            {{if eq .Proyecto.Rol "Admin"}}
+                                <button type="button" class="btn btn-outline-dark" onclick="changeToAddList(event)">Añadir Lista al proyecto »</button>
+                                <button type="button" class="btn btn-outline-dark" onclick="changeToProyectConfig(event)">Configuración del proyecto »</button>
+                                <!-- <button type="button" class="btn btn-outline-dark" onclick="deleteProyect(event)">Eliminar Proyecto »</button> -->
+                            {{end}}
+                    </div>
+                </section>
+                {{if not .Listas}}
+                <section class="text-center">
+                    <h5>Proyecto sin listas</h5>
+                </section>
+                {{else}}
+                    <div class="album py-5 bg-light">
+                        <div class="container">
+                            <div class="row">   
+                                {{range .Listas}}
+                                    <div class="col-md-4">
+                                        <div name="{{.Name}}" class="border lista-shadow card mb-4 box-shadow text-center">
+                                            <div class="card-header">
+                                                <h5 class="card-title" >{{.Name}}</h5>
+                                            </div>
+                                            <div class="card-body box-shadow">
+                                                {{if .Description}}
+                                                    <p class="card-text">{{.Description}}</p>
+                                                {{end}}
+                                                <div class="justify-content-between align-items-center">
+                                                    <div class="btn-group" id="{{.ID}}" data-proyectID="{{$proyectID}}" data-proyectName="{{$proyectName}}" data-listName="{{.Name}}">
+                                                        <button type="button" class="btn btn-sm btn-outline-secondary"onclick="changeToTasks(event)">Ver Tareas</button>
+                                                        {{if eq .Rol "Admin"}}
+                                                            <button type="button" class="btn btn-sm btn-outline-secondary"onclick="changeToListConfig(event)">Configuración</button>
+                                                            <!-- <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deleteList(event)">Eliminar Lista</button> -->
+                                                        {{end}}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {{end}}    
+                            </div>
+                        </div>
+                    </div>     
+                {{end}}     
+            {{end}}
+        {{end}}        
+               
+
+        <div class="modal" id="myModal" style="display: none;" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h4 class="modal-title">Actualizacion Pendiente</h4>
+                  <button type="button" class="close" data-dismiss="modal">×</button>
+                </div>
+                <div class="modal-body">
+                  Hay cambios en tus proyectos y listas
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="changeHome()" class="btn btn-info">Actualizar</button>
+                    <button type="button" class="btn btn-danger" data-dismiss="modal">Cerrar</button>
+                </div>
+                
+              </div>
+            </div>
+          </div>
+
+
+          <div class="modal" id="tokenModal" style="display: none;" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h4 class="modal-title">Tu sesión esta apunto de expirar</h4>
+                  <button type="button" class="close" data-dismiss="modal">×</button>
+                </div>
+                <div class="modal-body">
+                  ¿Deseas mantener la sesión?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="refreshToken()" class="btn btn-info">Renovar Sesión</button>
+                    <button type="button" class="btn btn-danger" onclick="exitSesion()" data-dismiss="modal">Cerrar Sesión</button>
+                </div>
+              </div>
+            </div>
+          </div>
+</body>
+
+
+
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+<script>
+
+    function buscar(event){
+        let input = event.target.closest('div').querySelector('input')
+        let inputValue = input.value;
+        if (inputValue != ""){
+            let buscar = document.getElementsByName(inputValue)[0];
+            if (buscar != null){
+                buscar.scrollIntoView();
+            }else{
+                alert("Ningun proyecto o lista con ese nombre");
+            }
+        }else{
+            alert('No has introducido ningun valor para buscar');
+        }
+        input.value = "";
+    }
+
+
+    function changeToAddList(event){
+        var div = event.target.closest('div');
+        proyectID = div.id
+        proyectName = div.dataset.proyectname;
+        changeToAddListGO(proyectID, proyectName).then(
+            function(resultados){
+                let tokenExpire = resultados[1];
+                let changeOK = resultados[0];
+                if (tokenExpire){
+                    alert('El Token de la sesión expiro')
+                    exitSesion();
+                }else{
+                    if (changeOK == false){
+                        alert('Ya no esta disponible el proyecto')
+                        changeHome()
+                    }
+                }
+            }
+        )
+    }
+
+    function changeToAddProyect(event){
+        changeToAddProyectGO().then(
+            function(tokenExpire){
+                if (tokenExpire){
+                    alert('El Token de la sesión expiro')
+                    exitSesion();
+                }
+            }
+        )
+    }
+
+
+    function changeToProyectConfig(event){
+        var div = event.target.closest('div');
+        proyectID = div.id;
+        changeToProyectConfigGO(proyectID).then(
+            function(resultados){
+                let tokenExpire = resultados[1];
+                let changeOK = resultados[0];
+                if (tokenExpire){
+                    alert('El Token de la sesión expiro')
+                    exitSesion();
+                }else{
+                    if (changeOK == false){
+                        alert('Ya no esta disponible el proyecto')
+                        changeHome()
+                    }
+                }
+            }
+        )
+    }
+
+
+    // function deleteProyect(event){
+    //     var div = event.target.closest('div');
+    //     proyectID = div.id;
+    //     deleteProyectGO(proyectID).then(
+    //         function(valorDesdeGO){
+    //             if (valorDesdeGO == false){
+    //                 alert('El proyecto no se borro')
+    //             }else{
+    //                 changeHome()
+    //             }
+    //         }
+    //     )
+    // }
+
+
+    function changeToListConfig(event){
+        var div = event.target.closest('div');
+        proyectID = div.dataset.proyectid;
+        listID = div.id;
+        changeToListConfigGO(listID, proyectID).then(
+            function(resultados){
+                let tokenExpire = resultados[1];
+                let listOK = resultados[0];
+                if (tokenExpire){
+                    alert('El Token de la sesión expiro')
+                    exitSesion();
+                }else{
+                    if (listOK == false){
+                        alert('La lista no esta disponible')
+                        changeHome()
+                        
+                    }
+                }
+            }
+        )
+    }
+
+    function changeToTasks(event){
+        var div = event.target.closest('div');
+        listID = div.id;
+        listName = div.dataset.listname;
+        changeToTasksGO(listID,listName).then(
+            function(resultados){
+                let tokenExpire = resultados[1];
+                let changeOK = resultados[0];
+                if (tokenExpire){
+                    alert('El Token de la sesión expiro')
+                    exitSesion();
+                }else{
+                    if (changeOK == false){
+                        alert('La lista ya no existe')
+                        changeHome()
+                    }
+                }
+            }
+        )
+    }
+
+
+
+
+    // function deleteList(event){
+    //     var div = event.target.closest('div');
+    //     listID = div.id;
+    //     proyectID = div.dataset.proyectid;
+    //     deleteListGO(listID, proyectID).then(
+    //         function(resultados){
+    //             let tokenExpire = resultados[1];
+    //             let listOK = resultados[0];
+    //             if (tokenExpire){
+    //                 alert('El Token de la sesión expiro')
+    //                 exitSesion();
+    //             }else{
+    //                 if (listOK == false){
+    //                     alert('La lista no se borro')
+    //                 }else{
+    //                     changeHome()
+    //                 }
+    //             }
+    //         }
+    //     )
+    // }
+
+
+    function changeToAdmin(){
+        changeToAdminGO().then(
+            function(){
+                alert('El Token de la sesión expiro')
+                exitSesion();
+            }
+        )
+    }
+
+
+    function changeHome(){
+        changeHomeGO().then(
+            function(tokenExpire){
+                if (tokenExpire){
+                    alert('El Token de la sesión expiro')
+                    exitSesion();
+                }
+            }
+        )
+    }
+
+
+
+    function checkChanges(){
+        checkChangesGO().then(
+            function(result){
+                if (result){
+                    $('#myModal').modal('show')
+                }
+            }
+        )
+    }
+
+
+
+    // function deleteUser(userEmail){
+    //     deleteUserGO(userEmail).then(
+    //         function(resultados){
+    //             let tokenExpire = resultados[1];
+    //             let deleteOK = resultados[0];
+    //             if (tokenExpire){
+    //                 alert('El Token de la sesión expiro')
+    //                 exitSesion();
+    //             }else{
+    //                 if (deleteOK == false){
+    //                     alert('El usuario no se borro')
+    //                 }else{
+    //                     changeToLogin();
+    //                 }
+    //             }
+    //         }
+    //     )
+    // }
+
+
+        
+    function checkToken(){
+        $('#tokenModal').modal('show')
+    }
+
+
+    function refreshToken(){
+        refreshTokenGO().then(
+            function(result){
+                if (!result){
+                    alert('La sesión expiro')
+                    exitSesion()
+                }else{
+                    $('#tokenModal').modal('hide')
+                    alert('Sesión renovada')
+                }
+            }   
+        )
+    }
+
+
+    function init () {
+        let forms = document.querySelectorAll('form');
+        for (let i = 0; i < forms.length; i++) {
+            forms[i].addEventListener('submit',(event) => {event.preventDefault();}, false)
+        }
+        setInterval('checkChanges()',300000); //5 minutos
+        setInterval('checkToken()',540000); //9 minutos
+    }
+
+    document.addEventListener('DOMContentLoaded',init,false);
+</script>
